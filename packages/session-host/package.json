@@ -1,0 +1,24 @@
+{
+  "name": "@terminull/session-host",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "//": "node-pty is declared for future PTY-backed sessions but is intentionally NOT imported by src yet. This keeps installs light: pnpm skips node-pty's native build script by default, so no toolchain compile runs during install.",
+  "scripts": {
+    "build": "tsc -b",
+    "test": "vitest run",
+    "typecheck": "tsc -b"
+  },
+  "dependencies": {
+    "@terminull/shared": "workspace:*",
+    "node-pty": "^1.0.0"
+  }
+}

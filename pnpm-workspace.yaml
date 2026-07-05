@@ -1,0 +1,17 @@
+packages:
+  - 'packages/*'
+  - 'packages/adapters/*'
+
+# Ignored build scripts are a non-fatal warning rather than a hard install
+# failure. Needed because pnpm 11 otherwise exits non-zero when any dependency's
+# build script is skipped.
+strictDepBuilds: false
+
+# Native/postinstall build scripts we intentionally skip:
+#  - esbuild: works from its prebuilt platform package (@esbuild/*), so its
+#    postinstall is unnecessary (verified: vitest + vite build both run green).
+#  - node-pty: declared by @terminull/session-host for a later milestone but not
+#    imported yet, so its native build is skipped to keep installs light.
+ignoredBuiltDependencies:
+  - esbuild
+  - node-pty

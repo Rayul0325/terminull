@@ -1,0 +1,8 @@
+{
+  "name": "@terminull/desktop",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "//": "Placeholder workspace slot. The Electron desktop shell lands in M10; there is no Electron dependency, build, or test yet — only the reserved package name and a src stub.",
+  "scripts": {}
+}

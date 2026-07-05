@@ -1,0 +1,5 @@
+.goal-ledger/
+node_modules/
+dist/
+.claude/
+*.tsbuildinfo

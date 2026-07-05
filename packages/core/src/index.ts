@@ -1,5 +1,9 @@
 import { SHARED_PLACEHOLDER, type TerminullMeta } from '@terminull/shared';
 
+export * from './store.js';
+export * from './mask.js';
+export * from './permissions.js';
+
 /** Core-layer metadata, extending the shared contract. */
 export interface CoreInfo extends TerminullMeta {
   readonly kind: 'core';

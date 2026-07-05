@@ -1,3 +1,5 @@
+export * from './events.js';
+
 /** Metadata shared by every Terminull package. */
 export interface TerminullMeta {
   /** Fully-qualified package name, e.g. "@terminull/shared". */

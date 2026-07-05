@@ -15,3 +15,7 @@ strictDepBuilds: false
 ignoredBuiltDependencies:
   - esbuild
   - node-pty
+
+allowBuilds:
+  esbuild: set this to true or false
+  node-pty: set this to true or false

@@ -1,0 +1,4 @@
+{"role":"user","text":"list the files"}
+{"role":"agent","text":"Running ls now."}
+{"role":"tool","text":"README.md\npackage.json"}
+{"role":"agent","text":"Two entries found."}

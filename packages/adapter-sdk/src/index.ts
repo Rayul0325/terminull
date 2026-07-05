@@ -1,7 +1,18 @@
 import type { CoreInfo } from '@terminull/core';
 import type { TerminullMeta } from '@terminull/shared';
 
-/** The contract every CLI-tool adapter implements. */
+// M3 adapter SDK: capability matrix, the ToolAdapter contract + sub-interfaces,
+// the plugin runtime, and the conformance runner.
+export * from './capabilities.js';
+export * from './adapter.js';
+export * from './plugin-host.js';
+export * from './conformance.js';
+
+/**
+ * Legacy lightweight adapter descriptor (M0). Retained for the built-in adapter
+ * stubs (acp/agy/claude/codex) that predate the full {@link ToolAdapter}
+ * contract; new integrations implement `ToolAdapter` from `./adapter.js`.
+ */
 export interface AgentAdapter extends TerminullMeta {
   /** Stable identifier of the CLI tool this adapter drives, e.g. "claude". */
   readonly tool: string;
@@ -9,7 +20,7 @@ export interface AgentAdapter extends TerminullMeta {
   readonly displayName: string;
 }
 
-/** Runtime context handed to an adapter by the core layer. */
+/** Runtime context handed to a legacy adapter by the core layer. */
 export interface AdapterContext {
   readonly core: CoreInfo;
 }

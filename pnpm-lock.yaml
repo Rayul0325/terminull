@@ -47,6 +47,9 @@ importers:
       '@terminull/shared':
         specifier: workspace:*
         version: link:../shared
+      zod:
+        specifier: ^3.24.0
+        version: 3.25.76
 
   packages/adapters/acp:
     dependencies:
@@ -77,6 +80,9 @@ importers:
       '@terminull/adapter-sdk':
         specifier: workspace:*
         version: link:../../adapter-sdk
+      '@terminull/shared':
+        specifier: workspace:*
+        version: link:../../shared
 
   packages/cli:
     dependencies:

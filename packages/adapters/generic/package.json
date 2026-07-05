@@ -17,6 +17,7 @@
     "typecheck": "tsc -b"
   },
   "dependencies": {
-    "@terminull/adapter-sdk": "workspace:*"
+    "@terminull/adapter-sdk": "workspace:*",
+    "@terminull/shared": "workspace:*"
   }
 }

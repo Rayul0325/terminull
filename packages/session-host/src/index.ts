@@ -1,20 +1,10 @@
-import type { TerminullMeta } from '@terminull/shared';
-
 /**
- * Placeholder for the PTY-backed session host.
+ * @terminull/session-host — paneld, the PTY-owning session daemon.
  *
- * `node-pty` is declared as a dependency for a later milestone but is
- * intentionally NOT imported here yet, so installs stay light and no native
- * build is required to compile this package.
+ * The daemon core lives in {@link SessionHost}; `paneld` (src/bin.ts) is the
+ * CLI wrapper. The wire protocol (frame codec + CTRL schemas) lives in
+ * `@terminull/shared` so the panel-server imports the identical contract.
  */
-export interface SessionHostInfo extends TerminullMeta {
-  readonly ptyBackend: 'node-pty';
-  readonly wired: boolean;
-}
-
-export const SESSION_HOST_PLACEHOLDER: SessionHostInfo = {
-  name: '@terminull/session-host',
-  version: '0.0.0',
-  ptyBackend: 'node-pty',
-  wired: false,
-};
+export * from './host.js';
+export * from './ring.js';
+export * as tmux from './tmux.js';

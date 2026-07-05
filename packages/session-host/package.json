@@ -5,13 +5,16 @@
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "bin": {
+    "paneld": "./dist/bin.js"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     }
   },
-  "//": "node-pty is declared for future PTY-backed sessions but is intentionally NOT imported by src yet. This keeps installs light: pnpm skips node-pty's native build script by default, so no toolchain compile runs during install.",
+  "//": "node-pty is a real runtime dependency (native). Its darwin prebuild ships a non-executable spawn-helper, so pnpm-workspace.yaml lists node-pty under onlyBuiltDependencies; a fresh install may still need a from-source rebuild (npm_config_build_from_source=true) — see the M2 progress notes.",
   "scripts": {
     "build": "tsc -b",
     "test": "vitest run",

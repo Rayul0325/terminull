@@ -1,4 +1,5 @@
 export * from './events.js';
+export * from './host-protocol.js';
 
 /** Metadata shared by every Terminull package. */
 export interface TerminullMeta {

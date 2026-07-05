@@ -10,12 +10,14 @@ strictDepBuilds: false
 # Native/postinstall build scripts we intentionally skip:
 #  - esbuild: works from its prebuilt platform package (@esbuild/*), so its
 #    postinstall is unnecessary (verified: vitest + vite build both run green).
-#  - node-pty: declared by @terminull/session-host for a later milestone but not
-#    imported yet, so its native build is skipped to keep installs light.
 ignoredBuiltDependencies:
   - esbuild
-  - node-pty
 
-allowBuilds:
-  esbuild: set this to true or false
-  node-pty: set this to true or false
+# Native build scripts we DO run:
+#  - node-pty: @terminull/session-host (paneld) imports it for real PTY-backed
+#    sessions. Its shipped darwin prebuild's spawn-helper is not marked
+#    executable, so posix_spawnp fails at runtime; a real native build produces
+#    an executable spawn-helper under build/Release. Requires a C/C++ toolchain
+#    (macOS CommandLineTools / Xcode).
+onlyBuiltDependencies:
+  - node-pty

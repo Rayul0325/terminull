@@ -36,6 +36,15 @@ export default tseslint.config(
     },
   },
   {
+    // Plain Node scripts (repo tooling, postinstall helpers) run under Node.
+    files: ['scripts/**/*.{js,mjs}', 'tooling/**/*.{js,mjs}'],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+      },
+    },
+  },
+  {
     // Test files use loose fixtures; relax a couple of rules there.
     files: ['**/*.test.ts', '**/*.test.tsx'],
     rules: {

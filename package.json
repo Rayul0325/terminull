@@ -10,7 +10,7 @@
   },
   "packageManager": "pnpm@11.10.0",
   "scripts": {
-    "postinstall": "node scripts/fix-node-pty-spawn-helper.mjs",
+    "postinstall": "node scripts/ensure-node-pty.mjs",
     "build": "pnpm -r build",
     "test": "pnpm -r test",
     "lint": "eslint .",

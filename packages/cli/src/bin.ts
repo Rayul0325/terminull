@@ -1,6 +1,7 @@
 #!/usr/bin/env node
-import { CLI_PLACEHOLDER } from './index.js';
+import { productionCliDeps, runCli } from './cli.js';
 
-// Placeholder entry point for the `terminull` command. Real command wiring
-// (session control, adapter selection, etc.) lands in a later milestone.
-process.stdout.write(`${CLI_PLACEHOLDER.name} ${CLI_PLACEHOLDER.version} (pre-alpha)\n`);
+// `terminull` entry point — enroll / machines status / enroll --remove (M8).
+// Further command wiring (session control, adapter selection) lands in M10.
+const code = await runCli(process.argv.slice(2), productionCliDeps());
+process.exit(code);

@@ -32,9 +32,7 @@ export function CodeBlock({
     margin: 0,
     maxHeight,
     overflow: 'auto',
-    ...(tone === 'error'
-      ? { color: 'var(--tn-err)', background: 'var(--tn-err-wash)' }
-      : {}),
+    ...(tone === 'error' ? { color: 'var(--tn-err)', background: 'var(--tn-err-wash)' } : {}),
   };
 
   return (

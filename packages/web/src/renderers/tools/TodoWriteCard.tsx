@@ -46,7 +46,9 @@ export function TodoWriteCard({ item, ctx }: RendererProps): ReactElement {
   return (
     <ToolCardShell icon="list" eyebrow={ctx.t('chat.toolLabel.TodoWrite')}>
       {todos.length === 0 ? (
-        <span style={{ color: 'var(--tn-fg-faint)', fontSize: 12 }}>{ctx.t('chat.todo.empty')}</span>
+        <span style={{ color: 'var(--tn-fg-faint)', fontSize: 12 }}>
+          {ctx.t('chat.todo.empty')}
+        </span>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           {todos.map((t, i) => {
@@ -58,7 +60,8 @@ export function TodoWriteCard({ item, ctx }: RendererProps): ReactElement {
                   : t.status === 'pending'
                     ? ctx.t('chat.todo.pending')
                     : t.status; // unrecognized status: show verbatim, never fabricate
-            const tone = t.status === 'completed' ? 'done' : t.status === 'in_progress' ? 'running' : 'idle';
+            const tone =
+              t.status === 'completed' ? 'done' : t.status === 'in_progress' ? 'running' : 'idle';
             return (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12 }}>
                 <Chip tone={tone}>{label}</Chip>

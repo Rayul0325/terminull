@@ -50,7 +50,10 @@ describe('SystemView', () => {
 
   it('replaces a leading raw hook tag with a muted chip instead of dumping it', () => {
     const html = renderToStaticMarkup(
-      <SystemView item={sy({ text: '<system-reminder>secret-body</system-reminder>' })} ctx={ctx()} />,
+      <SystemView
+        item={sy({ text: '<system-reminder>secret-body</system-reminder>' })}
+        ctx={ctx()}
+      />,
     );
     expect(html).toContain('chat.system.hookTag');
     expect(html).not.toContain('secret-body');

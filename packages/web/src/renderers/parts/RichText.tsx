@@ -87,7 +87,10 @@ function blockNodes(segment: string, keyBase: string): ReactNode[] {
   const flushBullets = (): void => {
     if (bullets.length > 0) {
       blocks.push(
-        <ul key={`${keyBase}-ul-${blocks.length}`} style={{ margin: '0.35em 0', paddingLeft: '1.2em' }}>
+        <ul
+          key={`${keyBase}-ul-${blocks.length}`}
+          style={{ margin: '0.35em 0', paddingLeft: '1.2em' }}
+        >
           {bullets}
         </ul>,
       );
@@ -100,7 +103,9 @@ function blockNodes(segment: string, keyBase: string): ReactNode[] {
     const bullet = /^-\s+(.*)$/.exec(line);
     if (bullet) {
       const body = bullet[1] ?? '';
-      bullets.push(<li key={`${keyBase}-li-${idx}`}>{inlineNodes(body, `${keyBase}-li-${idx}`)}</li>);
+      bullets.push(
+        <li key={`${keyBase}-li-${idx}`}>{inlineNodes(body, `${keyBase}-li-${idx}`)}</li>,
+      );
       return;
     }
     flushBullets();

@@ -33,7 +33,9 @@ function withLastActivity(
 }
 
 function render(s: FleetSession, extra: { now?: number; onOpen?: () => void } = {}): string {
-  return renderToStaticMarkup(<SessionRow session={s} now={extra.now ?? NOW} onOpen={extra.onOpen} />);
+  return renderToStaticMarkup(
+    <SessionRow session={s} now={extra.now ?? NOW} onOpen={extra.onOpen} />,
+  );
 }
 
 describe('SessionRow honesty', () => {

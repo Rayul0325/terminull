@@ -17,10 +17,7 @@ export function SidechainView({ item, ctx }: RendererProps): ReactElement {
       style={{ display: 'flex', alignItems: 'center', gap: 8, margin: '10px 0' }}
     >
       <span className="tn-hairline" style={{ flex: 1 }} aria-hidden="true" />
-      <span
-        className="tn-microlabel"
-        style={{ color: 'var(--tn-fg-faint)', whiteSpace: 'nowrap' }}
-      >
+      <span className="tn-microlabel" style={{ color: 'var(--tn-fg-faint)', whiteSpace: 'nowrap' }}>
         {label}
         {identity.length > 0 ? ` · ${identity}` : ''}
       </span>

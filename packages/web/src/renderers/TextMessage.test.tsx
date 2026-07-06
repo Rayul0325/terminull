@@ -25,7 +25,9 @@ function agentMessage(text: string): ChatItem {
 
 describe('TextMessage', () => {
   it('renders **bold** prose as a <b> element via RichText', () => {
-    const html = renderToStaticMarkup(<TextMessage item={agentMessage('a **bold** b')} ctx={ctx} />);
+    const html = renderToStaticMarkup(
+      <TextMessage item={agentMessage('a **bold** b')} ctx={ctx} />,
+    );
     expect(html).toContain('<b>bold</b>');
   });
 
@@ -50,7 +52,9 @@ describe('TextMessage', () => {
   });
 
   it('does NOT treat a plain single-word tag as a hook tag (real content stays real content)', () => {
-    const html = renderToStaticMarkup(<TextMessage item={agentMessage('<div>hi</div>')} ctx={ctx} />);
+    const html = renderToStaticMarkup(
+      <TextMessage item={agentMessage('<div>hi</div>')} ctx={ctx} />,
+    );
     // Escaped by RichText (never live markup), but NOT swapped for the chip.
     expect(html).not.toContain(i18n.t('chat.system.hookTag'));
     expect(html).toContain('&lt;div&gt;');

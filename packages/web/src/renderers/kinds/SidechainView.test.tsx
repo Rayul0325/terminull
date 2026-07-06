@@ -38,7 +38,9 @@ describe('SidechainView', () => {
   });
 
   it('appends the identity after the label when present', () => {
-    const html = renderToStaticMarkup(<SidechainView item={sc({ text: 'reviewer' })} ctx={ctx()} />);
+    const html = renderToStaticMarkup(
+      <SidechainView item={sc({ text: 'reviewer' })} ctx={ctx()} />,
+    );
     expect(html).toContain('chat.kind.sidechain');
     expect(html).toContain('reviewer');
   });

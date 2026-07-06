@@ -49,7 +49,10 @@ function readLastActivity(session: FleetSession): LastActivity | undefined {
 function displayName(session: FleetSession): string {
   if (session.title && session.title.trim() !== '') return session.title;
   if (session.cwd) {
-    const base = session.cwd.split('/').filter((p) => p !== '').pop();
+    const base = session.cwd
+      .split('/')
+      .filter((p) => p !== '')
+      .pop();
     if (base) return base;
   }
   return session.id.slice(0, 8);
@@ -60,7 +63,8 @@ function relativeParts(now: number, updatedAt?: number): { key: string; count?: 
   if (!updatedAt) return null;
   const delta = now - updatedAt;
   if (delta < 60_000) return { key: 'fleet.relative.justNow' };
-  if (delta < 3_600_000) return { key: 'fleet.relative.minutesAgo', count: Math.floor(delta / 60_000) };
+  if (delta < 3_600_000)
+    return { key: 'fleet.relative.minutesAgo', count: Math.floor(delta / 60_000) };
   if (delta < 86_400_000)
     return { key: 'fleet.relative.hoursAgo', count: Math.floor(delta / 3_600_000) };
   return { key: 'fleet.relative.daysAgo', count: Math.floor(delta / 86_400_000) };

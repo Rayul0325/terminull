@@ -129,7 +129,10 @@ export function ManageHome(): ReactElement {
             (s) => s.live && machines[sessionMachineId(s)]?.state !== 'stale',
           );
           const name = cwd
-            ? (cwd.split('/').filter((p) => p !== '').pop() ?? cwd)
+            ? (cwd
+                .split('/')
+                .filter((p) => p !== '')
+                .pop() ?? cwd)
             : t('home.fleet.unknownProject');
           const headerMachineBadge =
             groupMachine && groupMachine !== LOCAL_MACHINE ? (

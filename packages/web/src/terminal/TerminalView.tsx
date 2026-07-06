@@ -189,7 +189,12 @@ export default function TerminalView({
   return (
     <div
       data-terminull-scope="terminal"
-      style={{ height: '100%', display: 'flex', flexDirection: 'column', background: 'var(--tn-bg)' }}
+      style={{
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        background: 'var(--tn-bg)',
+      }}
     >
       {notice !== null || effectiveMode === 'ro' || renderer === 'dom' ? (
         <div

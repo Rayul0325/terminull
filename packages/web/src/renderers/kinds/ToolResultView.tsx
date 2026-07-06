@@ -19,11 +19,7 @@ import { Chip } from '../parts/Chip';
 
 /** True when the tool_result raw payload flags an error (never green-by-default). */
 function isErrorResult(raw: unknown): boolean {
-  return (
-    !!raw &&
-    typeof raw === 'object' &&
-    (raw as Record<string, unknown>)['isError'] === true
-  );
+  return !!raw && typeof raw === 'object' && (raw as Record<string, unknown>)['isError'] === true;
 }
 
 export function ToolResultView({ item, ctx }: RendererProps): ReactElement {
@@ -38,9 +34,7 @@ export function ToolResultView({ item, ctx }: RendererProps): ReactElement {
       {text.length > 0 ? (
         <CodeBlock text={text} tone={isError ? 'error' : undefined} />
       ) : (
-        <div style={{ color: 'var(--tn-fg-faint)', fontSize: 12 }}>
-          {ctx.t('chat.kind.empty')}
-        </div>
+        <div style={{ color: 'var(--tn-fg-faint)', fontSize: 12 }}>{ctx.t('chat.kind.empty')}</div>
       )}
     </ToolCardShell>
   );

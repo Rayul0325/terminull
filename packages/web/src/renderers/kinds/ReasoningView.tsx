@@ -19,9 +19,7 @@ export function ReasoningView({ item, ctx }: RendererProps): ReactElement {
       {text.trim().length > 0 ? (
         <RichText text={text} />
       ) : (
-        <div style={{ color: 'var(--tn-fg-faint)', fontSize: 12 }}>
-          {ctx.t('chat.kind.empty')}
-        </div>
+        <div style={{ color: 'var(--tn-fg-faint)', fontSize: 12 }}>{ctx.t('chat.kind.empty')}</div>
       )}
     </Disclosure>
   );

@@ -43,3 +43,68 @@ jobs:
 
       - name: Typecheck
         run: pnpm typecheck
+
+  # Gate (f): the published `terminull` tarball installs into a throwaway prefix
+  # and runs, its node-pty healing story is intact, and `npm pack` leaves the
+  # workspace byte-for-byte unmutated (tsup prepack must write ONLY into
+  # packages/cli's gitignored dist-pack/ · web-dist/ · scripts-pack/). NO
+  # electron job here — desktop packaging is deferred.
+  pack-smoke:
+    name: pack-smoke (terminull tarball installs + runs)
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-14, ubuntu-latest]
+        node: [22]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up pnpm (version from package.json#packageManager)
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node ${{ matrix.node }}
+        uses: actions/setup-node@v5
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      # Needed so the prepack step has web dist + built workspace to bundle.
+      - name: Build workspace
+        run: pnpm -r build
+
+      # Pack the CLI into a dir OUTSIDE the tree so the .tgz artifact itself
+      # cannot dirty `git status`. tsup prepack runs here.
+      - name: npm pack the CLI
+        working-directory: packages/cli
+        run: |
+          set -euo pipefail
+          PACK_OUT="$(mktemp -d)"
+          TARBALL="$PACK_OUT/$(npm pack --pack-destination "$PACK_OUT" --silent | tail -n1)"
+          test -f "$TARBALL"
+          echo "TARBALL=$TARBALL" >> "$GITHUB_ENV"
+
+      # Gate (f) core assertion: pack must NOT mutate any tracked workspace file.
+      - name: Workspace unmutated after pack
+        run: |
+          set -euo pipefail
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "::error::npm pack mutated the workspace (prepack must write only into gitignored dirs):"
+            git status --porcelain
+            exit 1
+          fi
+
+      # One install in a throwaway prefix: bin runs AND node-pty is loadable
+      # (proving the postinstall ensure-node-pty healing shipped and worked).
+      - name: Install tarball, run --help, verify node-pty
+        run: |
+          set -euo pipefail
+          INSTALL_DIR="$(mktemp -d)"
+          cd "$INSTALL_DIR"
+          npm init -y >/dev/null 2>&1
+          npm install "$TARBALL"
+          ./node_modules/.bin/terminull --help
+          node -e "require('node-pty'); console.log('node-pty loadable')"

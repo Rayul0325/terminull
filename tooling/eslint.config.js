@@ -13,6 +13,10 @@ export default tseslint.config(
     // harness/tooling scratch directories (not part of the monorepo source).
     ignores: [
       '**/dist/**',
+      // Pack-time outputs of the published cli bundle (generated, gitignored).
+      '**/dist-pack/**',
+      '**/web-dist/**',
+      '**/scripts-pack/**',
       '**/node_modules/**',
       '**/*.config.js',
       '**/*.config.ts',
@@ -56,8 +60,9 @@ export default tseslint.config(
     },
   },
   {
-    // Plain Node scripts (repo tooling, postinstall helpers) run under Node.
-    files: ['scripts/**/*.{js,mjs}', 'tooling/**/*.{js,mjs}'],
+    // Plain Node scripts (repo tooling, postinstall helpers, per-package
+    // pack/prepack scripts) run under Node.
+    files: ['scripts/**/*.{js,mjs}', 'tooling/**/*.{js,mjs}', 'packages/*/scripts/**/*.{js,mjs}'],
     languageOptions: {
       globals: {
         ...globals.node,

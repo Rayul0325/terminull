@@ -1,14 +1,21 @@
 /**
- * ManageHome render tests (contract §7, D1) — the fleet board's machine
- * treatment must match FleetPanel: a session on a STALE machine renders as a
- * last-known snapshot (dimmed, no live dot, staleSnapshot in the title), a
- * connected/remote session shows its machine label, and the machine filter
- * narrows the board to one machine. No DOM test environment in this package, so
- * the route renders to static markup (react-dom/server) inside a MemoryRouter
- * (it uses <Link>/useNavigate). Store state is injected directly; the internal
- * filter is UI state (useState) that renderToStaticMarkup cannot click, so the
- * narrowing predicate is exercised through the exported `sessionMachineId` that
- * the component's inline filter calls.
+ * ManageHome fleet-tree tests. Two concerns:
+ *
+ * 1. Machine honesty (contract §7, D1) — parity with FleetPanel, now via the
+ *    shared SessionRow (P1-B): a session on a STALE machine renders as a
+ *    last-known snapshot (dimmed, an `offline` dot never a `running` one, a
+ *    staleSnapshot chip); a connected/remote session shows a `running` dot and
+ *    its machine label; the machine filter narrows the board.
+ * 2. The pill-wall → project-tree + top-of-page health line (P1-B): a HUMAN
+ *    title inside a cwd-named group, the offline/ok health verdict per store
+ *    state, and a 100-session snapshot rendering without throwing.
+ *
+ * No DOM test environment here, so the route renders to static markup
+ * (react-dom/server) inside a MemoryRouter (it uses <Link>/useNavigate). The
+ * stores the route + FleetHealthLine read are re-pointed at their live
+ * getState() (renderToStaticMarkup otherwise reads zustand's server snapshot and
+ * ignores setState); the heavy sibling sections render for real against their
+ * empty defaults, as before.
  */
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -18,13 +25,10 @@ import ko from '../i18n/locales/ko.json';
 import type { FleetSession, FleetSnapshot, MachineStateDto } from '../api/types';
 import { sessionMachineId, useFleetStore } from '../stores/fleet';
 import { useMachinesStore } from '../stores/machines';
+import { useConnectionStore } from '../stores/connection';
+import { useApprovalsStore } from '../stores/approvals';
 import { ManageHome } from './ManageHome';
 
-// renderToStaticMarkup uses React's server-render path, where zustand reads the
-// server snapshot (getInitialState()) and ignores setState. Re-point only the
-// two stores these tests inject (fleet + machines) at their LIVE getState();
-// the connection/approvals stores keep their empty defaults (no mock needed),
-// and every non-hook export stays real.
 vi.mock('../stores/fleet', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../stores/fleet')>();
   const real = actual.useFleetStore;
@@ -45,6 +49,26 @@ vi.mock('../stores/machines', async (importOriginal) => {
   ) as unknown as typeof real;
   return { ...actual, useMachinesStore: live };
 });
+vi.mock('../stores/connection', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../stores/connection')>();
+  const real = actual.useConnectionStore;
+  const live = Object.assign(
+    (selector?: (s: ReturnType<typeof real.getState>) => unknown) =>
+      selector ? selector(real.getState()) : real.getState(),
+    real,
+  ) as unknown as typeof real;
+  return { ...actual, useConnectionStore: live };
+});
+vi.mock('../stores/approvals', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../stores/approvals')>();
+  const real = actual.useApprovalsStore;
+  const live = Object.assign(
+    (selector?: (s: ReturnType<typeof real.getState>) => unknown) =>
+      selector ? selector(real.getState()) : real.getState(),
+    real,
+  ) as unknown as typeof real;
+  return { ...actual, useApprovalsStore: live };
+});
 
 beforeAll(async () => {
   if (!i18n.isInitialized) {
@@ -55,6 +79,8 @@ beforeAll(async () => {
 afterEach(() => {
   useFleetStore.setState({ snapshot: null, loading: false, errorCode: null });
   useMachinesStore.setState({ machines: {}, loading: false, errorCode: null });
+  useConnectionStore.setState({ wsStatus: 'offline', seq: 0, hostConnected: null, attention: [] });
+  useApprovalsStore.setState({ entries: [], loading: false, errorCode: null });
 });
 
 function fleetSession(overrides: Partial<FleetSession> = {}): FleetSession {
@@ -78,7 +104,7 @@ function render(): string {
 }
 
 describe('ManageHome machine honesty (parity with FleetPanel)', () => {
-  it('stale machine: session chip is dimmed, has no live dot, staleSnapshot in title', () => {
+  it('stale machine: row is dimmed, offline dot (not running), staleSnapshot chip', () => {
     useMachinesStore.setState({ machines: { mars: machine({ state: 'stale', lastSeenAt: 500 }) } });
     useFleetStore.setState({
       snapshot: fleetSnapshot({
@@ -88,12 +114,14 @@ describe('ManageHome machine honesty (parity with FleetPanel)', () => {
     const html = render();
 
     expect(html).toContain('opacity:0.55');
-    expect(html).toContain(ko.machines.staleSnapshot); // in the chip title
-    expect(html).not.toContain('tn-dot--live');
-    expect(html).toContain('Mars'); // remote machine label on the chip
+    expect(html).toContain(ko.machines.staleSnapshot);
+    expect(html).toContain('mars-job'); // human title, not a bare uuid
+    expect(html).toContain('tn-status-dot--offline');
+    expect(html).not.toContain('tn-status-dot--running');
+    expect(html).toContain('Mars'); // remote machine label (single-machine group header)
   });
 
-  it('connected remote session: live dot present, machine label shown, not dimmed', () => {
+  it('connected remote session: running dot present, machine label shown, not dimmed', () => {
     useMachinesStore.setState({ machines: { mars: machine({ state: 'connected' }) } });
     useFleetStore.setState({
       snapshot: fleetSnapshot({
@@ -102,7 +130,7 @@ describe('ManageHome machine honesty (parity with FleetPanel)', () => {
     });
     const html = render();
 
-    expect(html).toContain('tn-dot--live');
+    expect(html).toContain('tn-status-dot--running');
     expect(html).toContain('Mars');
     expect(html).not.toContain('opacity:0.55');
     expect(html).not.toContain(ko.machines.staleSnapshot);
@@ -111,6 +139,7 @@ describe('ManageHome machine honesty (parity with FleetPanel)', () => {
 
 describe('ManageHome machine filter', () => {
   it('unfiltered board renders sessions from both local and remote machines', () => {
+    useConnectionStore.setState({ wsStatus: 'online' });
     useMachinesStore.setState({ machines: { mars: machine({ state: 'connected' }) } });
     useFleetStore.setState({
       snapshot: fleetSnapshot({
@@ -139,5 +168,49 @@ describe('ManageHome machine filter', () => {
     expect(sessions.filter((s) => sessionMachineId(s) === 'local').map((s) => s.id)).toEqual([
       's-local',
     ]);
+  });
+});
+
+describe('ManageHome fleet tree + health line', () => {
+  it('renders a human session title inside its cwd-named project group', () => {
+    useConnectionStore.setState({ wsStatus: 'online' });
+    useFleetStore.setState({
+      snapshot: fleetSnapshot({
+        sessions: [
+          fleetSession({
+            id: 'uuid-aaaa-bbbb-cccc',
+            title: '리팩터 작업',
+            cwd: '/Users/x/proj-a',
+          }),
+        ],
+      }),
+    });
+    const html = render();
+    expect(html).toContain('리팩터 작업');
+    expect(html).toContain('proj-a'); // group name = cwd basename
+    expect(html).toContain(ko.fleet.health.ok); // healthy verdict at the top
+  });
+
+  it('shows the offline health verdict when the websocket is down', () => {
+    useConnectionStore.setState({ wsStatus: 'offline' });
+    useFleetStore.setState({ snapshot: fleetSnapshot({ sessions: [] }) });
+    expect(render()).toContain(ko.fleet.health.offline);
+  });
+
+  it('renders a 100-session snapshot without throwing', () => {
+    useConnectionStore.setState({ wsStatus: 'online' });
+    const sessions = Array.from({ length: 100 }, (_, i) =>
+      fleetSession({
+        id: `s-${i}`,
+        title: `job ${i}`,
+        cwd: `/Users/x/proj-${i % 5}`,
+        live: i % 2 === 0,
+      }),
+    );
+    useFleetStore.setState({ snapshot: fleetSnapshot({ sessions }) });
+    expect(() => render()).not.toThrow();
+    const html = render();
+    expect(html).toContain('job 0');
+    expect(html).toContain('job 99');
   });
 });

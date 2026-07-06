@@ -7,6 +7,7 @@
 import { create } from 'zustand';
 import type { Envelope } from '@terminull/shared';
 import { api } from '../api/client';
+import type { StreamStatus } from '../api/stream';
 import type { FleetSession, FleetSnapshot } from '../api/types';
 
 interface FleetState {
@@ -111,4 +112,25 @@ export function cwdOfProjectId(projectId: string): string | null {
   } catch {
     return null;
   }
+}
+
+/** The one-line fleet health verdict (drives FleetHealthLine). */
+export type FleetHealthLevel = 'ok' | 'attention' | 'offline';
+
+/**
+ * Derive the single glanceable fleet-health level from EXISTING web stores.
+ * Terminull ported no governance loops (unlike the old control tower), so there
+ * is no loop-gauge input here: a websocket that is not fully `online` is
+ * `offline` — honest, since liveness cannot be verified while (re)connecting or
+ * disconnected; any pending attention/approval item is `attention`; otherwise
+ * `ok`. Pure so it unit-tests without mounting a store, and never green-by-
+ * default (a dead socket always wins over an empty attention list).
+ */
+export function computeFleetHealth(input: {
+  wsStatus: StreamStatus;
+  attentionCount: number;
+}): FleetHealthLevel {
+  if (input.wsStatus !== 'online') return 'offline';
+  if (input.attentionCount > 0) return 'attention';
+  return 'ok';
 }

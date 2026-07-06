@@ -13,8 +13,18 @@
  *   --ignore-list     never answer `list` (heartbeat timeout test)
  *   --collect-sessions answer collect with one fake remote adapter session
  *   --session=<sid>   advertise one pre-existing running session in helloOk
+ *   --fail-spawn      answer `spawn` with a ctrl error (host detail test)
+ *   --attach-delay=<ms> delay every `attached` reply (mid-dial close test)
+ *   --pid-dir=<dir>   write `<dir>/<pid>` at boot (relay child census test)
+ *   --stderr=<msg>    write one line to stderr at boot (stderr sink test)
+ *   --spawn-sid=<sid> spawn replies with this FIXED sid — pair with
+ *                     --session=<sid> so fresh relay children (separate
+ *                     processes, separate session maps) can attach to it
  */
+import fs from 'node:fs';
+import path from 'node:path';
 import process from 'node:process';
+import { setTimeout } from 'node:timers';
 import {
   AGENT_PREAMBLE,
   FrameDecoder,
@@ -28,8 +38,13 @@ const argValue = (name) => {
 };
 
 if (args.has('--die')) process.exit(3);
+const pidDir = argValue('--pid-dir');
+if (pidDir !== null) fs.writeFileSync(path.join(pidDir, String(process.pid)), '');
+const stderrMsg = argValue('--stderr');
+if (stderrMsg !== null) process.stderr.write(`${stderrMsg}\n`);
 if (args.has('--noise')) process.stdout.write('Welcome to fake-remote!\nmotd noise line\n');
 process.stdout.write(`${AGENT_PREAMBLE}\n`);
+const attachDelayMs = Number(argValue('--attach-delay') ?? '0');
 
 const bootId = argValue('--boot-id') ?? `boot-${process.pid}-${Date.now()}`;
 const advertised = argValue('--session');
@@ -78,7 +93,12 @@ process.stdin.on('data', (chunk) => {
         ctrl({ t: 'sessions', reqId: msg.reqId, sessions: [...sessions.values()] });
         break;
       case 'spawn': {
-        const sid = nextSid++;
+        if (args.has('--fail-spawn')) {
+          ctrl({ t: 'error', reqId: msg.reqId, code: 'SPAWN_FAILED', msg: 'posix_spawnp failed: /usr/bin/zsh not found on host' });
+          break;
+        }
+        const fixedSid = argValue('--spawn-sid');
+        const sid = fixedSid !== null ? Number(fixedSid) : nextSid++;
         sessions.set(sid, {
           sid,
           label: msg.spec.label,
@@ -95,13 +115,17 @@ process.stdin.on('data', (chunk) => {
         ctrl({ t: 'spawned', reqId: msg.reqId, sid, pid: 9999 });
         break;
       }
-      case 'attach':
+      case 'attach': {
         if (!sessions.has(msg.sid)) {
           ctrl({ t: 'error', reqId: msg.reqId, code: 'NOT_FOUND', msg: 'no such sid' });
           break;
         }
-        ctrl({ t: 'attached', reqId: msg.reqId, sid: msg.sid, fromSeq: 0, headSeq: 0, gap: false });
+        const attached = () =>
+          ctrl({ t: 'attached', reqId: msg.reqId, sid: msg.sid, fromSeq: 0, headSeq: 0, gap: false });
+        if (attachDelayMs > 0) setTimeout(attached, attachDelayMs);
+        else attached();
         break;
+      }
       case 'kill': {
         const s = sessions.get(msg.sid);
         if (s) {

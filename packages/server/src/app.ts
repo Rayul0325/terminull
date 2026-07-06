@@ -30,6 +30,7 @@ import { z } from 'zod';
 import {
   CORE_PLACEHOLDER,
   EventStore,
+  HarnessFileEngine,
   NotPostableError,
   PermissionSettings,
   maskSecrets,
@@ -41,6 +42,7 @@ import {
   type ToolAdapter,
 } from '@terminull/adapter-sdk';
 import {
+  DEFAULT_PROFILE_ID,
   LOCAL_MACHINE_ID,
   PANEL_PROTO_VERSION,
   PtyClientMessageSchema,
@@ -94,6 +96,11 @@ import {
 } from './machines.js';
 import { registerMachinesRoutes } from './machines-routes.js';
 import { HostRequestError, HostUnavailableError, PaneldClient } from './paneld-client.js';
+import { registerHarnessRoutes } from './harness-routes.js';
+import { ProfilesRegistry } from './profiles.js';
+import { registerProfilesRoutes } from './profiles-routes.js';
+import { registerPrefsRoutes } from './prefs-routes.js';
+import { SessionStatusMap, registerSessionStatusRoutes } from './session-status.js';
 import { SessionRegistry, type ServerSession } from './sessions.js';
 
 /** Default listen port. */
@@ -216,6 +223,8 @@ const SpawnBodySchema = z
     rows: z.number().int().positive().max(1000).optional(),
     /** Target machine id (M8). Absent = the local paneld. */
     machine: z.string().min(1).optional(),
+    /** Account profile override (M9). Absent = the tool's active profile. */
+    profile: z.string().min(1).optional(),
   })
   .strict();
 
@@ -234,6 +243,11 @@ export class TerminullServer {
   readonly pluginHost: PluginHost;
   /** The manage-agent executor (public: the integration oracle drives it). */
   readonly agentActions: AgentExecutor;
+  /** Account-profile registry (M9) — `<stateDir>/profiles.json`. */
+  readonly profiles: ProfilesRegistry;
+
+  private readonly harnessEngine: HarnessFileEngine;
+  private readonly sessionStatuses = new SessionStatusMap();
 
   private readonly adaptersById = new Map<string, ToolAdapter>();
   private readonly manageAgent: ManageAgent;
@@ -355,6 +369,18 @@ export class TerminullServer {
           this.fleetCache = null;
         }
       },
+    });
+
+    // --- profiles + harness editor (M9) ---------------------------------------
+    // Boot honesty: a corrupt profiles.json throws here — a half-read profile
+    // registry must never boot silently (mirrors machines.json, contract D1).
+    this.profiles = new ProfilesRegistry(this.stateDir);
+    this.harnessEngine = new HarnessFileEngine({
+      backupsDir: path.join(this.stateDir, 'harness-backups'),
+      // Jail roots: the harness home + the cwd-scoped project root (D4). The
+      // engine re-asserts this on every write — defence in depth over catalog
+      // membership.
+      jailRoots: [this.harnessCtx().home ?? os.homedir(), process.cwd()],
     });
 
     // --- manage agent mount --------------------------------------------------
@@ -676,6 +702,9 @@ export class TerminullServer {
           ...(tool !== undefined ? { tool } : {}),
           ...(payload !== undefined ? { payload: maskDeep(payload) } : {}),
         });
+        // M9 statusbar: fold the latest snapshot per tool-native session id.
+        // Invalid payloads are dropped by the fold (display-only, never coerced).
+        if (type === 'session.status') this.sessionStatuses.ingest(payload);
         json(res, 201, { seq: ev.seq });
       } catch (e) {
         if (e instanceof NotPostableError) {
@@ -725,14 +754,20 @@ export class TerminullServer {
           return;
         }
       }
+      const profile = this.resolveSpawnProfile(body.data.adapterId, body.data.profile, machineId);
+      if ('error' in profile) {
+        fail(res, profile.status, profile.error, profile.extra ?? {});
+        return;
+      }
       await this.gate(req, res, 'session.spawn', {
         params: {
           adapterId: body.data.adapterId,
           cwd: body.data.cwd,
           cmd: spec.cmd,
           machine: machineId,
+          profile: profile.profileId,
         },
-        execute: (actor) => this.spawnSession(body.data, spec, actor),
+        execute: (actor) => this.spawnSession(body.data, spec, actor, profile),
       });
     });
 
@@ -822,6 +857,27 @@ export class TerminullServer {
       harnessCtx: () => this.harnessCtx(),
       gate: (req, res, action, opts) => this.gate(req, res, action, opts),
     });
+    // Harness file editor + '내 커스텀' + profiles + prefs + statusbar (M9) —
+    // own modules, app.ts must not grow (contract §0).
+    registerHarnessRoutes(r, {
+      adapters: this.adaptersById,
+      store: this.store,
+      engine: this.harnessEngine,
+      harnessCtx: () => this.harnessCtx(),
+      projectRoot: () => process.cwd(),
+      gate: (req, res, action, opts) => this.gate(req, res, action, opts),
+    });
+    registerProfilesRoutes(r, {
+      auth: this.auth,
+      store: this.store,
+      registry: this.profiles,
+      adapters: this.adaptersById,
+      liveSessionCount: (toolId) =>
+        this.registry.all().filter((s) => s.adapterId === toolId && s.running).length,
+      gate: (req, res, action, opts) => this.gate(req, res, action, opts),
+    });
+    registerPrefsRoutes(r, { auth: this.auth, store: this.store, stateDir: this.stateDir });
+    registerSessionStatusRoutes(r, { statuses: this.sessionStatuses });
     registerAgentRoutes(r, {
       auth: this.auth,
       store: this.store,
@@ -866,7 +922,58 @@ export class TerminullServer {
     const body: z.infer<typeof SpawnBodySchema> = { ...request };
     const spec = this.buildSpawnCommand(body);
     if ('error' in spec) return { status: 400, body: { code: spec.error, ...(spec.extra ?? {}) } };
-    return this.spawnSession(body, spec, 'agent');
+    // Agent spawns resolve the ACTIVE profile too (same env path as the route).
+    const profile = this.resolveSpawnProfile(
+      body.adapterId,
+      body.profile,
+      body.machine ?? LOCAL_MACHINE_ID,
+    );
+    if ('error' in profile) {
+      return { status: profile.status, body: { code: profile.error, ...(profile.extra ?? {}) } };
+    }
+    return this.spawnSession(body, spec, 'agent', profile);
+  }
+
+  /**
+   * Resolve the EFFECTIVE profile for a spawn (M9 D2): the body's `profile`
+   * override, else `active[toolId]`, else `default`. `default` = the real
+   * home, env untouched. A non-default profile needs the adapter's
+   * `configHomeEnvVars` (else 422 profile_unsupported — agy has no verified
+   * isolation env) and a LOCAL machine (configHome paths are local in v1).
+   * The configHome is a POINTER: its contents are never read or created here.
+   */
+  private resolveSpawnProfile(
+    adapterId: string,
+    requested: string | undefined,
+    machineId: string,
+  ):
+    | { profileId: string; env: Record<string, string> }
+    | { status: number; error: string; extra?: Record<string, unknown> } {
+    const effective = requested ?? this.profiles.activeOf(adapterId);
+    if (effective === DEFAULT_PROFILE_ID) return { profileId: DEFAULT_PROFILE_ID, env: {} };
+    const profile = this.profiles.find(adapterId, effective);
+    if (!profile) {
+      return {
+        status: 400,
+        error: 'unknown_profile',
+        extra: { toolId: adapterId, profileId: effective },
+      };
+    }
+    const vars = this.adaptersById.get(adapterId)?.configHomeEnvVars ?? [];
+    if (vars.length === 0) {
+      return { status: 422, error: 'profile_unsupported', extra: { toolId: adapterId } };
+    }
+    if (machineId !== LOCAL_MACHINE_ID) {
+      return {
+        status: 422,
+        error: 'profile_machine_unsupported',
+        extra: { toolId: adapterId, machine: machineId },
+      };
+    }
+    return {
+      profileId: effective,
+      env: Object.fromEntries(vars.map((v) => [v, profile.configHome])),
+    };
   }
 
   // -------------------------------------------------------------------------
@@ -1001,6 +1108,10 @@ export class TerminullServer {
     body: z.infer<typeof SpawnBodySchema>,
     command: { cmd: string; args: string[] },
     actor: Actor,
+    profile: { profileId: string; env: Record<string, string> } = {
+      profileId: DEFAULT_PROFILE_ID,
+      env: {},
+    },
   ): Promise<GateResult> {
     const id = crypto.randomUUID();
     const machineId = body.machine ?? LOCAL_MACHINE_ID;
@@ -1009,7 +1120,10 @@ export class TerminullServer {
       cmd: command.cmd,
       args: command.args,
       cwd: body.cwd,
-      env: {},
+      // Profile isolation (M9 D2): only the adapter's config-home vars are
+      // set — SpawnSpec.env layers over the daemon's process.env, nothing is
+      // unset and no credentials are bridged.
+      env: { ...profile.env },
       cols: body.cols ?? 120,
       rows: body.rows ?? 32,
       label,
@@ -1037,7 +1151,16 @@ export class TerminullServer {
         };
       }
       if (e instanceof HostRequestError) {
-        return { status: 502, body: { code: 'spawn_failed', hostCode: e.hostCode } };
+        // Carried-over M8 fix: preserve the remote daemon's error detail
+        // end-to-end (masked) — a bare hostCode buried real failure causes.
+        return {
+          status: 502,
+          body: {
+            code: 'spawn_failed',
+            hostCode: e.hostCode,
+            detail: maskSecrets(e.hostMessage),
+          },
+        };
       }
       throw e;
     }
@@ -1064,11 +1187,19 @@ export class TerminullServer {
         label,
         adapterId: body.adapterId,
         machine: machineId,
+        profile: profile.profileId,
       },
     });
     return {
       status: 201,
-      body: { sessionId: id, sid: spawned.sid, pid: spawned.pid, label, machine: machineId },
+      body: {
+        sessionId: id,
+        sid: spawned.sid,
+        pid: spawned.pid,
+        label,
+        machine: machineId,
+        profile: profile.profileId,
+      },
     };
   }
 
@@ -1293,6 +1424,14 @@ export class TerminullServer {
         1011,
         session.machine === LOCAL_MACHINE_ID ? 'host_unavailable' : 'machine_unavailable',
       );
+      return;
+    }
+    // Carried-over M8 fix: the viewer may have left WHILE the attachment was
+    // dialing (remote attach = a fresh relay child). The ws 'close' handler
+    // below is registered too late for that race — reap the child here or it
+    // orphans until the machine link itself dies.
+    if (ws.readyState !== ws.OPEN) {
+      attachment.close();
       return;
     }
     const attached: PtyAttached = {

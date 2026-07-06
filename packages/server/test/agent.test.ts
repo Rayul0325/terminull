@@ -123,7 +123,7 @@ describe('permission settings routes', () => {
     expect(res.status).toBe(200);
     expect(res.body.version).toBe(1);
     const byId = new Map(res.body.actions.map((a: any) => [a.id, a]));
-    expect(byId.size).toBe(11);
+    expect(byId.size).toBe(13);
     expect(byId.get('directive.send')).toMatchObject({
       class: 'confirm',
       defaultClass: 'autonomous',
@@ -133,6 +133,12 @@ describe('permission settings routes', () => {
     expect(byId.get('session.delete')).toMatchObject({
       floor: 'confirm',
       requiresTwoStep: true,
+    });
+    // M9: danger-risk harness file writes carry an immutable confirm floor.
+    expect(byId.get('harness.write_danger')).toMatchObject({
+      class: 'confirm',
+      floor: 'confirm',
+      risk: 'high',
     });
   });
 

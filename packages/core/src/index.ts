@@ -4,6 +4,7 @@ export * from './store.js';
 export * from './mask.js';
 export * from './permissions.js';
 export * from './harness-files.js';
+export * from './harness-injection.js';
 
 /** Core-layer metadata, extending the shared contract. */
 export interface CoreInfo extends TerminullMeta {

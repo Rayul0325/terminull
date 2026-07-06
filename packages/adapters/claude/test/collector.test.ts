@@ -23,7 +23,9 @@ function writeSession(pid: number, obj: Record<string, unknown>): void {
   fs.writeFileSync(path.join(claudeHome, 'sessions', `${pid}.json`), JSON.stringify(obj));
 }
 function writeTranscript(cwd: string, sid: string, records: object[]): string {
-  const enc = cwd.replaceAll('/', '-');
+  // Mirror Claude Code's real project-dir naming: every non-alphanumeric char
+  // (not just '/') is dash-encoded, so fixtures land where the collector looks.
+  const enc = cwd.replace(/[^A-Za-z0-9]/g, '-');
   const dir = path.join(claudeHome, 'projects', enc);
   fs.mkdirSync(dir, { recursive: true });
   const file = path.join(dir, `${sid}.jsonl`);
@@ -93,6 +95,52 @@ describe('createClaudeCollector', () => {
     // both recents discovered, cwd recovered from the transcript for recent-a.
     expect(recent.map((s) => s.id).sort()).toEqual(['recent-a', 'recent-b']);
     expect(recent.find((s) => s.id === 'recent-a')?.cwd).toBe(recentCwd);
+  });
+
+  it('resolves live transcript paths for cwds with dots/spaces/non-ASCII, and omits ref when absent (regression: 502 transcript_read_failed)', async () => {
+    // Two alive pids the collector will accept (injected liveness probe).
+    const pidAlive = (pid: number) => pid === 4001 || pid === 4002 || pid === 4003;
+
+    // (1) A cwd with a dot segment. The old `replaceAll('/','-')` left the '.'
+    // intact (`-work-.cfg-tower`), missing the real `-work--cfg-tower` dir.
+    const dotCwd = '/work/.cfg/tower';
+    writeTranscript(dotCwd, 'sid-dot', [
+      { type: 'assistant', aiTitle: 'Dot', cwd: dotCwd, message: { content: [] } },
+    ]);
+    writeSession(4001, { pid: 4001, sessionId: 'sid-dot', cwd: dotCwd });
+
+    // (2) A cwd with a space + non-ASCII segment (the real `오픈랩 2026` case).
+    const uniCwd = '/work/오픈랩 2026';
+    writeTranscript(uniCwd, 'sid-uni', [
+      { type: 'assistant', aiTitle: 'Uni', cwd: uniCwd, message: { content: [] } },
+    ]);
+    writeSession(4002, { pid: 4002, sessionId: 'sid-uni', cwd: uniCwd });
+
+    // (3) A live session whose transcript was never written → honest: no ref
+    // (route degrades to `supported:false`, not a 502 from an ENOENT open).
+    writeSession(4003, { pid: 4003, sessionId: 'sid-gone', cwd: '/work/never-written' });
+
+    const collector = createClaudeCollector({ claudeHome, pidAlive });
+    const sessions = await collector.collect({});
+
+    for (const [cwd, sid] of [
+      [dotCwd, 'sid-dot'],
+      [uniCwd, 'sid-uni'],
+    ] as const) {
+      const s = sessions.find((x) => x.id === sid);
+      const expected = path.join(
+        claudeHome,
+        'projects',
+        cwd.replace(/[^A-Za-z0-9]/g, '-'),
+        `${sid}.jsonl`,
+      );
+      expect(s?.transcriptRef).toEqual({ kind: 'file', path: expected });
+      expect(fs.existsSync(expected)).toBe(true);
+    }
+
+    const gone = sessions.find((x) => x.id === 'sid-gone');
+    expect(gone).toBeDefined();
+    expect(gone?.transcriptRef).toBeUndefined();
   });
 
   it('returns [] when the claude home does not exist (honest, no throw)', async () => {

@@ -57,6 +57,15 @@ async function readTail(file: string, bytes = TAIL_WINDOW): Promise<string> {
   }
 }
 
+/** True iff `p` resolves to a readable regular file (never throws). */
+async function isReadableFile(p: string): Promise<boolean> {
+  try {
+    return (await fsp.stat(p)).isFile();
+  } catch {
+    return false;
+  }
+}
+
 /** Extract the most recent occurrence of a JSON string field from raw text. */
 function lastField(raw: string, field: string): string | null {
   const re = new RegExp(`"${field}"\\s*:\\s*"((?:[^"\\\\]|\\\\.)*)"`, 'g');
@@ -108,9 +117,17 @@ async function enrich(entry: RawEntry): Promise<DiscoveredSession> {
   }
 }
 
-/** Build the fixed dash-encoded transcript path for a live session. */
+/**
+ * Build the transcript path for a live session, mirroring Claude Code's own
+ * project-dir naming: EVERY non-alphanumeric char in the cwd is dash-encoded,
+ * not just `/`. A naive `/`-only encoding left `.`, spaces and non-ASCII chars
+ * intact (e.g. `/…/.claude/control-tower`, `/…/오픈랩 2026`), yielding a path
+ * that does not exist — the transcript route's `fsp.open` then threw ENOENT and
+ * the handler returned a blanket 502 `transcript_read_failed`. The encoding is
+ * lossy, so the resolved path is existence-checked by the caller.
+ */
 function transcriptPathFor(projectsDir: string, cwd: string, sessionId: string): string {
-  return path.join(projectsDir, cwd.replaceAll('/', '-'), `${sessionId}.jsonl`);
+  return path.join(projectsDir, cwd.replace(/[^A-Za-z0-9]/g, '-'), `${sessionId}.jsonl`);
 }
 
 /**
@@ -153,6 +170,11 @@ export function createClaudeCollector(opts: ClaudeCollectorOptions = {}): Sessio
         const updatedAt =
           toEpoch(j['updatedAt']) ?? toEpoch(j['statusUpdatedAt']) ?? toEpoch(j['startedAt']);
         const transcript = cwd ? transcriptPathFor(projectsDir, cwd, sessionId) : '';
+        // Only advertise a transcriptRef the parser can actually open. A path
+        // that does not resolve to a readable file (encoding edge, deleted, or a
+        // live transcript not yet written) is omitted so the transcript route
+        // returns an honest `supported:false` — never a 502 from an ENOENT open.
+        const hasTranscript = transcript ? await isReadableFile(transcript) : false;
         const session: DiscoveredSession = {
           id: sessionId,
           tool: 'claude',
@@ -160,7 +182,7 @@ export function createClaudeCollector(opts: ClaudeCollectorOptions = {}): Sessio
           ...(cwd ? { cwd } : {}),
           ...(typeof j['name'] === 'string' && j['name'] ? { title: j['name'] } : {}),
           ...(updatedAt !== undefined ? { updatedAt } : {}),
-          ...(transcript
+          ...(hasTranscript
             ? { transcriptRef: { kind: 'file', path: transcript } as TranscriptRef }
             : {}),
         };

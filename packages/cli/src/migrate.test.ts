@@ -93,7 +93,10 @@ function seedFullFootprint(home: string): {
     model: 'opus',
     hooks: {
       SessionStart: [
-        { matcher: 'compact', hooks: [{ type: 'command', command: '~/.claude/hooks/compact-reanchor.sh' }] },
+        {
+          matcher: 'compact',
+          hooks: [{ type: 'command', command: '~/.claude/hooks/compact-reanchor.sh' }],
+        },
         { matcher: '*', hooks: [{ type: 'command', command: ct('ct-session-start.sh') }] },
       ],
       PostToolUse: [
@@ -106,9 +109,7 @@ function seedFullFootprint(home: string): {
           ],
         },
       ],
-      Notification: [
-        { matcher: '*', hooks: [{ type: 'command', command: ct('ct-notify.sh') }] },
-      ],
+      Notification: [{ matcher: '*', hooks: [{ type: 'command', command: ct('ct-notify.sh') }] }],
       Stop: [
         { matcher: '*', hooks: [{ type: 'command', command: '~/.claude/hooks/format-batch.sh' }] },
         { matcher: '*', hooks: [{ type: 'command', command: ct('ct-stop.sh') }] },
@@ -156,7 +157,8 @@ function seedFullFootprint(home: string): {
     'constitution.json': Buffer.from('{"rules":[]}\n'),
     token: Buffer.from('tok_SECRET_do_not_read\n'),
   };
-  for (const [name, buf] of Object.entries(stateBytes)) fs.writeFileSync(path.join(stateDir, name), buf);
+  for (const [name, buf] of Object.entries(stateBytes))
+    fs.writeFileSync(path.join(stateDir, name), buf);
 
   return {
     settingsPath,
@@ -259,7 +261,9 @@ describe('--execute round trip', () => {
   it('surgically migrates, preserves foreign hooks + trust table, and rolls back byte-exact', async () => {
     const home = tmp();
     const seeded = seedFullFootprint(home);
-    const foreignBefore = hookCommands(seeded.settingsPath).filter((c) => !c.includes('/control-tower/'));
+    const foreignBefore = hookCommands(seeded.settingsPath).filter(
+      (c) => !c.includes('/control-tower/'),
+    );
     const stateShas = Object.fromEntries(
       Object.entries(seeded.stateBytes).map(([n, b]) => [n, contentSha(b)]),
     );
@@ -361,7 +365,10 @@ describe('partial legacy states', () => {
           hooks: {
             Stop: [
               { matcher: '*', hooks: [{ type: 'command', command: '~/.claude/hooks/keep.sh' }] },
-              { matcher: '*', hooks: [{ type: 'command', command: path.join(ctHooks, 'ct-stop.sh') }] },
+              {
+                matcher: '*',
+                hooks: [{ type: 'command', command: path.join(ctHooks, 'ct-stop.sh') }],
+              },
             ],
           },
         },

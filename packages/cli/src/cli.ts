@@ -25,7 +25,12 @@ import { t, usageText } from './messages.js';
 import { type MigrateDeps, runMigrate } from './migrate.js';
 import { runPluginsAdd, runPluginsScaffold, runPluginsValidate } from './plugins.js';
 import { runServe } from './serve.js';
-import { type LaunchctlRunner, type ServiceManager, createServiceManager, realLaunchctl } from './service.js';
+import {
+  type LaunchctlRunner,
+  type ServiceManager,
+  createServiceManager,
+  realLaunchctl,
+} from './service.js';
 import { RealSshRunner } from './ssh-runner.js';
 import { machinesStatus, renderStatusLines } from './status.js';
 import { MACHINES_FILE } from '@terminull/shared';

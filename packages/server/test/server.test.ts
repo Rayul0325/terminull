@@ -326,7 +326,10 @@ describe('GET /api/sessions/:sid/transcript', () => {
     const claudeHome = path.join(stack.collectHome, '.claude');
     const cwd = path.join(stack.stateDir, 'proj');
     fs.mkdirSync(path.join(claudeHome, 'sessions'), { recursive: true });
-    const projDir = path.join(claudeHome, 'projects', cwd.replaceAll('/', '-'));
+    // Mirror Claude Code's real project-dir naming (EVERY non-alphanumeric char
+    // dash-encoded — the collector resolves transcripts with the same rule; a
+    // '/'-only encoding breaks on runners whose TMPDIR contains '_' or '.').
+    const projDir = path.join(claudeHome, 'projects', cwd.replace(/[^A-Za-z0-9]/g, '-'));
     fs.mkdirSync(projDir, { recursive: true });
     fs.copyFileSync(GOLDEN, path.join(projDir, 'fix-sess-1.jsonl'));
     fs.writeFileSync(

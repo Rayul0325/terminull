@@ -7,7 +7,7 @@
 // It NEVER runs an install, NEVER writes outside packages/cli, and NEVER edits
 // package.json in place (the `files` + `bin` map do the shipping).
 import { execFileSync } from 'node:child_process';
-import { cpSync, existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -60,6 +60,23 @@ if (existsSync(webSrc)) {
   console.log('[prepack] copied web-dist');
 } else {
   console.warn('[prepack] packages/web/dist missing — run `pnpm --filter @terminull/web build` first');
+}
+
+// 2b. Ship the smoke page co-located with the bundle. The server reads it via
+// `new URL('./smoke/index.html', import.meta.url)`, which resolves to
+// `dist-pack/smoke/index.html` once inlined by tsup — so if web-dist is absent
+// (degraded pack) OR uiDir can't be resolved, `GET /` degrades to the honest
+// smoke page instead of a 500. The dev build's copy-assets.mjs handles the
+// dev/dist copy; this covers the published tarball layout.
+const smokeSrc = join(cliDir, '..', 'server', 'src', 'smoke', 'index.html');
+const smokeOut = join(cliDir, 'dist-pack', 'smoke');
+rmSync(smokeOut, { recursive: true, force: true });
+if (existsSync(smokeSrc)) {
+  mkdirSync(smokeOut, { recursive: true });
+  cpSync(smokeSrc, join(smokeOut, 'index.html'));
+  console.log('[prepack] copied dist-pack/smoke (fallback page)');
+} else {
+  throw new Error(`[prepack] smoke page missing: ${smokeSrc} — the / fallback would 500`);
 }
 
 // 3. Undo pnpm's allowBuilds write-back from step 0 so `npm pack` leaves the

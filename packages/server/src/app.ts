@@ -102,6 +102,7 @@ import { registerProfilesRoutes } from './profiles-routes.js';
 import { registerPrefsRoutes } from './prefs-routes.js';
 import { SessionStatusMap, registerSessionStatusRoutes } from './session-status.js';
 import { SessionRegistry, type ServerSession } from './sessions.js';
+import { StaticUi } from './static-ui.js';
 
 /** Default listen port. */
 export const DEFAULT_PORT = 7420;
@@ -127,6 +128,13 @@ export class UnsafeBindError extends Error {
 export interface ServerOptions {
   /** Server state dir (events.jsonl, token, server.json, permissions.json, host/). */
   stateDir: string;
+  /**
+   * Built web-panel bundle dir (the SPA the panel server hosts). Absent or
+   * missing → the honest smoke page is served at `/`. The CLI resolves this for
+   * both the published tarball (`web-dist/`) and the dev repo
+   * (`packages/web/dist`); see {@link StaticUi}.
+   */
+  uiDir?: string;
   /** Listen host. Non-loopback prints nothing here; wildcard needs unsafeBind. */
   host?: string;
   /** Listen port (0 = ephemeral). Default {@link DEFAULT_PORT}. */
@@ -248,6 +256,8 @@ export class TerminullServer {
 
   private readonly harnessEngine: HarnessFileEngine;
   private readonly sessionStatuses = new SessionStatusMap();
+  /** Static host for the built web panel (or the smoke-page fallback). */
+  private readonly ui: StaticUi;
 
   private readonly adaptersById = new Map<string, ToolAdapter>();
   private readonly manageAgent: ManageAgent;
@@ -419,6 +429,14 @@ export class TerminullServer {
       pendingCount: () => this.agentPendingCount(),
     });
 
+    // Static web-panel host: serves the built SPA when `uiDir` is present,
+    // else the smoke page (resolved with the same `./smoke/index.html`-relative
+    // path that survives the tsup bundle → `<bundle>/smoke/index.html`).
+    this.ui = new StaticUi({
+      ...(opts.uiDir !== undefined ? { uiDir: opts.uiDir } : {}),
+      smokePath: fileURLToPath(new URL('./smoke/index.html', import.meta.url)),
+    });
+
     this.buildRoutes();
     this.httpServer = http.createServer((req, res) => void this.handleRequest(req, res));
     this.httpServer.on('upgrade', (req, socket, head) => {
@@ -559,11 +577,17 @@ export class TerminullServer {
         return;
       }
       const match = this.router.match(method, url.pathname);
-      if (!match) {
-        fail(res, 404, 'not_found');
+      if (match) {
+        await match.handler(req, res, match.params, url);
         return;
       }
-      await match.handler(req, res, match.params, url);
+      // No API/WS route matched. GET/HEAD fall through to the static web panel
+      // (real asset, SPA deep-link → index.html, or the smoke fallback). A
+      // static miss (reserved namespace, missing asset) returns an honest 404.
+      if ((method === 'GET' || method === 'HEAD') && this.ui.serve(res, url.pathname, method)) {
+        return;
+      }
+      fail(res, 404, 'not_found');
     } catch (e) {
       // Degrade, never crash: every route failure becomes a coded 5xx/4xx.
       if (e instanceof BodyError) {
@@ -824,20 +848,9 @@ export class TerminullServer {
       res.end();
     });
 
-    r.add('GET', '/', (_req, res) => {
-      let html: string;
-      try {
-        html = fs.readFileSync(
-          fileURLToPath(new URL('./smoke/index.html', import.meta.url)),
-          'utf8',
-        );
-      } catch {
-        fail(res, 500, 'smoke_page_missing');
-        return;
-      }
-      res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
-      res.end(html);
-    });
+    // `GET /` (+ every other non-API GET) is served by the static web panel in
+    // handleRequest's fall-through — see {@link StaticUi}. The smoke page is the
+    // honest fallback when no web bundle is configured.
 
     // Machine registry surface (M8) — own module, app.ts must not grow.
     registerMachinesRoutes(r, {

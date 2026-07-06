@@ -262,9 +262,7 @@ export async function detectLegacy(deps: MigrateDeps): Promise<LegacyFootprint> 
 
   const settingsText = await readMaybe(settingsPath);
   const hooks =
-    settingsText === null
-      ? null
-      : { settingsPath, hits: detectControlTowerHooks(settingsText) };
+    settingsText === null ? null : { settingsPath, hits: detectControlTowerHooks(settingsText) };
 
   const launchAgents = await detectLaunchAgents(deps.launchAgentsDir);
 
@@ -297,7 +295,9 @@ export async function detectLegacy(deps: MigrateDeps): Promise<LegacyFootprint> 
 /** Render the human dry-run/execute plan as Korean lines. */
 export function renderMigrationPlan(fp: LegacyFootprint, opts: { execute: boolean }): string[] {
   const lines: string[] = [];
-  lines.push(t(opts.execute ? 'migrate.headerExecute' : 'migrate.header', { dir: fp.controlTowerDir }));
+  lines.push(
+    t(opts.execute ? 'migrate.headerExecute' : 'migrate.header', { dir: fp.controlTowerDir }),
+  );
   lines.push('');
   lines.push(t('migrate.tableHead'));
   lines.push('  ─────────────────────────────────────────────');
@@ -307,10 +307,7 @@ export function renderMigrationPlan(fp: LegacyFootprint, opts: { execute: boolea
   lines.push(
     t('migrate.rowHooks', {
       where: hookCount > 0 ? (fp.hooks?.settingsPath ?? '-') : '-',
-      action:
-        hookCount > 0
-          ? t('migrate.actHooks', { count: hookCount })
-          : t('migrate.actNone'),
+      action: hookCount > 0 ? t('migrate.actHooks', { count: hookCount }) : t('migrate.actNone'),
     }),
   );
   for (const h of fp.hooks?.hits ?? []) {
@@ -576,7 +573,9 @@ export async function runMigrate(
   deps: MigrateDeps,
 ): Promise<number> {
   if (values.from !== MIGRATION_SOURCE) {
-    deps.stderr(t('migrate.unknownSource', { source: values.from ?? '', supported: MIGRATION_SOURCE }));
+    deps.stderr(
+      t('migrate.unknownSource', { source: values.from ?? '', supported: MIGRATION_SOURCE }),
+    );
     return 2;
   }
 

@@ -22,9 +22,10 @@ import {
 import { AGENT_DIR } from './enroll-manifest.js';
 import { EnrollError, enroll, removeEnrollment, type EnrollDeps } from './enroll.js';
 import { t, usageText } from './messages.js';
+import { type MigrateDeps, runMigrate } from './migrate.js';
 import { runPluginsAdd, runPluginsScaffold, runPluginsValidate } from './plugins.js';
 import { runServe } from './serve.js';
-import { type ServiceManager, createServiceManager } from './service.js';
+import { type LaunchctlRunner, type ServiceManager, createServiceManager, realLaunchctl } from './service.js';
 import { RealSshRunner } from './ssh-runner.js';
 import { machinesStatus, renderStatusLines } from './status.js';
 import { MACHINES_FILE } from '@terminull/shared';
@@ -56,6 +57,10 @@ export interface CliDeps {
   launchAgentsDir?: string;
   /** Absolute entry script for the service plist (default: process.argv[1]). */
   entry?: string;
+  /** launchctl seam for `migrate` (default: realLaunchctl). Tests override. */
+  launchctl?: LaunchctlRunner;
+  /** uid for the `migrate` launchd domain target (default: process.getuid()). */
+  uid?: number;
   execFileImpl?: SetupDeps['execFileImpl'];
   now?: () => number;
 }
@@ -85,7 +90,9 @@ const PARSE_OPTIONS = {
   dir: { type: 'string' },
   host: { type: 'string' },
   port: { type: 'string' },
+  from: { type: 'string' },
   remove: { type: 'boolean' },
+  execute: { type: 'boolean' },
   yes: { type: 'boolean' },
   purge: { type: 'boolean' },
   json: { type: 'boolean' },
@@ -136,6 +143,21 @@ function resolveSetupDeps(serverState: string, deps: CliDeps): SetupDeps {
     fetchImpl: deps.fetchImpl,
     coreVersion: CLI_VERSION,
     ...(deps.now ? { now: deps.now } : {}),
+  };
+}
+
+/** Fill production defaults for the `migrate` command seams. */
+function resolveMigrateDeps(serverState: string, deps: CliDeps): MigrateDeps {
+  const home = deps.home ?? os.homedir();
+  return {
+    home,
+    stateDir: serverState,
+    launchAgentsDir: deps.launchAgentsDir ?? path.join(home, 'Library', 'LaunchAgents'),
+    launchctl: deps.launchctl ?? realLaunchctl,
+    uid: deps.uid ?? (typeof process.getuid === 'function' ? process.getuid() : 0),
+    stdout: deps.stdout,
+    stderr: deps.stderr,
+    now: deps.now ?? Date.now,
   };
 }
 
@@ -212,6 +234,15 @@ export async function runCli(argv: string[], deps: CliDeps): Promise<number> {
         return await runUninstall(
           { purge: values.purge, yes: values.yes },
           resolveSetupDeps(serverState, deps),
+        );
+      case 'migrate':
+        return await runMigrate(
+          {
+            ...(values.from ? { from: values.from } : {}),
+            ...(values.execute ? { execute: true } : {}),
+            ...(values.json ? { json: true } : {}),
+          },
+          resolveMigrateDeps(serverState, deps),
         );
       case 'plugins':
         return await runPlugins(positionals.slice(1), serverState, values, deps);

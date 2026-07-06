@@ -146,3 +146,50 @@ describe('runCli end-to-end (fake remote home)', () => {
     expect(fs.existsSync(path.join(state, MACHINES_FILE))).toBe(false);
   });
 });
+
+describe('runCli migrate dispatch', () => {
+  it('migrate --from control-tower → dry-run plan, exit 0, nothing changed', async () => {
+    const home = tmp();
+    const claude = path.join(home, '.claude');
+    fs.mkdirSync(path.join(claude, 'control-tower', 'hooks'), { recursive: true });
+    const settingsPath = path.join(claude, 'settings.json');
+    const bytes =
+      JSON.stringify(
+        {
+          hooks: {
+            Stop: [
+              {
+                matcher: '*',
+                hooks: [
+                  {
+                    type: 'command',
+                    command: path.join(claude, 'control-tower', 'hooks', 'ct-stop.sh'),
+                  },
+                ],
+              },
+            ],
+          },
+        },
+        null,
+        2,
+      ) + '\n';
+    fs.writeFileSync(settingsPath, bytes);
+
+    const { deps, out } = makeDeps();
+    deps.home = home;
+    deps.launchAgentsDir = path.join(home, 'Library', 'LaunchAgents');
+    const code = await runCli(['migrate', '--from', 'control-tower'], deps);
+    expect(code).toBe(0);
+    expect(out.join('\n')).toContain('migrate --from control-tower');
+    expect(out.join('\n')).toContain('control-tower 훅 1개 제거');
+    expect(fs.readFileSync(settingsPath, 'utf8')).toBe(bytes); // dry run: untouched
+  });
+
+  it('migrate with an unknown --from → usage error, exit 2', async () => {
+    const { deps, err } = makeDeps();
+    deps.home = tmp();
+    const code = await runCli(['migrate', '--from', 'nope'], deps);
+    expect(code).toBe(2);
+    expect(err.join('\n')).toContain('알 수 없는 마이그레이션 소스');
+  });
+});

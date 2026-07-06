@@ -342,6 +342,88 @@ export const MESSAGES = {
     en: 'plugin {name} added at {dir}',
     ko: '플러그인 {name}을 {dir}에 추가했습니다',
   },
+
+  // --- migrate (control-tower → terminull) ---
+  'migrate.unknownSource': {
+    en: 'unknown migration source {source} — supported: {supported}',
+    ko: '알 수 없는 마이그레이션 소스 {source} — 지원: {supported}',
+  },
+  'migrate.header': {
+    en: 'migrate --from control-tower (DRY RUN — nothing will change)\n  legacy install: {dir}',
+    ko: 'migrate --from control-tower (미리보기 — 아무것도 변경하지 않습니다)\n  레거시 설치: {dir}',
+  },
+  'migrate.headerExecute': {
+    en: 'migrate --from control-tower (--execute — applying)\n  legacy install: {dir}',
+    ko: 'migrate --from control-tower (--execute — 실제 적용)\n  레거시 설치: {dir}',
+  },
+  'migrate.nothing': {
+    en: 'nothing to migrate — no control-tower footprint found ({dir})',
+    ko: 'migrate 대상 없음 — control-tower 흔적을 찾지 못했습니다 ({dir})',
+  },
+  'migrate.tableHead': {
+    en: '  item                 / found-at / action',
+    ko: '  항목                 / 위치 / 조치',
+  },
+  'migrate.rowHooks': {
+    en: '  Claude hooks (settings.json)  {where}\n      → {action}',
+    ko: '  Claude 훅 (settings.json)  {where}\n      → {action}',
+  },
+  'migrate.rowNotify': {
+    en: '  Codex notify (config.toml)    {where}\n      → {action}',
+    ko: '  Codex notify (config.toml)    {where}\n      → {action}',
+  },
+  'migrate.rowService': {
+    en: '  LaunchAgent service           {where}\n      → {action}',
+    ko: '  LaunchAgent 서비스            {where}\n      → {action}',
+  },
+  'migrate.rowState': {
+    en: '  Event/state store             {where}\n      → {action}',
+    ko: '  이벤트/상태 저장소            {where}\n      → {action}',
+  },
+  'migrate.actNone': {
+    en: 'not found — no action',
+    ko: '없음 — 조치 없음',
+  },
+  'migrate.actHooks': {
+    en: 'remove {count} control-tower hook(s), preserve foreign hooks (backup first)',
+    ko: 'control-tower 훅 {count}개 제거, 나머지 훅은 보존 (먼저 백업)',
+  },
+  'migrate.actNotify': {
+    en: 'restore codex notify to its pre-control-tower value (backup first)',
+    ko: 'codex notify를 control-tower 이전 값으로 복원 (먼저 백업)',
+  },
+  'migrate.actService': {
+    en: 'launchctl bootout + archive plist ({labels})',
+    ko: 'launchctl bootout + plist 아카이브 ({labels})',
+  },
+  'migrate.actState': {
+    en: 'archive (move) {count} state file(s) with sha manifest',
+    ko: '상태 파일 {count}개 아카이브(이동) + sha manifest 기록',
+  },
+  'migrate.dirKept': {
+    en: '  note: the control-tower dir stays ({dir}) — only wiring is migrated (parallel operation still possible)',
+    ko: '  참고: control-tower 디렉터리는 그대로 둡니다 ({dir}) — 배선만 이관합니다 (병행 운영 가능)',
+  },
+  'migrate.executeHint': {
+    en: 'this was a DRY RUN. re-run with --execute to apply (reversible; a rollback block is printed).',
+    ko: '지금은 미리보기입니다. 실제 적용하려면 --execute 를 붙여 다시 실행하세요 (되돌리기 가능, 롤백 명령을 출력합니다).',
+  },
+  'migrate.applied': {
+    en: 'migration applied — archive: {archive}',
+    ko: '마이그레이션을 적용했습니다 — 아카이브: {archive}',
+  },
+  'migrate.manifest': {
+    en: 'manifest (every moved path + sha): {path}',
+    ko: 'manifest (이동한 모든 경로 + sha): {path}',
+  },
+  'migrate.followupInject': {
+    en: 'to re-enable Codex panel wiring under Terminull, run: terminull inject codex',
+    ko: 'Codex 패널 연동을 Terminull로 다시 켜려면: terminull inject codex 를 실행하세요',
+  },
+  'migrate.rollbackHeader': {
+    en: 'ROLLBACK — run these to fully undo this migration:',
+    ko: '롤백 — 이 마이그레이션을 완전히 되돌리려면 아래 명령을 실행하세요:',
+  },
 } as const satisfies Record<string, LocalizedText>;
 
 export type MessageKey = keyof typeof MESSAGES;
@@ -380,6 +462,10 @@ export function usageText(): string {
     '  terminull doctor                          환경/서버/서비스/무결성 진단.',
     '  terminull uninstall [--purge]             전체 제거 (--purge + 확인 시에만 데이터 삭제).',
     '',
+    '마이그레이션:',
+    '  terminull migrate --from control-tower [--execute] [--json]',
+    '      레거시 control-tower 하네스를 Terminull로 이관합니다 (기본 미리보기, --execute 로 적용).',
+    '',
     '플러그인:',
     '  terminull plugins validate <dir> [--json]',
     '  terminull plugins scaffold <point> <name> [--dir <targetDir>]',
@@ -389,7 +475,9 @@ export function usageText(): string {
     '  --server-state <dir>   서버 상태 디렉터리 (기본값: ~/.terminull)',
     '  --yes                  모든 동의 프롬프트를 자동 승인 (CI/무인 실행)',
     '  --purge                uninstall 시 데이터 디렉터리까지 삭제 (확인 필요)',
-    '  --json                 기계 판독용 JSON 출력 (plugins validate)',
+    '  --from <source>        migrate 소스 (control-tower)',
+    '  --execute              migrate 를 실제 적용 (기본은 미리보기)',
+    '  --json                 기계 판독용 JSON 출력 (plugins validate / migrate)',
     '  --help                 이 도움말 표시',
     '',
   ].join('\n');

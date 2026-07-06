@@ -1,6 +1,7 @@
 /**
- * `/api/tools/*` — per-tool adapter surfaces: registry listing, usage gauges,
- * account info, profile switching and harness install/preview.
+ * `/api/tools/*` — per-tool adapter surfaces: registry listing, model
+ * registry, usage gauges, account info, profile switching and harness
+ * install/preview.
  *
  * Error contract (capability honesty, per the M7 contract):
  *  - unknown `:toolId` → 404 `not_found`;
@@ -125,6 +126,21 @@ export function registerToolsRoutes(r: Router, deps: ToolsRouteDeps): void {
       capabilities: a.capabilities,
     }));
     json(res, 200, { tools });
+  });
+
+  r.add('GET', '/api/tools/:toolId/models', async (_req, res, params) => {
+    const adapter = adapterOr404(res, params['toolId']);
+    if (!adapter) return;
+    if (adapter.capabilities.modelDiscovery === 'none') {
+      // Capability honesty: a tool that declares no model discovery gets a
+      // typed 422, never an empty list dressed up as "zero models".
+      fail(res, 422, 'adapter_unsupported', { operation: 'models' });
+      return;
+    }
+    // Dynamic passthrough of the adapter's registry (discovered/configured/
+    // fallback provenance intact) — future models appear with no server change.
+    const models = await adapter.models.list(deps.harnessCtx());
+    json(res, 200, { models });
   });
 
   r.add('GET', '/api/tools/:toolId/usage', async (_req, res, params) => {

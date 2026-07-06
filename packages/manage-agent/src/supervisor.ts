@@ -69,6 +69,14 @@ export interface SupervisorDeps {
   caps: ManageAgentCaps;
   now: () => number;
   precheck?: PermissionPrecheck;
+  /**
+   * Live count of pending agent-origin confirmations — the server's
+   * confirmation queue, the SINGLE source of truth. When provided, `status()`
+   * derives `pendingApprovals` from it at read time (and clears a stale
+   * `awaiting_approval` once the queue is empty), so a confirmation the user
+   * resolves OUTSIDE a supervisor turn is reflected immediately.
+   */
+  pendingCount?: () => number;
 }
 
 /** Why the chat loop stopped — drives the terminal `agent.state` event. */
@@ -98,6 +106,7 @@ export class Supervisor implements ManageAgent {
   private readonly caps: ManageAgentCaps;
   private readonly now: () => number;
   private readonly precheck: PermissionPrecheck | undefined;
+  private readonly pendingCount: (() => number) | undefined;
 
   private runtimeState: AgentRuntimeState = 'idle';
   private probeResult: BrainProbe = { availability: 'unverified' };
@@ -106,8 +115,8 @@ export class Supervisor implements ManageAgent {
   /** USD spent today; `null` = no cost observed (unknown ≠ zero). */
   private spentUsdToday: number | null = null;
   private budgetDay = '';
-  /** Best-effort count (last snapshot + local pendings); the server's status
-   * route composes the authoritative number from its confirmation queue. */
+  /** Fallback count (last snapshot / local pendings) used ONLY when no
+   * `pendingCount` provider was injected — the live queue always wins. */
   private pendingApprovals = 0;
   private conversation: BrainMessage[] = [];
   private turnSeq = 0;
@@ -121,12 +130,26 @@ export class Supervisor implements ManageAgent {
     this.caps = deps.caps;
     this.now = deps.now;
     this.precheck = deps.precheck;
+    this.pendingCount = deps.pendingCount;
   }
 
   status(): AgentStatusDto {
     this.rollBudgetDay();
+    // Derive pending approvals from the server's confirmation queue (the
+    // single source of truth) at read time. A stored counter cannot see a
+    // confirmation the user resolved outside a turn — with the live count, an
+    // emptied queue also clears a stale awaiting_approval, derived-only (no
+    // event is emitted from a status read).
+    const pendingApprovals =
+      this.pendingCount !== undefined ? this.pendingCount() : this.pendingApprovals;
+    const state =
+      this.pendingCount !== undefined &&
+      this.runtimeState === 'awaiting_approval' &&
+      pendingApprovals === 0
+        ? 'idle'
+        : this.runtimeState;
     return {
-      state: this.runtimeState,
+      state,
       enabled: true,
       brain: {
         id: this.brain.id,
@@ -136,7 +159,7 @@ export class Supervisor implements ManageAgent {
       },
       caps: { ...this.caps },
       budget: { spentUsd: this.spentUsdToday, capUsd: this.caps.maxBudgetUsdPerDay },
-      pendingApprovals: this.pendingApprovals,
+      pendingApprovals,
       ...(this.lastTurnAt !== undefined ? { lastTurnAt: this.lastTurnAt } : {}),
     };
   }
@@ -203,7 +226,10 @@ export class Supervisor implements ManageAgent {
         turnsUsed += 1;
 
         const snapshot = await this.actions.snapshot();
-        this.pendingApprovals = snapshot.pendingApprovals + pendingCreated;
+        // The queue snapshot ALREADY contains confirmations created earlier in
+        // this chat (the executor enqueues before returning `pending`) — never
+        // add pendingCreated on top, that double-counts.
+        this.pendingApprovals = snapshot.pendingApprovals;
         const input: BrainTurnInput = {
           turnId,
           system: buildSystemPrompt(this.caps),
@@ -368,6 +394,8 @@ export class Supervisor implements ManageAgent {
         case 'executed':
           return { summary: `${proposalId} (${action.kind}): executed`, pending: false };
         case 'pending':
+          // Fallback-counter bridge until the next snapshot refresh (a live
+          // pendingCount provider makes this bookkeeping irrelevant).
           this.pendingApprovals += 1;
           return {
             summary: `${proposalId} (${action.kind}): pending user approval (confirmation ${outcome.confirmationId})`,

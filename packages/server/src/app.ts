@@ -304,6 +304,10 @@ export class TerminullServer {
         this.store.append(type, { actor: 'agent', payload: maskDeep(payload) });
       },
       caps: this.agentCaps,
+      // Status honesty: the confirmation queue is the single source of truth
+      // for pending approvals — the supervisor derives its count (and clears a
+      // stale awaiting_approval) from this live provider at every status read.
+      pendingCount: () => this.agentPendingCount(),
     });
 
     this.buildRoutes();
@@ -659,6 +663,11 @@ export class TerminullServer {
     return { home: this.opts.collectHome ?? os.homedir() };
   }
 
+  /** Live count of agent-origin confirmation cards (the approval inbox). */
+  private agentPendingCount(): number {
+    return this.confirmations.list().filter((p) => p.origin?.kind === 'manage-agent').length;
+  }
+
   /** Status DTO when the agent is disabled — honest, never a fabricated green. */
   private disabledAgentStatus(): AgentStatusDto {
     return {
@@ -667,8 +676,7 @@ export class TerminullServer {
       brain: { id: this.agentBrain.id, availability: 'unverified' },
       caps: { ...this.agentCaps },
       budget: { spentUsd: null, capUsd: this.agentCaps.maxBudgetUsdPerDay },
-      pendingApprovals: this.confirmations.list().filter((p) => p.origin?.kind === 'manage-agent')
-        .length,
+      pendingApprovals: this.agentPendingCount(),
     };
   }
 

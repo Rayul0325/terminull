@@ -195,6 +195,15 @@ export interface ManageAgentConfig {
    * Additive M7 builder field — omitting it changes nothing contracted.
    */
   precheck?: PermissionPrecheck;
+  /**
+   * OPTIONAL live count of pending agent-origin confirmations (the server's
+   * confirmation queue — the single source of truth). When provided, `status()`
+   * derives `pendingApprovals` from it and clears a stale `awaiting_approval`
+   * once the queue empties, so approvals the user resolves outside a turn are
+   * reflected immediately. Additive follow-up field — omitting it keeps the
+   * best-effort snapshot-based count.
+   */
+  pendingCount?: () => number;
 }
 
 /**
@@ -269,5 +278,6 @@ export function createManageAgent(config: ManageAgentConfig): ManageAgent {
     caps,
     now: config.now ?? Date.now,
     ...(config.precheck !== undefined ? { precheck: config.precheck } : {}),
+    ...(config.pendingCount !== undefined ? { pendingCount: config.pendingCount } : {}),
   });
 }

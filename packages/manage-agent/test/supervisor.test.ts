@@ -185,7 +185,8 @@ describe('proposal pipeline', () => {
     };
     const { agent, brain, audits } = harness(
       [[spawnAction, DONE], [DONE]],
-      { precheck: recordingPrecheck() },
+      // The server injects its live queue count; here the card stays parked.
+      { precheck: recordingPrecheck(), pendingCount: () => 1 },
       actionsHandle,
     );
     await agent.chat('spawn a worker');
@@ -348,6 +349,67 @@ describe('cap exhaustion', () => {
     expect(status.budget).toEqual({ spentUsd: null, capUsd: null });
     expect(status.lastTurnAt).toBeUndefined();
     expect(status.pendingApprovals).toBe(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Pending-approval honesty (status derives from the confirmation queue)
+// ---------------------------------------------------------------------------
+
+/**
+ * Fake actions backed by a LIVE queue, mirroring the real server executor:
+ * a `pending` outcome enqueues the confirmation immediately, so the NEXT
+ * snapshot already counts it — exactly the shape that made the old stored
+ * counter (`snapshot + pendingCreated`) double-count.
+ */
+function queueBackedActions(): FakeActionsHandle & { queue: string[] } {
+  const queue: string[] = [];
+  let seq = 0;
+  const executed: FakeActionsHandle['executed'] = [];
+  return {
+    executed,
+    queue,
+    actions: {
+      execute: (action, meta) => {
+        executed.push({ action, meta });
+        const confirmationId = `c-${(seq += 1)}`;
+        queue.push(confirmationId);
+        return Promise.resolve({ status: 'pending', confirmationId });
+      },
+      snapshot: () => Promise.resolve({ sessions: [], asks: [], pendingApprovals: queue.length }),
+    },
+  };
+}
+
+describe('pending-approval honesty', () => {
+  it('one pending proposal reads as exactly ONE pending approval (no double count)', async () => {
+    const handle = queueBackedActions();
+    const { agent, audits } = harness([[BOARD_ACTION, DONE], [DONE]], {}, handle);
+    await agent.chat('make a card');
+    await settled(audits);
+
+    expect(handle.queue).toHaveLength(1); // the server queue holds ONE card…
+    expect(agent.status().pendingApprovals).toBe(1); // …and status must agree
+    expect(agent.status().state).toBe('awaiting_approval');
+  });
+
+  it('a confirmation resolved OUTSIDE a turn drops the count and clears awaiting_approval', async () => {
+    const handle = queueBackedActions();
+    const { agent, audits } = harness(
+      [[BOARD_ACTION, DONE], [DONE]],
+      // The server passes its live agent-origin queue count; the supervisor
+      // derives status from it instead of trusting a stored counter.
+      { pendingCount: () => handle.queue.length },
+      handle,
+    );
+    await agent.chat('make a card');
+    await settled(audits);
+    expect(agent.status()).toMatchObject({ state: 'awaiting_approval', pendingApprovals: 1 });
+
+    // User approves/rejects via REST — no supervisor turn runs in between.
+    handle.queue.length = 0;
+    expect(agent.status().pendingApprovals).toBe(0);
+    expect(agent.status().state).toBe('idle');
   });
 });
 

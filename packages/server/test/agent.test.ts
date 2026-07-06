@@ -11,7 +11,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 import type { ProposedAction } from '@terminull/shared';
-import { api, startStack, type Stack } from './harness';
+import { api, startStack, waitFor, type Stack } from './harness';
 import { FakeBrain } from './fake-brain';
 
 let stack: Stack;
@@ -66,6 +66,54 @@ describe('agent status + chat gating', () => {
     const anonymous = await api(stack, 'POST', '/api/agent/chat', { body: { text: 'hi' } });
     expect(anonymous.status).toBe(403);
   });
+
+  it('status mirrors the confirmation queue: one card reads 1; resolving it OUTSIDE a turn reads 0 + idle', async () => {
+    const brain = new FakeBrain([
+      [
+        {
+          kind: 'action',
+          action: { kind: 'interrupt_session', sessionId: 'ghost' },
+          reason: 'stuck session',
+        },
+        { kind: 'done', stopReason: 'end_turn' },
+      ],
+      [{ kind: 'done', stopReason: 'end_turn' }],
+    ]);
+    stack = await startStack({ agentBrain: brain });
+
+    const chat = await api(stack, 'POST', '/api/agent/chat', {
+      body: { text: 'unstick that session' },
+      user: true,
+    });
+    expect(chat.status).toBe(202);
+    await waitFor(() =>
+      stack.server.store.inbox.some(
+        (e) => e.type === 'agent.state' && (e.payload as any)?.state === 'awaiting_approval',
+      ),
+    );
+
+    // Exactly one card is parked → status reports exactly one (regression:
+    // the stored supervisor counter used to double-count the fresh card).
+    const inbox = await api(stack, 'GET', '/api/agent/approvals');
+    expect(inbox.body.pending).toHaveLength(1);
+    const before = await api(stack, 'GET', '/api/agent/status');
+    expect(before.body).toMatchObject({ state: 'awaiting_approval', pendingApprovals: 1 });
+
+    // The user resolves the card via REST — NO further chat turn runs.
+    const resolved = await api(
+      stack,
+      'POST',
+      `/api/agent/approvals/${inbox.body.pending[0].id}/resolve`,
+      { body: { decision: 'approve' }, user: true },
+    );
+    expect(resolved.status).toBe(200);
+
+    // The drained queue is reflected immediately: count 0, stale
+    // awaiting_approval cleared to idle without waiting for the next turn.
+    const after = await api(stack, 'GET', '/api/agent/status');
+    expect(after.body.pendingApprovals).toBe(0);
+    expect(after.body.state).toBe('idle');
+  }, 15000);
 });
 
 describe('permission settings routes', () => {

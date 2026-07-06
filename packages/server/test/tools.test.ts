@@ -105,6 +105,44 @@ describe('GET /api/tools/:toolId/usage', () => {
   });
 });
 
+describe('GET /api/tools/:toolId/models', () => {
+  it('404s an unknown tool', async () => {
+    stack = await startStack();
+    const res = await api(stack, 'GET', '/api/tools/nope/models');
+    expect(res.status).toBe(404);
+    expect(res.body.code).toBe('not_found');
+  });
+
+  it('422s a tool that declares no model discovery — never an empty fake list', async () => {
+    stack = await startStack();
+    const res = await api(stack, 'GET', '/api/tools/generic-pty/models');
+    expect(res.status).toBe(422);
+    expect(res.body).toMatchObject({ code: 'adapter_unsupported', operation: 'models' });
+  });
+
+  it('claude registry is DYNAMIC: transcript-discovered ids first, fallback aliases fill in', async () => {
+    stack = await startStack();
+    // A transcript in the fixture home referencing a model id the panel has
+    // never heard of — future models must auto-appear without a code change.
+    const projects = path.join(stack.collectHome, '.claude', 'projects', 'proj');
+    fs.mkdirSync(projects, { recursive: true });
+    fs.writeFileSync(
+      path.join(projects, 'session.jsonl'),
+      `${JSON.stringify({ type: 'assistant', message: { model: 'claude-future-10-2' } })}\n`,
+    );
+
+    const res = await api(stack, 'GET', '/api/tools/claude/models');
+    expect(res.status).toBe(200);
+    expect(res.body.models).toEqual([
+      { id: 'claude-future-10-2', label: 'claude-future-10-2', source: 'discovered' },
+      { id: 'fable', label: 'Fable', source: 'fallback' },
+      { id: 'opus', label: 'Opus', source: 'fallback' },
+      { id: 'sonnet', label: 'Sonnet', source: 'fallback' },
+      { id: 'haiku', label: 'Haiku', source: 'fallback' },
+    ]);
+  });
+});
+
 describe('GET /api/tools/:toolId/account', () => {
   it('codex whoami is presence-only (never parses auth.json), profiles honest', async () => {
     stack = await startStack();

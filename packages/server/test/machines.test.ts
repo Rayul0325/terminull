@@ -182,7 +182,11 @@ describe('M8 gate oracle — two paneld instances over a stdio relay', () => {
 
   it('3. attach to the mars session: byte round-trip through relay + remote daemon', async () => {
     probe = await connectPty(marsSession);
-    await expectEventually(() => probe.texts, (t) => t.length >= 1, { timeoutMs: 15_000 });
+    await expectEventually(
+      () => probe.texts,
+      (t) => t.length >= 1,
+      { timeoutMs: 15_000 },
+    );
     expect(probe.texts[0]).toMatchObject({ t: 'attached', readOnly: false });
     probe.ws.send(Buffer.from('echo m8-roundtrip\r'), { binary: true });
     // The echo streams back asynchronously — poll the buffer until deadline.
@@ -233,11 +237,9 @@ describe('M8 gate oracle — two paneld instances over a stdio relay', () => {
     expect(marsEntry.state).toBe('stale');
 
     // The stale event is append-only: poll until written, assert its content.
-    const events = await expectEventually(
-      marsEvents,
-      (es) => es.some((e) => e.state === 'stale'),
-      { timeoutMs: 10_000 },
-    );
+    const events = await expectEventually(marsEvents, (es) => es.some((e) => e.state === 'stale'), {
+      timeoutMs: 10_000,
+    });
     const stale = events.find((e) => e.state === 'stale')!;
     expect(stale).toMatchObject({
       machineId: 'mars',
@@ -248,9 +250,13 @@ describe('M8 gate oracle — two paneld instances over a stdio relay', () => {
     expect(stale.lastSeenAt).toBeTypeOf('number');
 
     // The open mars viewer got an honest 1011 close.
-    const closed = await expectEventually(() => probe.closed(), (c) => c !== null, {
-      timeoutMs: 15_000,
-    });
+    const closed = await expectEventually(
+      () => probe.closed(),
+      (c) => c !== null,
+      {
+        timeoutMs: 15_000,
+      },
+    );
     expect(closed).toEqual({ code: 1011 });
 
     // Local keeps serving: spawn still works.
@@ -290,7 +296,11 @@ describe('M8 gate oracle — two paneld instances over a stdio relay', () => {
     // The replay streams in asynchronously after `attached`: poll the buffer
     // until deadline, never a single early read (macos-14 CI flake 2026-07-06).
     const probe2 = await connectPty(marsSession);
-    await expectEventually(() => probe2.texts, (t) => t.length >= 1, { timeoutMs: 15_000 });
+    await expectEventually(
+      () => probe2.texts,
+      (t) => t.length >= 1,
+      { timeoutMs: 15_000 },
+    );
     expect(probe2.texts[0]).toMatchObject({ t: 'attached' });
     const replay = await expectEventually(
       () => probe2.output(),
@@ -303,7 +313,11 @@ describe('M8 gate oracle — two paneld instances over a stdio relay', () => {
 
   it('5b. directive to a mars session injects via the machine link (200 delivered)', async () => {
     const viewer = await connectPty(marsSession);
-    await expectEventually(() => viewer.texts, (t) => t.length >= 1, { timeoutMs: 15_000 });
+    await expectEventually(
+      () => viewer.texts,
+      (t) => t.length >= 1,
+      { timeoutMs: 15_000 },
+    );
     const res = await api(stack, 'POST', '/api/directive', {
       body: { sessionId: marsSession, text: 'echo m8-directive' },
       user: true,

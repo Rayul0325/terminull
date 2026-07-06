@@ -34,19 +34,40 @@ import {
   PermissionSettings,
   maskSecrets,
 } from '@terminull/core';
-import { PluginHost, type DiscoveredSession, type ToolAdapter } from '@terminull/adapter-sdk';
+import {
+  PluginHost,
+  type DiscoveredSession,
+  type HarnessContext,
+  type ToolAdapter,
+} from '@terminull/adapter-sdk';
 import {
   PANEL_PROTO_VERSION,
   PtyClientMessageSchema,
   type Actor,
+  type AgentStatusDto,
   type PanelEvent,
   type PanelHello,
+  type ProposedActionKind,
   type PtyAttached,
   type PtyError,
   type SpawnSpec,
 } from '@terminull/shared';
+import {
+  ClaudeBrainAdapter,
+  DEFAULT_CAPS,
+  createManageAgent,
+  type BrainAdapter,
+  type ManageAgent,
+  type ManageAgentCaps,
+} from '@terminull/manage-agent';
 import * as claudePlugin from '@terminull/adapter-claude';
+import * as codexPlugin from '@terminull/adapter-codex';
 import * as genericPlugin from '@terminull/adapter-generic';
+import * as agyPlugin from '@terminull/adapter-agy';
+import { PERMISSION_TO_KIND, resultCodeOf } from './agent.js';
+import { AgentExecutor, type AgentSpawnRequest } from './agent-executor.js';
+import { registerAgentRoutes } from './agent-routes.js';
+import { registerToolsRoutes } from './tools-routes.js';
 import { Auth, TOKEN_COOKIE, originOk, type RequestActor } from './auth.js';
 import { ConfirmationQueue, type GateResult } from './confirmations.js';
 import { removeDiscovery, writeDiscovery } from './discovery.js';
@@ -99,10 +120,20 @@ export interface ServerOptions {
   collectHome?: string;
   /** Command used for claude spawns (default 'claude'). */
   claudeCmd?: string;
+  /** Command used for codex spawns (default 'codex'). */
+  codexCmd?: string;
+  /** Command used for agy spawns (default 'agy'). */
+  agyCmd?: string;
   /** Generic-adapter spawn allowlist (basenames). */
   spawnAllowlist?: string[];
   /** Fleet snapshot cache TTL in ms (default 2000). */
   fleetTtlMs?: number;
+  /** Manage-agent brain backend (tests inject a FakeBrain — NEVER a real CLI). */
+  agentBrain?: BrainAdapter;
+  /** Manage-agent hard caps (merged over {@link DEFAULT_CAPS}). */
+  agentCaps?: Partial<ManageAgentCaps>;
+  /** Enable the manage agent (default true; disabled → chat 409). */
+  agentEnabled?: boolean;
 }
 
 function readServerVersion(): string {
@@ -120,6 +151,8 @@ function readServerVersion(): string {
 export function defaultPluginHost(): PluginHost {
   const host = new PluginHost();
   host.register(claudePlugin.manifest, () => claudePlugin);
+  host.register(codexPlugin.manifest, () => codexPlugin);
+  host.register(agyPlugin.manifest, () => agyPlugin);
   host.register(genericPlugin.manifest, () => genericPlugin);
   host.instantiateAll();
   return host;
@@ -165,8 +198,14 @@ export class TerminullServer {
   readonly confirmations = new ConfirmationQueue();
   readonly paneld: PaneldClient;
   readonly pluginHost: PluginHost;
+  /** The manage-agent executor (public: the integration oracle drives it). */
+  readonly agentActions: AgentExecutor;
 
   private readonly adaptersById = new Map<string, ToolAdapter>();
+  private readonly manageAgent: ManageAgent;
+  private readonly agentBrain: BrainAdapter;
+  private readonly agentCaps: ManageAgentCaps;
+  private readonly agentEnabled: boolean;
   private readonly router = new Router();
   private readonly httpServer: http.Server;
   private readonly wss = new WebSocketServer({ noServer: true });
@@ -233,6 +272,38 @@ export class TerminullServer {
           });
         }
       },
+    });
+
+    // --- manage agent mount --------------------------------------------------
+    // The agent NEVER touches the panel directly: its only effect channel is
+    // this PanelActions executor, gated as the 'agent' actor, and its only
+    // event channel is the audit emitter below. It has NO permission-settings
+    // surface (facade omits it; core `set()` additionally throws for agents).
+    this.agentCaps = { ...DEFAULT_CAPS, ...opts.agentCaps };
+    // Default brain = the claude-headless subprocess adapter (manage-agent v1).
+    // It touches nothing at construction; probing happens lazily on first chat.
+    // Tests ALWAYS inject a FakeBrain here — unit tests never spawn a real CLI.
+    this.agentBrain = opts.agentBrain ?? new ClaudeBrainAdapter();
+    this.agentEnabled = opts.agentEnabled ?? true;
+    this.agentActions = new AgentExecutor({
+      store: this.store,
+      permissions: this.permissions,
+      confirmations: this.confirmations,
+      registry: this.registry,
+      paneld: this.paneld,
+      adapters: this.adaptersById,
+      spawnAllowlist: opts.spawnAllowlist ?? DEFAULT_SPAWN_ALLOWLIST,
+      deliverDirective: (sessionId, text, actor) => this.deliverDirective(sessionId, text, actor),
+      spawnSession: (request) => this.spawnFromAgent(request),
+      fleetSnapshot: () => this.fleetSnapshot(),
+    });
+    this.manageAgent = createManageAgent({
+      brain: this.agentBrain,
+      actions: this.agentActions,
+      emit: (type, payload) => {
+        this.store.append(type, { actor: 'agent', payload: maskDeep(payload) });
+      },
+      caps: this.agentCaps,
     });
 
     this.buildRoutes();
@@ -562,6 +633,55 @@ export class TerminullServer {
       res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
       res.end(html);
     });
+
+    // Per-tool adapter surfaces (usage/account/harness) + the manage-agent API.
+    registerToolsRoutes(r, {
+      adapters: this.adaptersById,
+      store: this.store,
+      harnessCtx: () => this.harnessCtx(),
+      gate: (req, res, action, opts) => this.gate(req, res, action, opts),
+    });
+    registerAgentRoutes(r, {
+      auth: this.auth,
+      store: this.store,
+      permissions: this.permissions,
+      confirmations: this.confirmations,
+      manageAgent: this.manageAgent,
+      stateDir: this.stateDir,
+      enabled: this.agentEnabled,
+      disabledStatus: () => this.disabledAgentStatus(),
+      resolveConfirmation: (req, res, id, verb) => this.resolveConfirmation(req, res, id, verb),
+    });
+  }
+
+  /** Context handed to adapter account/harness surfaces (fixture-able home). */
+  private harnessCtx(): HarnessContext {
+    return { home: this.opts.collectHome ?? os.homedir() };
+  }
+
+  /** Status DTO when the agent is disabled — honest, never a fabricated green. */
+  private disabledAgentStatus(): AgentStatusDto {
+    return {
+      state: 'disabled',
+      enabled: false,
+      brain: { id: this.agentBrain.id, availability: 'unverified' },
+      caps: { ...this.agentCaps },
+      budget: { spentUsd: null, capUsd: this.agentCaps.maxBudgetUsdPerDay },
+      pendingApprovals: this.confirmations.list().filter((p) => p.origin?.kind === 'manage-agent')
+        .length,
+    };
+  }
+
+  /**
+   * Spawn on behalf of an approved/autonomous agent proposal: same validation
+   * (`buildSpawnCommand`) and same execution path as the transport route, with
+   * the actor pinned to `'agent'`.
+   */
+  private async spawnFromAgent(request: AgentSpawnRequest): Promise<GateResult> {
+    const body: z.infer<typeof SpawnBodySchema> = { ...request };
+    const spec = this.buildSpawnCommand(body);
+    if ('error' in spec) return { status: 400, body: { code: spec.error, ...(spec.extra ?? {}) } };
+    return this.spawnSession(body, spec, 'agent');
   }
 
   // -------------------------------------------------------------------------
@@ -637,6 +757,39 @@ export class TerminullServer {
         ],
       };
     }
+    if (body.adapterId === 'codex') {
+      // Per the M7 contract: `-m` model, `-s` sandbox-mode via permissionMode.
+      return {
+        cmd: this.opts.codexCmd ?? 'codex',
+        args: [
+          ...(body.model !== undefined ? ['-m', body.model] : []),
+          ...(body.permissionMode !== undefined ? ['-s', body.permissionMode] : []),
+        ],
+      };
+    }
+    if (body.adapterId === 'agy') {
+      // agy has no single permission-mode flag: 'default' is the no-flag
+      // behaviour and the two others map to dedicated flags (adapter docs).
+      let permissionArgs: string[];
+      switch (body.permissionMode) {
+        case undefined:
+        case 'default':
+          permissionArgs = [];
+          break;
+        case 'skip-permissions':
+          permissionArgs = ['--dangerously-skip-permissions'];
+          break;
+        case 'sandbox':
+          permissionArgs = ['--sandbox'];
+          break;
+        default:
+          return { error: 'bad_request', extra: { param: 'permissionMode' } };
+      }
+      return {
+        cmd: this.opts.agyCmd ?? 'agy',
+        args: [...(body.model !== undefined ? ['--model', body.model] : []), ...permissionArgs],
+      };
+    }
     if (body.adapterId === 'generic-pty') {
       if (body.cmd === undefined) return { error: 'bad_request', extra: { param: 'cmd' } };
       const allowlist = this.opts.spawnAllowlist ?? DEFAULT_SPAWN_ALLOWLIST;
@@ -645,7 +798,7 @@ export class TerminullServer {
       }
       return { cmd: body.cmd, args: body.args ?? [] };
     }
-    // Only the two built-ins are spawnable in v1 — honest, not silent.
+    // Only the built-in tools are spawnable in v1 — honest, not silent.
     return { error: 'spawn_unsupported', extra: { adapterId: body.adapterId } };
   }
 
@@ -798,12 +951,27 @@ export class TerminullServer {
       return;
     }
     this.confirmations.remove(id);
+    // Agent-origin cards get the extra `agent.action` audit steps HERE (the
+    // shared resolve path), so /api/agent/approvals/:id/resolve and the plain
+    // /api/confirmations routes produce the identical chain.
+    const audit =
+      pending.origin !== undefined
+        ? {
+            proposalId: pending.origin.proposalId,
+            turnId: pending.origin.turnId,
+            actionKind: PERMISSION_TO_KIND[pending.action] ?? ('unknown' as ProposedActionKind),
+            permissionAction: pending.action,
+            confirmationId: id,
+            ...(pending.origin.reason !== undefined ? { reason: pending.origin.reason } : {}),
+          }
+        : null;
     if (verb === 'reject') {
       this.store.append('confirmation.rejected', {
         actor: 'user',
         ...(pending.sessionId !== undefined ? { sessionId: pending.sessionId } : {}),
         payload: { confirmationId: id, action: pending.action },
       });
+      if (audit) this.agentActions.emitPhase({ ...audit, phase: 'denied', resultCode: 'rejected' });
       json(res, 200, { rejected: true, confirmationId: id, action: pending.action });
       return;
     }
@@ -812,7 +980,23 @@ export class TerminullServer {
       ...(pending.sessionId !== undefined ? { sessionId: pending.sessionId } : {}),
       payload: { confirmationId: id, action: pending.action },
     });
-    const result = await pending.execute();
+    if (audit) this.agentActions.emitPhase({ ...audit, phase: 'approved' });
+    let result: GateResult;
+    try {
+      result = await pending.execute();
+    } catch (e) {
+      if (audit) {
+        this.agentActions.emitPhase({ ...audit, phase: 'failed', resultCode: 'internal_error' });
+      }
+      throw e;
+    }
+    if (audit) {
+      this.agentActions.emitPhase({
+        ...audit,
+        phase: result.status < 400 ? 'executed' : 'failed',
+        resultCode: resultCodeOf(result),
+      });
+    }
     json(res, 200, {
       approved: true,
       confirmationId: id,

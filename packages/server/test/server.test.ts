@@ -260,7 +260,7 @@ describe('session lifecycle', () => {
     });
     // Collector statuses are reported per adapter, none dropped.
     const adapterIds = fleet.body.adapters.map((a: any) => a.adapterId).sort();
-    expect(adapterIds).toEqual(['claude', 'generic-pty']);
+    expect(adapterIds).toEqual(['agy', 'claude', 'codex', 'generic-pty']);
 
     // Two-step: no phrase → 400, wrong phrase → 400, right phrase → killed.
     const noPhrase = await api(stack, 'DELETE', `/api/sessions/${sessionId}`, {

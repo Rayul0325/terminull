@@ -116,18 +116,24 @@ importers:
 
   packages/manage-agent:
     dependencies:
-      '@terminull/adapter-sdk':
-        specifier: workspace:*
-        version: link:../adapter-sdk
       '@terminull/core':
         specifier: workspace:*
         version: link:../core
+      '@terminull/shared':
+        specifier: workspace:*
+        version: link:../shared
 
   packages/server:
     dependencies:
+      '@terminull/adapter-agy':
+        specifier: workspace:*
+        version: link:../adapters/agy
       '@terminull/adapter-claude':
         specifier: workspace:*
         version: link:../adapters/claude
+      '@terminull/adapter-codex':
+        specifier: workspace:*
+        version: link:../adapters/codex
       '@terminull/adapter-generic':
         specifier: workspace:*
         version: link:../adapters/generic
@@ -137,6 +143,9 @@ importers:
       '@terminull/core':
         specifier: workspace:*
         version: link:../core
+      '@terminull/manage-agent':
+        specifier: workspace:*
+        version: link:../manage-agent
       '@terminull/session-host':
         specifier: workspace:*
         version: link:../session-host

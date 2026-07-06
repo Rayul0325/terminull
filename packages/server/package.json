@@ -20,10 +20,13 @@
     "typecheck": "tsc -b"
   },
   "dependencies": {
+    "@terminull/adapter-agy": "workspace:*",
     "@terminull/adapter-claude": "workspace:*",
+    "@terminull/adapter-codex": "workspace:*",
     "@terminull/adapter-generic": "workspace:*",
     "@terminull/adapter-sdk": "workspace:*",
     "@terminull/core": "workspace:*",
+    "@terminull/manage-agent": "workspace:*",
     "@terminull/session-host": "workspace:*",
     "@terminull/shared": "workspace:*",
     "ws": "^8.18.0",

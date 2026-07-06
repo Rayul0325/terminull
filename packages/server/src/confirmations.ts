@@ -9,6 +9,7 @@
  * store keep the durable audit trail.
  */
 import crypto from 'node:crypto';
+import type { AgentProposalOrigin } from '@terminull/shared';
 import type { RequestActor } from './auth.js';
 
 /** The queued action's deferred outcome (an HTTP-shaped result). */
@@ -27,6 +28,8 @@ export interface PendingConfirmation {
   /** Machine-field summary shown to the approving user (already masked). */
   params: unknown;
   createdAt: number;
+  /** Present when the entry was proposed by the manage agent (inbox card). */
+  origin?: AgentProposalOrigin;
   execute: () => Promise<GateResult>;
 }
 
@@ -60,6 +63,7 @@ export class ConfirmationQueue {
       ...(p.sessionId !== undefined ? { sessionId: p.sessionId } : {}),
       params: p.params,
       createdAt: p.createdAt,
+      ...(p.origin !== undefined ? { origin: p.origin } : {}),
     }));
   }
 }

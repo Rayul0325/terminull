@@ -11,7 +11,10 @@
     { "path": "../shared" },
     { "path": "../adapter-sdk" },
     { "path": "../session-host" },
+    { "path": "../manage-agent" },
     { "path": "../adapters/claude" },
-    { "path": "../adapters/generic" }
+    { "path": "../adapters/codex" },
+    { "path": "../adapters/generic" },
+    { "path": "../adapters/agy" }
   ]
 }

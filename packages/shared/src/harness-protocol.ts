@@ -29,14 +29,7 @@ import { LocalizedTextSchema } from './plugin-api.js';
  * the SDK depends on shared). The conformance point is the server, which
  * assigns `HarnessFileSpec.format` straight into this field.
  */
-export const HARNESS_FILE_FORMATS = [
-  'markdown',
-  'json',
-  'yaml',
-  'toml',
-  'text',
-  'other',
-] as const;
+export const HARNESS_FILE_FORMATS = ['markdown', 'json', 'yaml', 'toml', 'text', 'other'] as const;
 export type HarnessFileFormatDto = (typeof HARNESS_FILE_FORMATS)[number];
 
 /** Where a harness file lives (mirrors adapter-sdk `HarnessFileScope`). */

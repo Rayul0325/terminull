@@ -90,9 +90,7 @@ export function registerPrefsRoutes(r: Router, deps: PrefsRouteDeps): void {
     }
     const previous = loadKeybindings(deps.stateDir);
     // A corrupt previous file diffs against empty — the PUT itself repairs it.
-    const prevDto = previous === 'absent' || previous === 'invalid'
-      ? emptyKeybindings()
-      : previous;
+    const prevDto = previous === 'absent' || previous === 'invalid' ? emptyKeybindings() : previous;
     saveKeybindings(deps.stateDir, body.data);
     deps.store.append('prefs.keybindings_changed', {
       actor: 'user',

@@ -89,7 +89,9 @@ function DiffPreview({ before, after }: { before: string; after: string }): Reac
   const changed = rows.filter((r) => r.type !== 'same');
   const stats = diffStats(rows);
   if (rows.length === 0) {
-    return <div style={{ fontSize: 12, color: 'var(--tn-fg-muted)' }}>{t('harness.diff.none')}</div>;
+    return (
+      <div style={{ fontSize: 12, color: 'var(--tn-fg-muted)' }}>{t('harness.diff.none')}</div>
+    );
   }
   return (
     <div style={{ fontSize: 12 }}>
@@ -111,10 +113,7 @@ function DiffPreview({ before, after }: { before: string; after: string }): Reac
         }}
       >
         {changed.map((row, i) => (
-          <div
-            key={i}
-            style={{ color: row.type === 'add' ? 'var(--tn-ok)' : 'var(--tn-danger)' }}
-          >
+          <div key={i} style={{ color: row.type === 'add' ? 'var(--tn-ok)' : 'var(--tn-danger)' }}>
             {(row.type === 'add' ? '+ ' : '− ') + row.text}
           </div>
         ))}
@@ -238,7 +237,9 @@ export function HarnessFileEditor({ spec }: { spec: HarnessFileDto }): ReactElem
         ) : null}
       </div>
       {read?.path !== undefined ? (
-        <code style={{ fontSize: 11, color: 'var(--tn-fg-faint)', fontFamily: 'var(--tn-font-mono)' }}>
+        <code
+          style={{ fontSize: 11, color: 'var(--tn-fg-faint)', fontFamily: 'var(--tn-font-mono)' }}
+        >
           {read.path}
         </code>
       ) : null}
@@ -350,7 +351,11 @@ export function HarnessFileEditor({ spec }: { spec: HarnessFileDto }): ReactElem
       </details>
 
       {/* Danger-save confirm sheet (client mirror of the server confirm floor). */}
-      <Sheet open={confirmSave} title={t('harness.editor.dangerNote')} onClose={() => setConfirmSave(false)}>
+      <Sheet
+        open={confirmSave}
+        title={t('harness.editor.dangerNote')}
+        onClose={() => setConfirmSave(false)}
+      >
         <div style={{ display: 'grid', gap: 8 }}>
           <DiffPreview before={read?.content ?? ''} after={draft} />
           <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
@@ -482,12 +487,21 @@ export function HarnessSection(): ReactElement {
         </div>
       ) : null}
       {groups.map((group) => (
-        <div key={group.toolId} className="tn-card" style={{ padding: '10px 12px', margin: '6px 0' }}>
+        <div
+          key={group.toolId}
+          className="tn-card"
+          style={{ padding: '10px 12px', margin: '6px 0' }}
+        >
           <div style={{ fontWeight: 600, marginBottom: 4 }}>
             {pickLocalized(group.displayName, i18n.language)}
           </div>
           {group.files.map((spec) => (
-            <FileRow key={spec.id} spec={spec} selected={selected === spec.id} onSelect={setSelected} />
+            <FileRow
+              key={spec.id}
+              spec={spec}
+              selected={selected === spec.id}
+              onSelect={setSelected}
+            />
           ))}
         </div>
       ))}

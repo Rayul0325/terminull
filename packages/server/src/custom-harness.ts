@@ -83,9 +83,8 @@ function scanClaudeSettings(sink: Sink, file: string): void {
       for (const entry of matchers) {
         if (entry === null || typeof entry !== 'object') continue;
         const m = entry as Record<string, unknown>;
-        const matcher = typeof m['matcher'] === 'string' && m['matcher'].length > 0
-          ? m['matcher']
-          : null;
+        const matcher =
+          typeof m['matcher'] === 'string' && m['matcher'].length > 0 ? m['matcher'] : null;
         const inner = Array.isArray(m['hooks']) ? m['hooks'] : [];
         for (const hook of inner) {
           if (hook === null || typeof hook !== 'object') continue;

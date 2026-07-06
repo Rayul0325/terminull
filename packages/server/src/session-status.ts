@@ -41,10 +41,7 @@ export class SessionStatusMap {
 }
 
 /** Register `GET /api/sessions/:sid/status` (`:sid` = tool-native id). */
-export function registerSessionStatusRoutes(
-  r: Router,
-  deps: { statuses: SessionStatusMap },
-): void {
+export function registerSessionStatusRoutes(r: Router, deps: { statuses: SessionStatusMap }): void {
   r.add('GET', '/api/sessions/:sid/status', (_req, res, params) => {
     json(res, 200, { status: deps.statuses.get(params['sid'] ?? '') });
   });

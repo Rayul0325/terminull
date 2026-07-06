@@ -198,9 +198,7 @@ describe('manifest + custom', () => {
     };
     const custom = { id: 'custom' as const, scannedAt: 123, items: [], truncated: false };
     restoreFetch = setFetchImpl((url) =>
-      Promise.resolve(
-        url.endsWith('/custom') ? json(200, custom) : json(200, { groups: [group] }),
-      ),
+      Promise.resolve(url.endsWith('/custom') ? json(200, custom) : json(200, { groups: [group] })),
     );
     await useHarnessStore.getState().loadManifest();
     await useHarnessStore.getState().loadCustom();

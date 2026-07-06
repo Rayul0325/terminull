@@ -123,7 +123,9 @@ describe('REST seed', () => {
   it('a null REST status stays honest no-data (no entry, no fabricated zeros)', async () => {
     restoreFetch = setFetchImpl(() => Promise.resolve(json(200, { status: null })));
     await useSessionStatusStore.getState().seed('codex', 'sess-x');
-    expect(useSessionStatusStore.getState().statuses[statusKeyOf('codex', 'sess-x')]).toBeUndefined();
+    expect(
+      useSessionStatusStore.getState().statuses[statusKeyOf('codex', 'sess-x')],
+    ).toBeUndefined();
   });
 
   it('a stream fold that landed during the seed wins over the seed response', async () => {

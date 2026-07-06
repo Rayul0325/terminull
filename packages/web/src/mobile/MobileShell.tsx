@@ -119,7 +119,11 @@ function StatusTab(): ReactElement {
   const hostConnected = useConnectionStore((s) => s.hostConnected);
   const seq = useConnectionStore((s) => s.seq);
   const wsDot =
-    wsStatus === 'online' ? 'tn-dot--live' : wsStatus === 'offline' ? 'tn-dot--down' : 'tn-dot--warn';
+    wsStatus === 'online'
+      ? 'tn-dot--live'
+      : wsStatus === 'offline'
+        ? 'tn-dot--down'
+        : 'tn-dot--warn';
   return (
     <div style={{ display: 'grid', gap: 8, padding: 12 }}>
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -247,7 +251,9 @@ export function MobileShell({ initialTab = 'status' }: { initialTab?: MobileTab 
       <main style={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
         {tab === 'status' ? <StatusTab /> : null}
         {tab === 'sessions' ? (
-          <SessionsTab onOpen={(sessionId, adapterId) => setOpenSession({ sessionId, adapterId })} />
+          <SessionsTab
+            onOpen={(sessionId, adapterId) => setOpenSession({ sessionId, adapterId })}
+          />
         ) : null}
         {tab === 'inbox' ? (
           <div style={{ display: 'grid', gap: 8, padding: 12 }}>

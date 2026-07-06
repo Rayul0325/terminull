@@ -81,7 +81,9 @@ export function SessionStatusBar({
       {costText(dto.costUsd)}
     </span>,
     <span key="asof" style={{ marginLeft: 'auto', color: 'var(--tn-fg-faint)' }}>
-      {dto.asOf !== null ? t('statusbar.asOf', { time: new Date(dto.asOf).toLocaleTimeString() }) : ''}
+      {dto.asOf !== null
+        ? t('statusbar.asOf', { time: new Date(dto.asOf).toLocaleTimeString() })
+        : ''}
     </span>,
   ]);
 }

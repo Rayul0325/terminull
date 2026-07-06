@@ -52,9 +52,9 @@ describe('HarnessFileDto / HarnessGroupDto', () => {
   });
 
   it('requires both label locales (LocalizedText contract)', () => {
-    expect(
-      HarnessFileDtoSchema.safeParse({ ...file, label: { en: 'only english' } }).success,
-    ).toBe(false);
+    expect(HarnessFileDtoSchema.safeParse({ ...file, label: { en: 'only english' } }).success).toBe(
+      false,
+    );
   });
 
   it('groups carry a toolId + displayName', () => {
@@ -84,9 +84,10 @@ describe('read / write / backups wire shapes', () => {
   });
 
   it('write request takes expectedSha (nullable) + content; rejects extras', () => {
-    expect(
-      HarnessWriteRequestSchema.parse({ expectedSha: null, content: '# hi' }),
-    ).toEqual({ expectedSha: null, content: '# hi' });
+    expect(HarnessWriteRequestSchema.parse({ expectedSha: null, content: '# hi' })).toEqual({
+      expectedSha: null,
+      content: '# hi',
+    });
     expect(
       HarnessWriteRequestSchema.safeParse({ expectedSha: 'not-a-sha', content: '' }).success,
     ).toBe(false);
@@ -118,8 +119,12 @@ describe('read / write / backups wire shapes', () => {
   it('backup + restore shapes parse; rotation constant is 20', () => {
     expect(HARNESS_BACKUP_ROTATION).toBe(20);
     expect(
-      HarnessBackupDtoSchema.parse({ backupId: '1720000000000-abcdef12', ts: 1, sha: SHA, bytes: 0 })
-        .backupId,
+      HarnessBackupDtoSchema.parse({
+        backupId: '1720000000000-abcdef12',
+        ts: 1,
+        sha: SHA,
+        bytes: 0,
+      }).backupId,
     ).toBe('1720000000000-abcdef12');
     expect(
       HarnessRestoreRequestSchema.parse({ backupId: 'b1', expectedSha: null }).expectedSha,

@@ -100,9 +100,9 @@ describe('ProfilesFile', () => {
 
 describe('create / switch requests', () => {
   it("create refuses 'default' and switch accepts it", () => {
-    expect(
-      ProfileCreateRequestSchema.safeParse({ ...work, id: DEFAULT_PROFILE_ID }).success,
-    ).toBe(false);
+    expect(ProfileCreateRequestSchema.safeParse({ ...work, id: DEFAULT_PROFILE_ID }).success).toBe(
+      false,
+    );
     expect(ProfileCreateRequestSchema.parse(work).id).toBe('work');
     expect(
       ProfileSwitchRequestSchema.parse({ toolId: 'claude', profileId: 'default' }).profileId,

@@ -144,9 +144,9 @@ describe('HarnessFileEngine.write pipeline', () => {
       }),
     ).rejects.toBeInstanceOf(FileTooLargeError);
     fs.writeFileSync(path.join(home, 'CLAUDE.md'), 'y'.repeat(32));
-    await expect(small.read('claude.md.global', path.join(home, 'CLAUDE.md'))).rejects.toBeInstanceOf(
-      FileTooLargeError,
-    );
+    await expect(
+      small.read('claude.md.global', path.join(home, 'CLAUDE.md')),
+    ).rejects.toBeInstanceOf(FileTooLargeError);
   });
 
   it('jail: out-of-root paths and bad fileIds refuse before any fs mutation', async () => {

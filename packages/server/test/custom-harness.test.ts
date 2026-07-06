@@ -29,11 +29,12 @@ function snapshotTree(root: string): TreeSnap {
       const full = path.join(dir, name);
       const st = fs.lstatSync(full);
       if (st.isDirectory()) walk(full);
-      else files.set(full, {
-        mtimeMs: st.mtimeMs,
-        size: st.size,
-        content: fs.readFileSync(full, 'latin1'),
-      });
+      else
+        files.set(full, {
+          mtimeMs: st.mtimeMs,
+          size: st.size,
+          content: fs.readFileSync(full, 'latin1'),
+        });
     }
   };
   walk(root);
@@ -108,11 +109,11 @@ describe('GATE oracle (e) — GET /api/harness/custom is a read-only scan', () =
     expect(group.truncated).toBe(false);
 
     const kinds = (k: string) => group.items.filter((i) => i.kind === k);
-    expect(kinds('hook').map((i) => `${i.toolId}:${i.label}`).sort()).toEqual([
-      'claude:PostToolUse Write|Edit',
-      'claude:Stop',
-      'codex:notify',
-    ]);
+    expect(
+      kinds('hook')
+        .map((i) => `${i.toolId}:${i.label}`)
+        .sort(),
+    ).toEqual(['claude:PostToolUse Write|Edit', 'claude:Stop', 'codex:notify']);
     expect(kinds('hook').find((i) => i.label === 'PostToolUse Write|Edit')?.detail).toBe(
       'format-track.sh',
     );

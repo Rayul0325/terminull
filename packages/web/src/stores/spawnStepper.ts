@@ -84,7 +84,14 @@ export const useSpawnStepperStore = create<SpawnStepperState>((set, get) => ({
 
   selectTool: (toolId) => {
     // A tool change invalidates the downstream choices.
-    set({ toolId, model: null, permissionMode: null, models: null, modelsSupported: null, modelsErrorCode: null });
+    set({
+      toolId,
+      model: null,
+      permissionMode: null,
+      models: null,
+      modelsSupported: null,
+      modelsErrorCode: null,
+    });
     void (async () => {
       try {
         const res = await api.toolModels(toolId);

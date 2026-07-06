@@ -50,13 +50,28 @@ export interface AgentActionDef {
 
 /** The full, ordered action catalogue. */
 export const AGENT_ACTIONS: readonly AgentActionDef[] = [
-  { id: 'directive.send', labelKey: 'perm.directive_send', defaultClass: 'autonomous', risk: 'low' },
+  {
+    id: 'directive.send',
+    labelKey: 'perm.directive_send',
+    defaultClass: 'autonomous',
+    risk: 'low',
+  },
   { id: 'session.spawn', labelKey: 'perm.session_spawn', defaultClass: 'confirm', risk: 'med' },
   { id: 'ask.answer', labelKey: 'perm.ask_answer', defaultClass: 'forbidden', risk: 'high' },
   { id: 'plan.approve', labelKey: 'perm.plan_approve', defaultClass: 'forbidden', risk: 'high' },
-  { id: 'permission.grant', labelKey: 'perm.permission_grant', defaultClass: 'forbidden', risk: 'high' },
+  {
+    id: 'permission.grant',
+    labelKey: 'perm.permission_grant',
+    defaultClass: 'forbidden',
+    risk: 'high',
+  },
   { id: 'permission.mode', labelKey: 'perm.permission_mode', defaultClass: 'confirm', risk: 'med' },
-  { id: 'session.interrupt', labelKey: 'perm.session_interrupt', defaultClass: 'confirm', risk: 'med' },
+  {
+    id: 'session.interrupt',
+    labelKey: 'perm.session_interrupt',
+    defaultClass: 'confirm',
+    risk: 'med',
+  },
   {
     id: 'session.delete',
     labelKey: 'perm.session_delete',
@@ -79,7 +94,12 @@ export const AGENT_ACTIONS: readonly AgentActionDef[] = [
     risk: 'high',
     floor: 'confirm',
   },
-  { id: 'account.switch', labelKey: 'perm.account_switch', defaultClass: 'forbidden', risk: 'high' },
+  {
+    id: 'account.switch',
+    labelKey: 'perm.account_switch',
+    defaultClass: 'forbidden',
+    risk: 'high',
+  },
   { id: 'board.edit', labelKey: 'perm.board_edit', defaultClass: 'autonomous', risk: 'low' },
 ];
 

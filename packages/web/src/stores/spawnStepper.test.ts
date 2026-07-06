@@ -83,9 +83,7 @@ describe('spawn body (oracle g)', () => {
   });
 
   it('a failed spawn keeps the honest machine code; nothing is created', async () => {
-    restoreFetch = setFetchImpl(() =>
-      Promise.resolve(json(422, { code: 'machine_unavailable' })),
-    );
+    restoreFetch = setFetchImpl(() => Promise.resolve(json(422, { code: 'machine_unavailable' })));
     const s = useSpawnStepperStore.getState();
     s.openStepper();
     useSpawnStepperStore.setState({ toolId: 'claude' });
@@ -100,9 +98,7 @@ describe('spawn body (oracle g)', () => {
 describe('model discovery honesty', () => {
   it('selectTool loads the dynamic model list', async () => {
     restoreFetch = setFetchImpl(() =>
-      Promise.resolve(
-        json(200, { models: [{ id: 'opus', label: 'Opus', source: 'discovered' }] }),
-      ),
+      Promise.resolve(json(200, { models: [{ id: 'opus', label: 'Opus', source: 'discovered' }] })),
     );
     useSpawnStepperStore.getState().openStepper();
     useSpawnStepperStore.getState().selectTool('claude');

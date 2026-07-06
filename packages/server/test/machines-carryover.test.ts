@@ -148,9 +148,13 @@ describe('S9 — attach relay child reaped on ws-close-mid-dial', () => {
       ws.on('error', reject);
     });
     // The dial has started (a second relay child registered its pid file).
-    await expectEventually(() => fs.readdirSync(pidDir).length, (n) => n >= 2, {
-      timeoutMs: 10_000,
-    });
+    await expectEventually(
+      () => fs.readdirSync(pidDir).length,
+      (n) => n >= 2,
+      {
+        timeoutMs: 10_000,
+      },
+    );
     ws.close();
 
     // The in-flight relay child must be reaped once the dial completes —
@@ -174,9 +178,13 @@ describe('S9 — attach relay child reaped on ws-close-mid-dial', () => {
       ws2.on('open', () => resolve());
       ws2.on('error', reject);
     });
-    const ws2Texts = await expectEventually(() => texts, (t) => t.some((m) => m.t === 'attached'), {
-      timeoutMs: 10_000,
-    });
+    const ws2Texts = await expectEventually(
+      () => texts,
+      (t) => t.some((m) => m.t === 'attached'),
+      {
+        timeoutMs: 10_000,
+      },
+    );
     expect(ws2Texts.some((m) => m.t === 'attached')).toBe(true);
     ws2.terminate();
     // …and that healthy viewer's relay is a THIRD child, reaped on terminate.

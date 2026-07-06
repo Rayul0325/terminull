@@ -311,10 +311,6 @@ export function registerHarnessRoutes(r: Router, deps: HarnessRouteDeps): void {
 
   r.add('GET', '/api/harness/custom', (_req, res) => {
     const ctx = deps.harnessCtx();
-    json(
-      res,
-      200,
-      scanCustomHarness({ home: ctx.home ?? '', cwd: deps.projectRoot() }),
-    );
+    json(res, 200, scanCustomHarness({ home: ctx.home ?? '', cwd: deps.projectRoot() }));
   });
 }

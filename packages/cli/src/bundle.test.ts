@@ -47,9 +47,9 @@ describe('runChildMergedTail', () => {
   });
 
   it('reports the signal when the child dies without an exit code', async () => {
-    await expect(
-      runScripted(`process.kill(process.pid, 'SIGKILL');`),
-    ).rejects.toThrow(/pnpm deploy exited signal SIGKILL/);
+    await expect(runScripted(`process.kill(process.pid, 'SIGKILL');`)).rejects.toThrow(
+      /pnpm deploy exited signal SIGKILL/,
+    );
   });
 
   it('rejects with a spawn error for a missing executable', async () => {

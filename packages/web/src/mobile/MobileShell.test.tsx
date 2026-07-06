@@ -75,9 +75,11 @@ describe('MobileShell', () => {
   });
 
   it('the inbox tab renders inline approve/deny for a GET-seeded confirmation', () => {
-    useConnectionStore.getState().seedConfirmations([
-      { id: 'c-1', action: 'session.spawn', actor: 'agent', params: {}, createdAt: 5 },
-    ]);
+    useConnectionStore
+      .getState()
+      .seedConfirmations([
+        { id: 'c-1', action: 'session.spawn', actor: 'agent', params: {}, createdAt: 5 },
+      ]);
     const html = render('inbox');
     expect(html).toContain(ko.inbox.approve);
     expect(html).toContain(ko.inbox.deny);

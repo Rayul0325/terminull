@@ -11,7 +11,12 @@ import { pickLocalized } from '../agent/localized';
 import { Sheet } from '../components/Sheet';
 import { machineLabel } from '../machines/MachinesStrip';
 import { activeProfileOf, useProfilesStore } from '../stores/profiles';
-import { STEPS, selectableMachines, useSpawnStepperStore, type StepId } from '../stores/spawnStepper';
+import {
+  STEPS,
+  selectableMachines,
+  useSpawnStepperStore,
+  type StepId,
+} from '../stores/spawnStepper';
 import { useMachinesStore } from '../stores/machines';
 import { useToolsStore } from '../stores/tools';
 
@@ -190,7 +195,9 @@ export function SessionCreateStepper(): ReactElement {
                   type="button"
                   className="tn-btn"
                   style={
-                    stepper.model === null ? { borderColor: 'var(--tn-accent)', fontWeight: 600 } : {}
+                    stepper.model === null
+                      ? { borderColor: 'var(--tn-accent)', fontWeight: 600 }
+                      : {}
                   }
                   onClick={() => stepper.setModel(null)}
                 >

@@ -45,7 +45,14 @@ function json(status: number, body: unknown): Response {
 
 const PENDING = [
   { id: 'c-1', action: 'harness.write_danger', actor: 'agent', params: {}, createdAt: 500 },
-  { id: 'c-2', action: 'session.spawn', actor: 'agent', params: {}, createdAt: 600, sessionId: 's-9' },
+  {
+    id: 'c-2',
+    action: 'session.spawn',
+    actor: 'agent',
+    params: {},
+    createdAt: 600,
+    sessionId: 's-9',
+  },
 ];
 
 describe('confirmation GET-seed (oracle h, store half)', () => {
@@ -69,9 +76,9 @@ describe('confirmation GET-seed (oracle h, store half)', () => {
     store.applyEvents([ev('confirmation.pending', { confirmationId: 'c-1', action: 'x' })]);
     expect(useConnectionStore.getState().attention).toHaveLength(1);
     // Reverse order: stream first, seed second.
-    useConnectionStore.getState().applyEvents([
-      ev('confirmation.pending', { confirmationId: 'c-3', action: 'y' }),
-    ]);
+    useConnectionStore
+      .getState()
+      .applyEvents([ev('confirmation.pending', { confirmationId: 'c-3', action: 'y' })]);
     useConnectionStore
       .getState()
       .seedConfirmations([{ id: 'c-3', action: 'y', actor: 'agent', params: {}, createdAt: 1 }]);
@@ -82,7 +89,9 @@ describe('confirmation GET-seed (oracle h, store half)', () => {
 
   it('a confirmation.approved event clears the seeded item', () => {
     useConnectionStore.getState().seedConfirmations(PENDING);
-    useConnectionStore.getState().applyEvents([ev('confirmation.approved', { confirmationId: 'c-1' })]);
+    useConnectionStore
+      .getState()
+      .applyEvents([ev('confirmation.approved', { confirmationId: 'c-1' })]);
     expect(useConnectionStore.getState().attention.map((a) => a.key)).toEqual(['confirm:c-2']);
   });
 });
@@ -118,9 +127,15 @@ describe('inline confirmation resolve', () => {
 
 describe('ask options + inline answer', () => {
   it('captures string[] options from the ask payload', () => {
-    useConnectionStore.getState().applyEvents([
-      ev('session.ask', { askId: 'a-1', summary: '어느 브랜치로 할까요?', options: ['main', 'dev'] }, 's-1'),
-    ]);
+    useConnectionStore
+      .getState()
+      .applyEvents([
+        ev(
+          'session.ask',
+          { askId: 'a-1', summary: '어느 브랜치로 할까요?', options: ['main', 'dev'] },
+          's-1',
+        ),
+      ]);
     const item = useConnectionStore.getState().attention[0];
     expect(item).toMatchObject({ kind: 'ask', refId: 'a-1', options: ['main', 'dev'] });
   });

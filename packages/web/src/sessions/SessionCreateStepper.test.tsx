@@ -111,7 +111,17 @@ describe('ConfirmSummary', () => {
 
 describe('SessionCreateStepper steps', () => {
   it('machine step offers local + CONNECTED machines only, with the note', () => {
-    useToolsStore.setState({ tools: [{ ...CLAUDE_TOOL, capabilities: { ...CLAUDE_TOOL.capabilities, permissionModes: [...CLAUDE_TOOL.capabilities.permissionModes] } }] });
+    useToolsStore.setState({
+      tools: [
+        {
+          ...CLAUDE_TOOL,
+          capabilities: {
+            ...CLAUDE_TOOL.capabilities,
+            permissionModes: [...CLAUDE_TOOL.capabilities.permissionModes],
+          },
+        },
+      ],
+    });
     useMachinesStore.setState({
       machines: {
         mars: { id: 'mars', label: 'Mars', state: 'connected', lastSeenAt: 1 },
@@ -140,7 +150,17 @@ describe('SessionCreateStepper steps', () => {
   });
 
   it('confirm step shows the summary + default-profile badge and the spawn action', () => {
-    useToolsStore.setState({ tools: [{ ...CLAUDE_TOOL, capabilities: { ...CLAUDE_TOOL.capabilities, permissionModes: [...CLAUDE_TOOL.capabilities.permissionModes] } }] });
+    useToolsStore.setState({
+      tools: [
+        {
+          ...CLAUDE_TOOL,
+          capabilities: {
+            ...CLAUDE_TOOL.capabilities,
+            permissionModes: [...CLAUDE_TOOL.capabilities.permissionModes],
+          },
+        },
+      ],
+    });
     useSpawnStepperStore.setState({
       open: true,
       step: 'confirm',
@@ -153,7 +173,9 @@ describe('SessionCreateStepper steps', () => {
     const html = renderToStaticMarkup(<SessionCreateStepper />);
     expect(html).toContain('/w/proj');
     expect(html).toContain('plan');
-    expect(html).toContain(i18n.t('stepper.profileBadge', { profile: ko.account.profiles.default }));
+    expect(html).toContain(
+      i18n.t('stepper.profileBadge', { profile: ko.account.profiles.default }),
+    );
     expect(html).toContain(ko.stepper.spawn);
   });
 });

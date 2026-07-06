@@ -58,9 +58,11 @@ function confirmation(overrides: Partial<AttentionItem> = {}): AttentionItem {
 
 describe('AttentionSection inline answers', () => {
   it('a seeded confirmation renders inline approve/deny (GET-seed, no WS needed)', () => {
-    useConnectionStore.getState().seedConfirmations([
-      { id: 'c-1', action: 'harness.write_danger', actor: 'agent', params: {}, createdAt: 1 },
-    ]);
+    useConnectionStore
+      .getState()
+      .seedConfirmations([
+        { id: 'c-1', action: 'harness.write_danger', actor: 'agent', params: {}, createdAt: 1 },
+      ]);
     const html = render();
     expect(html).toContain(ko.home.attention.kind.confirmation);
     expect(html).toContain('harness.write_danger');

@@ -78,9 +78,13 @@ describe('GATE oracle (d) — profile switch → new-spawn env only', () => {
     expect(first.status).toBe(201);
     expect(first.body.profile).toBe('default');
     const firstPid = first.body.pid as number;
-    await expectEventually(() => captureLines(capture), (l) => l.length === 1, {
-      timeoutMs: 10_000,
-    });
+    await expectEventually(
+      () => captureLines(capture),
+      (l) => l.length === 1,
+      {
+        timeoutMs: 10_000,
+      },
+    );
     expect(captureLines(capture)).toEqual(['unset']); // default = env untouched
 
     // Switch (user) — live claude session count rides the response.
@@ -128,9 +132,13 @@ describe('GATE oracle (d) — profile switch → new-spawn env only', () => {
     });
     expect(second.status).toBe(201);
     expect(second.body.profile).toBe('work');
-    await expectEventually(() => captureLines(capture), (l) => l.length === 2, {
-      timeoutMs: 10_000,
-    });
+    await expectEventually(
+      () => captureLines(capture),
+      (l) => l.length === 2,
+      {
+        timeoutMs: 10_000,
+      },
+    );
     expect(captureLines(capture)[1]).toBe(configHome); // CLAUDE_CONFIG_DIR=<fake>/claude-work
 
     // Credential-bridge negative: the server neither created nor removed
@@ -165,9 +173,13 @@ describe('stepper spawn fields (oracle g, server half)', () => {
     });
     expect(res.status).toBe(201);
     expect(res.body.machine).toBe('local');
-    const lines = await expectEventually(() => captureLines(argsCapture), (l) => l.length === 1, {
-      timeoutMs: 10_000,
-    });
+    const lines = await expectEventually(
+      () => captureLines(argsCapture),
+      (l) => l.length === 1,
+      {
+        timeoutMs: 10_000,
+      },
+    );
     expect(lines[0]).toBe('--model opus --permission-mode plan');
     fs.rmSync(tools, { recursive: true, force: true });
   }, 20_000);

@@ -14,12 +14,7 @@ import type { HarnessFileDto, HarnessReadDto } from '@terminull/shared';
 import i18n from '../i18n';
 import ko from '../i18n/locales/ko.json';
 import { useHarnessStore, type HarnessFileEditState } from '../stores/harness';
-import {
-  CustomGroupCard,
-  FileRow,
-  HarnessFileEditor,
-  SaveOutcomeNote,
-} from './HarnessSection';
+import { CustomGroupCard, FileRow, HarnessFileEditor, SaveOutcomeNote } from './HarnessSection';
 
 vi.mock('../stores/harness', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../stores/harness')>();
@@ -94,7 +89,11 @@ function fileState(overrides: Partial<HarnessFileEditState> = {}): HarnessFileEd
 describe('manifest rows', () => {
   it('renders the Korean label, risk badge, and honest missing chip', () => {
     const html = renderToStaticMarkup(
-      <FileRow spec={spec({ exists: false, riskLevel: 'high' })} selected={false} onSelect={() => {}} />,
+      <FileRow
+        spec={spec({ exists: false, riskLevel: 'high' })}
+        selected={false}
+        onSelect={() => {}}
+      />,
     );
     expect(html).toContain('설정 파일');
     expect(html).toContain(ko.settings.agent.risk.high);
@@ -202,7 +201,9 @@ describe('editor chrome', () => {
       files: { 'claude.md.global': fileState({ fileId: 'claude.md.global' }) },
     });
     const low = renderToStaticMarkup(
-      <HarnessFileEditor spec={spec({ id: 'claude.md.global', riskLevel: 'low', format: 'markdown' })} />,
+      <HarnessFileEditor
+        spec={spec({ id: 'claude.md.global', riskLevel: 'low', format: 'markdown' })}
+      />,
     );
     expect(low).not.toContain(ko.harness.editor.dangerNote);
   });

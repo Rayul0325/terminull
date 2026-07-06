@@ -1,0 +1,11 @@
+{"type":"user","message":{"content":[{"type":"text","text":"hello there"}]}}
+{"type":"assistant","timestamp":"2026-07-06T00:00:02.000Z","message":{"content":[{"type":"text","text":"Hi! Let me help."}]}}
+{"type":"assistant","message":{"content":[{"type":"tool_use","name":"Bash","input":{"command":"ls -la","description":"List files"}}]}}
+{"type":"assistant","message":{"content":[{"type":"tool_use","name":"Write","input":{"file_path":"/a/b/c.ts","content":"x"}}]}}
+{"type":"assistant","message":{"content":[{"type":"tool_use","name":"AskUserQuestion","input":{"questions":[{"question":"Which option?"}]}}]}}
+{"type":"assistant","message":{"content":[{"type":"tool_use","name":"ExitPlanMode","input":{"plan":"do the thing"}}]}}
+{"type":"assistant","isSidechain":true,"message":{"content":[{"type":"text","text":"subagent chatter"}]}}
+{"type":"user","isMeta":true,"message":{"content":[{"type":"text","text":"meta noise"}]}}
+{"type":"user","message":{"content":[{"type":"text","text":"<command-name>/checkpoint</command-name><command-args>save now</command-args>"}]}}
+{"type":"user","message":{"content":[{"type":"text","text":"<system-reminder>injected junk</system-reminder>real question here"}]}}
+{"type":"assistant","message":{"content":[{"type":"text","tex

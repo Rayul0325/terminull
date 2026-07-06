@@ -11,12 +11,20 @@
       "import": "./dist/index.js"
     }
   },
+  "files": [
+    "dist",
+    "harness"
+  ],
   "scripts": {
     "build": "tsc -b",
     "test": "vitest run",
     "typecheck": "tsc -b"
   },
   "dependencies": {
-    "@terminull/adapter-sdk": "workspace:*"
+    "@terminull/adapter-sdk": "workspace:*",
+    "@terminull/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@terminull/session-host": "workspace:*"
   }
 }

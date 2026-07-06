@@ -68,6 +68,13 @@ importers:
       '@terminull/adapter-sdk':
         specifier: workspace:*
         version: link:../../adapter-sdk
+      '@terminull/shared':
+        specifier: workspace:*
+        version: link:../../shared
+    devDependencies:
+      '@terminull/session-host':
+        specifier: workspace:*
+        version: link:../../session-host
 
   packages/adapters/codex:
     dependencies:

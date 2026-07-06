@@ -6,5 +6,12 @@
   },
   "include": ["src/**/*"],
   "exclude": ["src/**/*.test.ts", "dist", "node_modules"],
-  "references": [{ "path": "../core" }, { "path": "../adapter-sdk" }]
+  "references": [
+    { "path": "../core" },
+    { "path": "../shared" },
+    { "path": "../adapter-sdk" },
+    { "path": "../session-host" },
+    { "path": "../adapters/claude" },
+    { "path": "../adapters/generic" }
+  ]
 }

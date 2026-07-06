@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Terminull — 세션</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+      }
+      body {
+        font:
+          15px/1.5 system-ui,
+          sans-serif;
+        max-width: 720px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+      }
+      h1 {
+        font-size: 1.2rem;
+      }
+      small {
+        opacity: 0.6;
+      }
+      ul {
+        list-style: none;
+        padding: 0;
+      }
+      li {
+        padding: 0.5rem 0.7rem;
+        border: 1px solid rgba(128, 128, 128, 0.35);
+        border-radius: 8px;
+        margin: 0.4rem 0;
+      }
+      .live {
+        font-weight: 600;
+      }
+      .dot {
+        display: inline-block;
+        width: 0.6em;
+        height: 0.6em;
+        border-radius: 50%;
+        background: #999;
+        margin-right: 0.5em;
+      }
+      .live .dot {
+        background: #2f9e44;
+      }
+      .warn {
+        color: #c92a2a;
+      }
+      .empty {
+        opacity: 0.7;
+        padding: 1rem 0;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Terminull — 세션 <small id="stamp"></small></h1>
+    <p><small>M6 웹 앱이 오기 전까지의 임시 화면입니다. 5초마다 자동 새로고침됩니다.</small></p>
+    <div id="adapters"></div>
+    <ul id="list"></ul>
+    <div id="empty" class="empty" hidden>표시할 세션이 없습니다.</div>
+    <div id="error" class="warn" hidden></div>
+    <script>
+      const $ = (id) => document.getElementById(id);
+      const esc = (s) =>
+        String(s ?? '').replace(
+          /[&<>"]/g,
+          (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c],
+        );
+      async function refresh() {
+        try {
+          const res = await fetch('/api/fleet');
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          const fleet = await res.json();
+          $('error').hidden = true;
+          $('stamp').textContent = new Date(fleet.generatedAt).toLocaleTimeString();
+          const broken = fleet.adapters.filter((a) => !a.ok);
+          $('adapters').innerHTML = broken.length
+            ? '<p class="warn">수집 실패 어댑터: ' +
+              broken.map((a) => esc(a.adapterId)).join(', ') +
+              '</p>'
+            : '';
+          const items = fleet.sessions.map(
+            (s) =>
+              '<li class="' +
+              (s.live ? 'live' : '') +
+              '"><span class="dot"></span>' +
+              esc(s.title || s.id) +
+              ' <small>' +
+              esc(s.tool) +
+              (s.live ? ' · 실행 중' : ' · 종료/기록') +
+              (s.cwd ? ' · ' + esc(s.cwd) : '') +
+              '</small></li>',
+          );
+          $('list').innerHTML = items.join('');
+          $('empty').hidden = items.length > 0;
+        } catch (e) {
+          $('error').textContent = '서버에 연결하지 못했습니다 (' + esc(e.message) + ')';
+          $('error').hidden = false;
+        }
+      }
+      refresh();
+      setInterval(refresh, 5000);
+    </script>
+  </body>
+</html>

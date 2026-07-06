@@ -5,6 +5,9 @@
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "bin": {
+    "terminull-server": "./dist/bin.js"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -12,12 +15,21 @@
     }
   },
   "scripts": {
-    "build": "tsc -b",
+    "build": "tsc -b && node ./scripts/copy-assets.mjs",
     "test": "vitest run",
     "typecheck": "tsc -b"
   },
   "dependencies": {
+    "@terminull/adapter-claude": "workspace:*",
+    "@terminull/adapter-generic": "workspace:*",
     "@terminull/adapter-sdk": "workspace:*",
-    "@terminull/core": "workspace:*"
+    "@terminull/core": "workspace:*",
+    "@terminull/session-host": "workspace:*",
+    "@terminull/shared": "workspace:*",
+    "ws": "^8.18.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@types/ws": "^8.5.13"
   }
 }

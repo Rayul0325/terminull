@@ -1,5 +1,6 @@
 export * from './events.js';
 export * from './host-protocol.js';
+export * from './panel-protocol.js';
 export * from './plugin-api.js';
 
 /** Metadata shared by every Terminull package. */

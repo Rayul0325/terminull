@@ -45,8 +45,9 @@ export default tseslint.config(
     },
   },
   {
-    // Test files use loose fixtures; relax a couple of rules there.
-    files: ['**/*.test.ts', '**/*.test.tsx'],
+    // Test files (and their harness helpers under test/) use loose fixtures;
+    // relax a couple of rules there.
+    files: ['**/*.test.ts', '**/*.test.tsx', '**/test/**/*.ts'],
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
     },

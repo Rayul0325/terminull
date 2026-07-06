@@ -1,3 +1,4 @@
+export * from './agent-protocol.js';
 export * from './events.js';
 export * from './host-protocol.js';
 export * from './panel-protocol.js';

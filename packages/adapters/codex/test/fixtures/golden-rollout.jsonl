@@ -1,0 +1,15 @@
+{"timestamp":"2026-07-06T00:00:00.000Z","type":"session_meta","payload":{"id":"sess-1","session_id":"sess-1","cwd":"/tmp/proj","originator":"cli"}}
+{"type":"turn_context","payload":{"cwd":"/tmp/proj","model":"gpt-x","approval_policy":"on-request","sandbox_policy":"read-only"}}
+{"type":"response_item","payload":{"type":"message","role":"developer","content":[{"type":"input_text","text":"SYSTEM INSTRUCTIONS — dropped"}]}}
+{"type":"response_item","payload":{"type":"message","role":"user","content":[{"type":"input_text","text":"hello codex"}]}}
+{"type":"event_msg","payload":{"type":"user_message","message":"hello codex"}}
+{"type":"response_item","payload":{"type":"reasoning","summary":[]}}
+{"timestamp":"2026-07-06T00:00:02.000Z","type":"response_item","payload":{"type":"message","role":"assistant","content":[{"type":"output_text","text":"Hi, I can help."}]}}
+{"type":"event_msg","payload":{"type":"agent_message","message":"Hi, I can help."}}
+{"type":"response_item","payload":{"type":"function_call","name":"exec_command","call_id":"c1","arguments":"{\"command\":[\"bash\",\"-lc\",\"ls -la\"]}"}}
+{"type":"response_item","payload":{"type":"function_call_output","call_id":"c1","output":"exit 0: 2 files"}}
+{"type":"event_msg","payload":{"type":"agent_message","message":"Only in the event stream"}}
+{"type":"event_msg","payload":{"type":"token_count","rate_limits":{"primary":{"used_percent":42.5,"window_minutes":300,"resets_at":1782459473},"secondary":{"used_percent":10,"window_minutes":10080,"resets_at":1782999999}}}}
+{"type":"response_item","payload":{"type":"web_search_call","action":{"query":"codex news"}}}
+{"type":"response_item","payload":{"type":"custom_widget"}}
+{"type":"response_item","payload":{"type":"message","role":"assistan

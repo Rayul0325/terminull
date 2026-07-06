@@ -7,16 +7,13 @@
  * new-session stepper are later M6 packets — not faked here.
  */
 import { useState, type ReactElement } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ApprovalsInbox } from '../agent/ApprovalsInbox';
 import { AttentionSection } from '../inbox/AttentionSection';
 import { SessionCreateStepper } from '../sessions/SessionCreateStepper';
 import { useSpawnStepperStore } from '../stores/spawnStepper';
 import { MachinesStrip, machineLabel } from '../machines/MachinesStrip';
-import { FleetHealthLine } from '../components/fleet/FleetHealthLine';
-import { ProjectGroup } from '../components/fleet/ProjectGroup';
-import { SessionRow } from '../components/fleet/SessionRow';
 import { groupByProject, projectIdOf, sessionMachineId, useFleetStore } from '../stores/fleet';
 import { LOCAL_MACHINE, useMachinesStore } from '../stores/machines';
 import { useConnectionStore } from '../stores/connection';
@@ -57,7 +54,6 @@ function StatusStrip(): ReactElement {
 
 export function ManageHome(): ReactElement {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const snapshot = useFleetStore((s) => s.snapshot);
   const errorCode = useFleetStore((s) => s.errorCode);
   const machines = useMachinesStore((s) => s.machines);
@@ -72,7 +68,6 @@ export function ManageHome(): ReactElement {
 
   return (
     <div style={{ maxWidth: 1080, margin: '0 auto', padding: 16, display: 'grid', gap: 12 }}>
-      <FleetHealthLine />
       <StatusStrip />
       <AttentionSection />
       <ApprovalsInbox />
@@ -119,67 +114,62 @@ export function ManageHome(): ReactElement {
         {snapshot && groups.length === 0 ? (
           <div style={{ color: 'var(--tn-fg-muted)' }}>{t('fleet.empty')}</div>
         ) : null}
-        {groups.map(([cwd, sessions]) => {
-          // One project node = one cwd-group. A group entirely on a single
-          // non-local machine shows ONE header badge; mixed groups fall back to
-          // per-row badges so no session's machine is silently hidden.
-          const machineIds = new Set(sessions.map(sessionMachineId));
-          const groupMachine = machineIds.size === 1 ? [...machineIds][0] : null;
-          const anyBusy = sessions.some(
-            (s) => s.live && machines[sessionMachineId(s)]?.state !== 'stale',
-          );
-          const name = cwd
-            ? (cwd
-                .split('/')
-                .filter((p) => p !== '')
-                .pop() ?? cwd)
-            : t('home.fleet.unknownProject');
-          const headerMachineBadge =
-            groupMachine && groupMachine !== LOCAL_MACHINE ? (
-              <span className="tn-badge" title={groupMachine}>
-                {machineLabel(t, groupMachine, machines[groupMachine])}
+        {groups.map(([cwd, sessions]) => (
+          <div key={cwd || 'unknown'} style={{ margin: '10px 0' }}>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 4 }}>
+              <Link
+                to={`/workspace/${projectIdOf(cwd || undefined)}`}
+                style={{ fontWeight: 600, color: 'var(--tn-fg)', textDecoration: 'none' }}
+              >
+                {cwd || t('home.fleet.unknownProject')}
+              </Link>
+              <span className="tn-chip">
+                {t('home.fleet.sessionCount', { count: sessions.length })}
               </span>
-            ) : null;
-          return (
-            <ProjectGroup
-              key={cwd || 'unknown'}
-              name={name}
-              fullPath={cwd || undefined}
-              anyBusy={anyBusy}
-              count={sessions.length}
-              machineBadge={headerMachineBadge}
-              headerRight={
-                <Link
-                  to={`/workspace/${projectIdOf(cwd || undefined)}`}
-                  className="tn-badge"
-                  style={{ textDecoration: 'none' }}
-                >
-                  {t('home.fleet.openWorkspace')}
-                </Link>
-              }
-            >
-              {sessions.map((s) => {
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {sessions.slice(0, 12).map((s) => {
                 const machineId = sessionMachineId(s);
-                const stale = machines[machineId]?.state === 'stale';
-                const rowBadge =
-                  groupMachine === null && machineId !== LOCAL_MACHINE ? (
-                    <span className="tn-badge" title={machineId}>
-                      {machineLabel(t, machineId, machines[machineId])}
-                    </span>
-                  ) : null;
+                const machineStale = machines[machineId]?.state === 'stale';
                 return (
-                  <SessionRow
+                  <Link
                     key={s.id}
-                    session={s}
-                    stale={stale}
-                    machineBadge={rowBadge}
-                    onOpen={() => navigate(`/session/${encodeURIComponent(s.id)}`)}
-                  />
+                    to={`/session/${encodeURIComponent(s.id)}`}
+                    className="tn-chip"
+                    style={{
+                      textDecoration: 'none',
+                      maxWidth: 280,
+                      // Stale machine ⇒ last-known snapshot, never a live dot.
+                      opacity: machineStale ? 0.55 : 1,
+                    }}
+                    title={
+                      machineStale
+                        ? `${s.title ?? s.id} — ${t('machines.staleSnapshot')}`
+                        : (s.title ?? s.id)
+                    }
+                  >
+                    <span className={`tn-dot ${s.live && !machineStale ? 'tn-dot--live' : ''}`} />
+                    <span
+                      style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                    >
+                      {s.title ?? s.id}
+                    </span>
+                    {machineId !== LOCAL_MACHINE ? (
+                      <span style={{ fontSize: 11, color: 'var(--tn-fg-faint)' }}>
+                        {machineLabel(t, machineId, machines[machineId])}
+                      </span>
+                    ) : null}
+                  </Link>
                 );
               })}
-            </ProjectGroup>
-          );
-        })}
+              {sessions.length > 12 ? (
+                <span className="tn-chip">
+                  {t('home.fleet.more', { count: sessions.length - 12 })}
+                </span>
+              ) : null}
+            </div>
+          </div>
+        ))}
       </section>
       <SessionCreateStepper />
     </div>

@@ -53,35 +53,7 @@
     "loadFailed": "セッションの読み込みに失敗しました（{{code}}）",
     "collectorFailed": "一部のコレクターが失敗しました: {{adapters}}",
     "empty": "表示するセッションがありません。",
-    "live": "ライブ",
-    "more": "他 {{count}} 件",
-    "health": {
-      "ok": "正常",
-      "attention": "要対応",
-      "offline": "接続切断"
-    },
-    "status": {
-      "running": "作業中",
-      "idle": "待機",
-      "waiting": "応答待ち",
-      "ended": "終了"
-    },
-    "relative": {
-      "justNow": "たった今",
-      "minutesAgo": "{{count}}分前",
-      "hoursAgo": "{{count}}時間前",
-      "daysAgo": "{{count}}日前"
-    },
-    "activity": {
-      "unknown": "確認中…"
-    },
-    "group": {
-      "count": "{{count}}"
-    },
-    "section": {
-      "live": "実行中",
-      "ended": "最近終了"
-    }
+    "live": "ライブ"
   },
   "machines": {
     "title": "マシン",
@@ -131,9 +103,7 @@
       "event": "イベント",
       "reasoning": "推論",
       "sidechain": "サブエージェント",
-      "system": "システム",
-      "toolResult": "ツール結果",
-      "empty": "(内容なし)"
+      "system": "システム"
     },
     "generic": {
       "noText": "表示する内容がありません。",
@@ -151,69 +121,6 @@
       "writeSize": "{{count}} 文字",
       "detail": "詳細",
       "contentUnavailable": "内容なし"
-    },
-    "toolLabel": {
-      "Bash": "コマンド実行",
-      "Read": "ファイル読み込み",
-      "Edit": "ファイル編集",
-      "Write": "ファイル作成",
-      "NotebookEdit": "ノートブック編集",
-      "Grep": "検索",
-      "Glob": "ファイル検索",
-      "Task": "エージェント",
-      "Agent": "エージェント",
-      "WebFetch": "Web取得",
-      "WebSearch": "Web検索",
-      "TodoWrite": "タスク",
-      "AskUserQuestion": "質問",
-      "ExitPlanMode": "プラン承認"
-    },
-    "field": {
-      "checking": "確認中…"
-    },
-    "edit": {
-      "title": "編集",
-      "viewDiff": "差分を表示",
-      "noChange": "変更なし"
-    },
-    "read": {
-      "title": "読み込み",
-      "range": "{{offset}}行目から{{limit}}行"
-    },
-    "grep": {
-      "title": "検索",
-      "scope": "範囲"
-    },
-    "glob": {
-      "title": "ファイル検索",
-      "scope": "範囲"
-    },
-    "agent": {
-      "title": "エージェント起動",
-      "noPrompt": "(指示なし)"
-    },
-    "ask": {
-      "title": "質問",
-      "awaiting": "回答待ち",
-      "answered": "回答済み"
-    },
-    "plan": {
-      "title": "プラン承認",
-      "viewPlan": "プランを表示"
-    },
-    "todo": {
-      "title": "タスク",
-      "empty": "タスクなし",
-      "done": "完了",
-      "inProgress": "進行中",
-      "pending": "保留"
-    },
-    "result": {
-      "missing": "結果を受信していません",
-      "error": "エラー"
-    },
-    "system": {
-      "hookTag": "システム通知"
     }
   },
   "composer": {
@@ -286,8 +193,7 @@
   },
   "detail": {
     "markdownPending": "Markdown プレビューは準備中 — 生テキストを表示しています",
-    "kindUnavailable": "「{{kind}}」の詳細表示はまだ利用できません。",
-    "viewMarkdown": "マークダウン"
+    "kindUnavailable": "「{{kind}}」の詳細表示はまだ利用できません。"
   },
   "keys": {
     "nextTab": "次のタブ",
@@ -305,10 +211,7 @@
       "theme": "テーマ",
       "themeAuto": "システムに合わせる",
       "themeLight": "ライト",
-      "themeDark": "ダーク",
-      "themeFamily": "テーマスタイル",
-      "familyObservatory": "オブザーバトリー (ウォーム)",
-      "familyClear": "クリア"
+      "themeDark": "ダーク"
     },
     "keys": {
       "title": "キーボードショートカット",

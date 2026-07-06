@@ -1,14 +1,12 @@
 /**
  * FleetPanel render tests — the honesty-critical machine treatment (contract
  * §7, D1): a session on a STALE machine must render as a last-known snapshot —
- * dimmed (opacity 0.55), an `offline` status dot (never a `running` one) even
- * when `s.live` is true, and an honest staleSnapshot chip; a session on a
- * CONNECTED machine gets a `running` status dot. The panel now composes the
- * shared SessionRow (P1-B), so state shows as `.tn-status-dot--*`, not the old
- * `.tn-dot--live`. No DOM test environment in this package, so the panel renders
- * to static markup (react-dom/server), mirroring ApprovalsInbox.test. Store
- * state is injected directly (the panel reads it synchronously in render); the
- * throttled REST refetch never runs under renderToStaticMarkup.
+ * dimmed (opacity 0.55), NO live dot even when `s.live` is true, and an honest
+ * staleSnapshot chip — never as live data; a session on a CONNECTED machine
+ * keeps its live dot. No DOM test environment in this package, so the panel
+ * renders to static markup (react-dom/server), mirroring ApprovalsInbox.test.
+ * Store state is injected directly (the panel reads it synchronously in
+ * render); the throttled REST refetch never runs under renderToStaticMarkup.
  */
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
@@ -75,7 +73,7 @@ function render(): string {
 }
 
 describe('FleetPanel machine honesty', () => {
-  it('stale machine: live session renders dimmed, offline dot (not running), staleSnapshot chip', () => {
+  it('stale machine: live session renders dimmed, no live dot, staleSnapshot chip', () => {
     // A live session on a machine that stopped responding — the machine's
     // stale state must win over the session's own `live:true`.
     useMachinesStore.setState({ machines: { mars: machine({ state: 'stale', lastSeenAt: 500 }) } });
@@ -89,16 +87,14 @@ describe('FleetPanel machine honesty', () => {
     // Dimmed last-known snapshot, and the honest chip.
     expect(html).toContain('opacity:0.55');
     expect(html).toContain(ko.machines.staleSnapshot);
-    // Human title, not a bare uuid.
-    expect(html).toContain('mars-job');
-    // Offline dot — never a running/live signal for a stale machine.
-    expect(html).toContain('tn-status-dot--offline');
-    expect(html).not.toContain('tn-status-dot--running');
+    // No live dot anywhere (the only machine is stale), and NOT the live chip.
+    expect(html).not.toContain('tn-dot--live');
+    expect(html).not.toContain(ko.fleet.live);
     // Remote machine chip carries the config label.
     expect(html).toContain('Mars');
   });
 
-  it('connected machine: live session gets a running dot, not dimmed, no stale chip', () => {
+  it('connected machine: live session keeps its live dot and live chip, not dimmed', () => {
     useMachinesStore.setState({ machines: { mars: machine({ state: 'connected' }) } });
     useFleetStore.setState({
       snapshot: fleetSnapshot({
@@ -107,19 +103,21 @@ describe('FleetPanel machine honesty', () => {
     });
     const html = render();
 
-    expect(html).toContain('tn-status-dot--running');
+    expect(html).toContain('tn-dot--live');
+    expect(html).toContain(ko.fleet.live);
     expect(html).not.toContain(ko.machines.staleSnapshot);
     expect(html).not.toContain('opacity:0.55');
   });
 
-  it('local session has no machine chip and gets a running dot', () => {
+  it('local session has no machine chip and stays live', () => {
     useFleetStore.setState({
       snapshot: fleetSnapshot({
         sessions: [fleetSession({ id: 's-local', title: 'local-job', live: true })],
       }),
     });
     const html = render();
-    expect(html).toContain('tn-status-dot--running');
+    expect(html).toContain('tn-dot--live');
+    expect(html).toContain(ko.fleet.live);
     expect(html).not.toContain(ko.machines.staleSnapshot);
   });
 

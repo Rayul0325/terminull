@@ -12,7 +12,6 @@ import type { CollectContext, DiscoveredSession, ToolAdapter } from '@terminull/
 import {
   LOCAL_MACHINE_ID,
   type Collected,
-  type Envelope,
   type MachineStateDto,
   type SessionSummary,
 } from '@terminull/shared';
@@ -36,59 +35,6 @@ export interface FleetSession extends DiscoveredSession {
   serverSessionId?: string;
   /** Machine this session lives on. Absent = 'local' (M8, additive). */
   machine?: string;
-  /**
-   * What this session is doing right now, derived from the server's in-memory
-   * recent-event window (never a disk re-parse). `toolName` is the RAW tool
-   * name (e.g. 'Bash') — the web maps it to a localized label; `summary` is a
-   * short human string (a bash description, a file path). Absent = honestly
-   * unknown; the client renders "확인 중"/"—" rather than a fabricated value.
-   */
-  lastActivity?: { toolName?: string; summary?: string };
-}
-
-/** The slice of a recent in-memory event needed to derive `lastActivity`. */
-type RecentEvent = Pick<Envelope, 'sessionId' | 'payload'>;
-
-/** Read a non-empty string field from an event's opaque payload, or undefined. */
-function payloadStr(payload: unknown, key: string): string | undefined {
-  if (payload && typeof payload === 'object' && !Array.isArray(payload)) {
-    const val = (payload as Record<string, unknown>)[key];
-    if (typeof val === 'string' && val.length > 0) return val;
-  }
-  return undefined;
-}
-
-/**
- * Derive a session's "what is it doing right now" from the server's in-memory
- * recent-event window. Scans newest-first for the most recent event belonging
- * to `sessionId` that carries a tool-activity signal (`toolName`, or a summary
- * string), and returns the raw tool name plus an optional short summary.
- *
- * Returns `undefined` when no such event exists — an HONEST absent, never a
- * fabricated placeholder. `recentEvents` is expected in append (oldest-first)
- * order, matching `EventStore.inbox`; the newest matching event wins.
- */
-export function lastActivityForSession(
-  recentEvents: readonly RecentEvent[],
-  sessionId: string,
-): { toolName?: string; summary?: string } | undefined {
-  for (let i = recentEvents.length - 1; i >= 0; i--) {
-    const ev = recentEvents[i];
-    if (!ev || ev.sessionId !== sessionId) continue;
-    const toolName = payloadStr(ev.payload, 'toolName');
-    // Prefer an explicit summary; fall back to the classic PostToolUse human
-    // strings (a bash description, a file path).
-    const summary =
-      payloadStr(ev.payload, 'summary') ??
-      payloadStr(ev.payload, 'description') ??
-      payloadStr(ev.payload, 'file');
-    if (toolName === undefined && summary === undefined) continue;
-    return {
-      ...(toolName !== undefined ? { toolName } : {}),
-      ...(summary !== undefined ? { summary } : {}),
-    };
-  }
-  return undefined;
 }
 
 /** The `GET /api/fleet` payload. */
@@ -109,11 +55,6 @@ export async function collectFleet(
   adapters: Map<string, ToolAdapter>,
   registry: SessionRegistry,
   ctx: CollectContext,
-  // Optional in-memory recent-event window (e.g. `EventStore.inbox`). When
-  // provided, each local session is enriched with `lastActivity` derived from
-  // its most recent event; absent/empty leaves every session's `lastActivity`
-  // undefined (honest absent). Never re-parses transcripts from disk.
-  recentEvents: readonly RecentEvent[] = [],
 ): Promise<FleetSnapshot> {
   const statuses: AdapterFleetStatus[] = [];
   const sessions: FleetSession[] = [];
@@ -160,16 +101,6 @@ export async function collectFleet(
       serverSessionId: s.id,
       machine: LOCAL_MACHINE_ID,
     });
-  }
-
-  // Enrich with "what is it doing right now" from the in-memory event window.
-  // Sessions with no matching recent event keep `lastActivity` undefined — the
-  // client renders "확인 중"/"—", never a fabricated value.
-  if (recentEvents.length > 0) {
-    for (const s of sessions) {
-      const activity = lastActivityForSession(recentEvents, s.id);
-      if (activity !== undefined) s.lastActivity = activity;
-    }
   }
 
   sessions.sort((a, b) => (b.updatedAt ?? 0) - (a.updatedAt ?? 0));

@@ -11,7 +11,6 @@
 import type { ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MachinesStrip, machineLabel } from '../../machines/MachinesStrip';
-import { SessionRow } from '../../components/fleet/SessionRow';
 import { sessionMachineId, useFleetStore } from '../../stores/fleet';
 import { LOCAL_MACHINE, useMachinesStore } from '../../stores/machines';
 import { useWorkspace } from '../WorkspaceContext';
@@ -50,39 +49,67 @@ export function FleetPanel(): ReactElement {
       ) : null}
       {snapshot.sessions.map((s) => {
         const machineId = sessionMachineId(s);
-        const stale = machines[machineId]?.state === 'stale';
-        const machineBadge =
-          machineId !== LOCAL_MACHINE ? (
-            <span className="tn-badge" title={machineId}>
-              {machineLabel(t, machineId, machines[machineId])}
-            </span>
-          ) : null;
-        // The stale-snapshot honesty (dimming, no live dot, staleSnapshot chip)
-        // now lives inside SessionRow; the panel keeps its tool chip + explicit
-        // rw-attach affordance (M9 W6) in the row's trailing slot.
+        const machineStale = machines[machineId]?.state === 'stale';
         return (
-          <SessionRow
+          <div
             key={s.id}
-            session={s}
-            stale={stale}
-            machineBadge={machineBadge}
-            onOpen={() => workspace?.openSessionPanel(s.id, s.tool)}
-            trailing={
-              <>
-                <span className="tn-badge" title={s.tool}>
-                  {s.tool}
-                </span>
-                <button
-                  type="button"
-                  className="tn-btn"
-                  style={{ padding: '0 8px', fontSize: 12 }}
-                  onClick={() => workspace?.openTerminalPanel(s.id, 'rw')}
-                >
-                  {t('terminal.attachRw')}
-                </button>
-              </>
-            }
-          />
+            className="tn-card"
+            style={{
+              display: 'flex',
+              gap: 8,
+              alignItems: 'center',
+              width: '100%',
+              padding: '8px 10px',
+              margin: '4px 0',
+              border: '1px solid var(--tn-border)',
+              // Stale-snapshot state: the machine stopped responding, so this
+              // row is last-known data — visibly dimmed, never a live dot.
+              opacity: machineStale ? 0.55 : 1,
+            }}
+          >
+            <span className={`tn-dot ${s.live && !machineStale ? 'tn-dot--live' : ''}`} />
+            <button
+              type="button"
+              onClick={() => workspace?.openSessionPanel(s.id, s.tool)}
+              style={{
+                flex: 1,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                textAlign: 'left',
+                background: 'none',
+                border: 'none',
+                color: 'inherit',
+                font: 'inherit',
+                cursor: 'pointer',
+                padding: 0,
+              }}
+            >
+              {s.title ?? s.id}
+            </button>
+            {machineId !== LOCAL_MACHINE ? (
+              <span className="tn-chip" title={machineId}>
+                {machineLabel(t, machineId, machines[machineId])}
+              </span>
+            ) : null}
+            <span className="tn-chip">{s.tool}</span>
+            {machineStale ? (
+              <span className="tn-chip" style={{ color: 'var(--tn-warn)' }}>
+                {t('machines.staleSnapshot')}
+              </span>
+            ) : s.live ? (
+              <span className="tn-chip">{t('fleet.live')}</span>
+            ) : null}
+            {/* Explicit rw attach entry (M9 W6); plain open stays read-only. */}
+            <button
+              type="button"
+              className="tn-btn"
+              style={{ padding: '0 8px', fontSize: 12 }}
+              onClick={() => workspace?.openTerminalPanel(s.id, 'rw')}
+            >
+              {t('terminal.attachRw')}
+            </button>
+          </div>
         );
       })}
     </div>

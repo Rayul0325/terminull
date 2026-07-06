@@ -57,20 +57,16 @@ export function App(): ReactElement {
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <header
-        className="tn-hairline"
         style={{
           display: 'flex',
           alignItems: 'center',
           gap: 12,
           padding: '8px 14px',
+          borderBottom: '1px solid var(--tn-border)',
           background: 'var(--tn-bg-elevated)',
         }}
       >
-        <Link
-          to="/"
-          className="tn-display"
-          style={{ fontWeight: 600, color: 'var(--tn-fg)', textDecoration: 'none' }}
-        >
+        <Link to="/" style={{ fontWeight: 700, color: 'var(--tn-fg)', textDecoration: 'none' }}>
           {t('app.name')}
         </Link>
         <span className="tn-chip">

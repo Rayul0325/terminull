@@ -53,35 +53,7 @@
     "loadFailed": "Failed to load sessions ({{code}})",
     "collectorFailed": "Some collectors failed: {{adapters}}",
     "empty": "No sessions to show.",
-    "live": "live",
-    "more": "+{{count}} more",
-    "health": {
-      "ok": "OK",
-      "attention": "Needs attention",
-      "offline": "Disconnected"
-    },
-    "status": {
-      "running": "Working",
-      "idle": "Idle",
-      "waiting": "Awaiting reply",
-      "ended": "Ended"
-    },
-    "relative": {
-      "justNow": "just now",
-      "minutesAgo": "{{count}}m ago",
-      "hoursAgo": "{{count}}h ago",
-      "daysAgo": "{{count}}d ago"
-    },
-    "activity": {
-      "unknown": "checking…"
-    },
-    "group": {
-      "count": "{{count}}"
-    },
-    "section": {
-      "live": "Live",
-      "ended": "Recently ended"
-    }
+    "live": "live"
   },
   "machines": {
     "title": "Machines",
@@ -131,9 +103,7 @@
       "event": "event",
       "reasoning": "reasoning",
       "sidechain": "subagent",
-      "system": "system",
-      "toolResult": "Tool result",
-      "empty": "(empty)"
+      "system": "system"
     },
     "generic": {
       "noText": "Nothing to display.",
@@ -151,69 +121,6 @@
       "writeSize": "{{count}} chars",
       "detail": "Details",
       "contentUnavailable": "No content"
-    },
-    "toolLabel": {
-      "Bash": "Run command",
-      "Read": "Read file",
-      "Edit": "Edit file",
-      "Write": "Write file",
-      "NotebookEdit": "Edit notebook",
-      "Grep": "Search",
-      "Glob": "Find files",
-      "Task": "Agent",
-      "Agent": "Agent",
-      "WebFetch": "Web fetch",
-      "WebSearch": "Web search",
-      "TodoWrite": "Todos",
-      "AskUserQuestion": "Question",
-      "ExitPlanMode": "Plan approval"
-    },
-    "field": {
-      "checking": "checking…"
-    },
-    "edit": {
-      "title": "Edit",
-      "viewDiff": "View diff",
-      "noChange": "no change"
-    },
-    "read": {
-      "title": "Read",
-      "range": "from line {{offset}}, {{limit}} lines"
-    },
-    "grep": {
-      "title": "Grep",
-      "scope": "scope"
-    },
-    "glob": {
-      "title": "Glob",
-      "scope": "scope"
-    },
-    "agent": {
-      "title": "Agent launch",
-      "noPrompt": "(no prompt)"
-    },
-    "ask": {
-      "title": "Question",
-      "awaiting": "Awaiting answer",
-      "answered": "Answered"
-    },
-    "plan": {
-      "title": "Plan approval",
-      "viewPlan": "View plan"
-    },
-    "todo": {
-      "title": "Todos",
-      "empty": "No todos",
-      "done": "done",
-      "inProgress": "in progress",
-      "pending": "pending"
-    },
-    "result": {
-      "missing": "No result received",
-      "error": "Error"
-    },
-    "system": {
-      "hookTag": "System notice"
     }
   },
   "composer": {
@@ -286,8 +193,7 @@
   },
   "detail": {
     "markdownPending": "Markdown preview pending — showing raw text",
-    "kindUnavailable": "Detail view for '{{kind}}' is not available yet.",
-    "viewMarkdown": "Markdown"
+    "kindUnavailable": "Detail view for '{{kind}}' is not available yet."
   },
   "keys": {
     "nextTab": "Next tab",
@@ -305,10 +211,7 @@
       "theme": "Theme",
       "themeAuto": "Follow system",
       "themeLight": "Light",
-      "themeDark": "Dark",
-      "themeFamily": "Theme style",
-      "familyObservatory": "Observatory (warm)",
-      "familyClear": "Clear"
+      "themeDark": "Dark"
     },
     "keys": {
       "title": "Keyboard shortcuts",

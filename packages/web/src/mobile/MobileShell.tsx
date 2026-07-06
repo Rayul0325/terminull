@@ -73,12 +73,12 @@ function MobileSessionSheet({
       }}
     >
       <div
-        className="tn-hairline"
         style={{
           display: 'flex',
           gap: 8,
           alignItems: 'center',
           padding: '8px 12px',
+          borderBottom: '1px solid var(--tn-border)',
         }}
       >
         <button type="button" className="tn-btn" onClick={onClose}>

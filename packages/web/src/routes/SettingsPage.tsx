@@ -13,7 +13,7 @@ import { MachinesSection } from '../machines/MachinesSection';
 import { KEY_ACTIONS } from '../keybindings/defaults';
 import { comboAllowedInTerminal, keybindings, normalizeCombo } from '../keybindings/manager';
 import { layoutSync, useLayoutStore } from '../stores/layout';
-import { usePrefsStore, type ThemeFamily, type ThemeMode } from '../stores/prefs';
+import { usePrefsStore, type ThemeMode } from '../stores/prefs';
 
 function KeybindRow({
   actionId,
@@ -130,17 +130,6 @@ export function SettingsPage(): ReactElement {
               <option value="auto">{t('settings.general.themeAuto')}</option>
               <option value="light">{t('settings.general.themeLight')}</option>
               <option value="dark">{t('settings.general.themeDark')}</option>
-            </select>
-          </label>
-          <label style={{ display: 'grid', gap: 4, fontSize: 13 }}>
-            {t('settings.general.themeFamily')}
-            <select
-              className="tn-input"
-              value={prefs.themeFamily}
-              onChange={(e) => prefs.setThemeFamily(e.target.value as ThemeFamily)}
-            >
-              <option value="observatory">{t('settings.general.familyObservatory')}</option>
-              <option value="clear">{t('settings.general.familyClear')}</option>
             </select>
           </label>
         </div>

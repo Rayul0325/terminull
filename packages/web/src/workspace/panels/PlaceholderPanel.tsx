@@ -16,27 +16,15 @@ export function PlaceholderPanel(props: IDockviewPanelProps<PlaceholderPanelPara
       style={{
         height: '100%',
         display: 'flex',
+        flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: 24,
+        gap: 8,
+        color: 'var(--tn-fg-muted)',
       }}
     >
-      {/* Still an honest placeholder — restyled to the P0 card frame, but the
-          "not implemented yet" notice below is unchanged and non-negotiable. */}
-      <div
-        className="tn-card"
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: 8,
-          padding: '20px 28px',
-          color: 'var(--tn-fg-muted)',
-        }}
-      >
-        <span className="tn-eyebrow">{t(`panel.kind.${kind}`, kind)}</span>
-        <div>{t('panel.placeholder.notice')}</div>
-      </div>
+      <span className="tn-chip">{t(`panel.kind.${kind}`, kind)}</span>
+      <div>{t('panel.placeholder.notice')}</div>
     </div>
   );
 }

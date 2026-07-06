@@ -1,5 +1,5 @@
 {
-  "name": "@terminull/plugin-api",
+  "name": "terminull-plugin-api",
   "version": "0.1.0",
   "type": "module",
   "description": "Terminull plugin contract: manifest types + zod schemas for the 8 contribution points, the pluginApi semver gate, a programmatic plugin-directory validator, and a scaffolding generator.",

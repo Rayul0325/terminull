@@ -7,7 +7,7 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ## [0.1.0] — 2026-07-06
 
 First public release. Two packages are published to npm — `terminull` (the CLI
-product entry) and `@terminull/plugin-api` (plugin-authoring types + validator);
+product entry) and `terminull-plugin-api` (plugin-authoring types + validator);
 all other workspace packages stay private. Built across milestones M0–M10.
 
 ### Added
@@ -43,7 +43,7 @@ all other workspace packages stay private. Built across milestones M0–M10.
   editor (diff / 409 / 422 / backup-restore), account center, session-create
   stepper, keybinding editor, mobile shell.
 - **Install + publish (M10, this release)**
-  - `@terminull/plugin-api` — public plugin contract: `PLUGIN_API_VERSION`
+  - `terminull-plugin-api` — public plugin contract: `PLUGIN_API_VERSION`
     semver gate, `LocalizedText`, 8 contribution points, zod manifest schemas,
     and the node-only `validatePluginDir()` validator (manifest discovery,
     schema, semver gate, module jail, duplicate-id check).

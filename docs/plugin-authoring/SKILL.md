@@ -264,6 +264,6 @@ existence/JSON checks; fill in real content after).
 - `examples/terminull-plugin-locale-ja` — a full `ja` locale pack.
 - `examples/terminull-plugin-broken` — intentionally invalid; shows what an actionable FAIL looks like.
 
-Programmatic use: `import { validatePluginDir } from '@terminull/plugin-api/validate'`
-and `import { scaffoldPlugin } from '@terminull/plugin-api/scaffold'` (both Node-only).
-The pure entry `@terminull/plugin-api` exports the schemas + `rangeSatisfies`.
+Programmatic use: `import { validatePluginDir } from 'terminull-plugin-api/validate'`
+and `import { scaffoldPlugin } from 'terminull-plugin-api/scaffold'` (both Node-only).
+The pure entry `terminull-plugin-api` exports the schemas + `rangeSatisfies`.

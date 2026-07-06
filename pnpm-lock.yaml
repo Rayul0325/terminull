@@ -47,12 +47,12 @@ importers:
       '@terminull/core':
         specifier: workspace:*
         version: link:../core
-      '@terminull/plugin-api':
-        specifier: workspace:*
-        version: link:../plugin-api
       '@terminull/shared':
         specifier: workspace:*
         version: link:../shared
+      terminull-plugin-api:
+        specifier: workspace:*
+        version: link:../plugin-api
       zod:
         specifier: ^3.24.0
         version: 3.25.76
@@ -124,15 +124,15 @@ importers:
       '@terminull/core':
         specifier: workspace:*
         version: link:../core
-      '@terminull/plugin-api':
-        specifier: workspace:*
-        version: link:../plugin-api
       '@terminull/server':
         specifier: workspace:*
         version: link:../server
       '@terminull/shared':
         specifier: workspace:*
         version: link:../shared
+      terminull-plugin-api:
+        specifier: workspace:*
+        version: link:../plugin-api
       tsup:
         specifier: ^8.5.1
         version: 8.5.1(postcss@8.5.16)(typescript@5.9.3)
@@ -218,7 +218,7 @@ importers:
 
   packages/shared:
     dependencies:
-      '@terminull/plugin-api':
+      terminull-plugin-api:
         specifier: workspace:*
         version: link:../plugin-api
       zod:

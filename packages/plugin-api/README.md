@@ -1,4 +1,4 @@
-# @terminull/plugin-api
+# terminull-plugin-api
 
 The public plugin contract for [Terminull](https://github.com/terminull/terminull) —
 manifest types + zod schemas for the eight contribution points, the `pluginApi`
@@ -9,16 +9,16 @@ plugin author depends on to author and check a plugin against the exact contract
 the runtime enforces.
 
 ```sh
-npm install @terminull/plugin-api
+npm install terminull-plugin-api
 ```
 
 ## Three entry points
 
 | Import                           | Runtime                    | Contents                                                                                                                                                          |
 | -------------------------------- | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@terminull/plugin-api`          | pure (zod only — web-safe) | `PluginManifestSchema` + the 8 `*ContributionSchema`, `LocalizedTextSchema`, `CONTRIBUTION_POINTS`, `PLUGIN_API_VERSION`, and `rangeSatisfies` (the semver gate). |
-| `@terminull/plugin-api/validate` | Node (`node:fs`)           | `validatePluginDir(dir)` — the machine oracle behind `terminull plugins validate`.                                                                                |
-| `@terminull/plugin-api/scaffold` | Node (`node:fs`)           | `scaffoldPlugin({ point, name, targetDir })` — writes a validate-green package.                                                                                   |
+| `terminull-plugin-api`          | pure (zod only — web-safe) | `PluginManifestSchema` + the 8 `*ContributionSchema`, `LocalizedTextSchema`, `CONTRIBUTION_POINTS`, `PLUGIN_API_VERSION`, and `rangeSatisfies` (the semver gate). |
+| `terminull-plugin-api/validate` | Node (`node:fs`)           | `validatePluginDir(dir)` — the machine oracle behind `terminull plugins validate`.                                                                                |
+| `terminull-plugin-api/scaffold` | Node (`node:fs`)           | `scaffoldPlugin({ point, name, targetDir })` — writes a validate-green package.                                                                                   |
 
 The `.` entry is pure so it can ship inside a browser bundle; the `/validate`
 and `/scaffold` subpaths touch the filesystem and are Node-only.
@@ -26,7 +26,7 @@ and `/scaffold` subpaths touch the filesystem and are Node-only.
 ## Validate a plugin directory
 
 ```ts
-import { validatePluginDir } from '@terminull/plugin-api/validate';
+import { validatePluginDir } from 'terminull-plugin-api/validate';
 
 const res = validatePluginDir('./terminull-plugin-my-theme');
 if (!res.ok) {
@@ -44,7 +44,7 @@ relevant, an `at` path (`contributes.themes[0].module`) — actionable, not just
 ## Scaffold a new plugin
 
 ```ts
-import { scaffoldPlugin } from '@terminull/plugin-api/scaffold';
+import { scaffoldPlugin } from 'terminull-plugin-api/scaffold';
 
 const { dir } = scaffoldPlugin({ point: 'themes', name: 'my-theme', targetDir: '.' });
 // → ./terminull-plugin-my-theme, already passing validatePluginDir
@@ -58,7 +58,7 @@ template. Singular point names (`theme`) are accepted via
 ## The semver gate
 
 ```ts
-import { rangeSatisfies, PLUGIN_API_VERSION } from '@terminull/plugin-api';
+import { rangeSatisfies, PLUGIN_API_VERSION } from 'terminull-plugin-api';
 rangeSatisfies('^1'); // true  (host API major = PLUGIN_API_VERSION = 1)
 rangeSatisfies('^2'); // false (fail-closed)
 ```

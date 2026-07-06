@@ -12,7 +12,7 @@
  * contributions point at are consumed by the SDK, server and web layers.
  *
  * Source of truth moved from `@terminull/shared` in M10 so plugin authors can
- * depend on the PUBLIC `@terminull/plugin-api` package without the private
+ * depend on the PUBLIC `terminull-plugin-api` package without the private
  * monorepo; `@terminull/shared` re-exports everything here unchanged.
  *
  * i18n rule: every user-facing label ships BOTH `en` and `ko` (see

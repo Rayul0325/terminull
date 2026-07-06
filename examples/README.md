@@ -15,12 +15,12 @@ self-contained `node --test test.mjs`.
 
 ## Run the whole set
 
-From a built monorepo (`pnpm --filter @terminull/plugin-api build` first — the
+From a built monorepo (`pnpm --filter terminull-plugin-api build` first — the
 example self-tests import the compiled validator by relative path):
 
 ```sh
 # the canonical, CI-covered pass (validates all three + asserts the broken one fails):
-pnpm --filter @terminull/plugin-api test
+pnpm --filter terminull-plugin-api test
 
 # or each example on its own:
 node --test examples/terminull-plugin-obsidian-warm/test.mjs

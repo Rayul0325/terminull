@@ -65,9 +65,9 @@ like `>=1 <2`. `^2` / `banana` / `""` fail closed. Use `^1`.
 3. `terminull plugins validate <dir>`  (`--json` for machines)
 4. not green? fix by each issue's `code` + `at`, GOTO 3
 
-Programmatic: `import { validatePluginDir } from '@terminull/plugin-api/validate'`
-and `import { scaffoldPlugin } from '@terminull/plugin-api/scaffold'` (Node-only).
-Pure schemas + the `rangeSatisfies` gate: `@terminull/plugin-api`.
+Programmatic: `import { validatePluginDir } from 'terminull-plugin-api/validate'`
+and `import { scaffoldPlugin } from 'terminull-plugin-api/scaffold'` (Node-only).
+Pure schemas + the `rangeSatisfies` gate: `terminull-plugin-api`.
 
 ## Working examples
 

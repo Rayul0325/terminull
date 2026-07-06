@@ -21,8 +21,8 @@ incompatible or malformed plugin is disabled with a reason; it never half-loads.
 4. Not green? Use each issue's `code` + `at` (table at the bottom), fix, GOTO 3.
 
 Programmatic equivalents (Node-only): `validatePluginDir` from
-`@terminull/plugin-api/validate`; `scaffoldPlugin` from
-`@terminull/plugin-api/scaffold`.
+`terminull-plugin-api/validate`; `scaffoldPlugin` from
+`terminull-plugin-api/scaffold`.
 
 ## Eight contribution points
 

@@ -1,5 +1,5 @@
 /**
- * `terminull plugins …` — THIN wrappers over the FROZEN `@terminull/plugin-api`
+ * `terminull plugins …` — THIN wrappers over the FROZEN `terminull-plugin-api`
  * surface (contract §D4). No plugin logic lives here: validation is
  * `validatePluginDir`, scaffolding is `scaffoldPlugin`, and every scaffold is
  * re-validated the moment it is written (gate (e) — templates can never drift
@@ -11,8 +11,8 @@
  */
 import fsp from 'node:fs/promises';
 import path from 'node:path';
-import { normalizeScaffoldPoint, scaffoldPlugin } from '@terminull/plugin-api/scaffold';
-import { type PluginValidationResult, validatePluginDir } from '@terminull/plugin-api/validate';
+import { normalizeScaffoldPoint, scaffoldPlugin } from 'terminull-plugin-api/scaffold';
+import { type PluginValidationResult, validatePluginDir } from 'terminull-plugin-api/validate';
 import { t } from './messages.js';
 
 interface Io {

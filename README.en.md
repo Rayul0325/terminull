@@ -10,7 +10,7 @@ web panel. Every string is dual-locale (Korean / English).
 
 **Status: v0.1.0 (first public release).** Exactly TWO packages are published to
 npm — the product entry `terminull` (this CLI) and the plugin-authoring
-types/validator library `@terminull/plugin-api`. Every other workspace package
+types/validator library `terminull-plugin-api`. Every other workspace package
 stays private.
 
 ---
@@ -130,9 +130,9 @@ Plugins **never modify core** — they extend only through the 8 contribution
 points: `adapters` · `renderers` · `panels` · `themes` · `locales` · `keymaps` ·
 `harnessForms` · `commands`.
 
-- **`@terminull/plugin-api`** (public npm package) — manifest zod schemas, the
+- **`terminull-plugin-api`** (public npm package) — manifest zod schemas, the
   semver gate (`PLUGIN_API_VERSION`), and the real validator
-  `validatePluginDir()` at `@terminull/plugin-api/validate` (manifest discovery
+  `validatePluginDir()` at `terminull-plugin-api/validate` (manifest discovery
   → schema → semver → module jail → duplicate-id). This is the machine oracle.
 - **`terminull plugins validate <dir>`** — wraps the validator, printing issues
   with `at` paths (exit 1 on errors, `--json` for machines).

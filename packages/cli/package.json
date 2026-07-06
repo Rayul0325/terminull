@@ -56,7 +56,7 @@
     "@terminull/adapter-codex": "workspace:*",
     "@terminull/adapter-sdk": "workspace:*",
     "@terminull/core": "workspace:*",
-    "@terminull/plugin-api": "workspace:*",
+    "terminull-plugin-api": "workspace:*",
     "@terminull/server": "workspace:*",
     "@terminull/shared": "workspace:*",
     "tsup": "^8.5.1"

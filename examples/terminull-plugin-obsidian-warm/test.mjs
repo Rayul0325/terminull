@@ -1,7 +1,7 @@
 /**
  * Self-test: this example theme plugin passes the programmatic validator.
  * Run from a built monorepo: `node --test test.mjs` (imports the compiled
- * `@terminull/plugin-api` validator by relative path — examples are not
+ * `terminull-plugin-api` validator by relative path — examples are not
  * workspace members, so there is no bare-specifier resolution to rely on).
  */
 import { test } from 'node:test';

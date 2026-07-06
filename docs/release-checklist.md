@@ -7,7 +7,7 @@
 
 게시 대상 공개 패키지는 **딱 둘**입니다:
 
-1. `@terminull/plugin-api` (packages/plugin-api) — 플러그인 작성용 타입/검증
+1. `terminull-plugin-api` (packages/plugin-api) — 플러그인 작성용 타입/검증
 2. `terminull` (packages/cli) — 제품 진입점, `npx terminull setup`
 
 나머지 워크스페이스 패키지는 모두 `"private": true`라 게시되지 않습니다.
@@ -40,30 +40,30 @@ pnpm typecheck
 
 ```sh
 # 게시될 파일 목록을 실제 게시 없이 미리 본다 (부작용 없음)
-npm pack --dry-run -w @terminull/plugin-api
+cd packages/plugin-api && npm pack --dry-run && cd -
 cd packages/cli && npm pack --dry-run && cd -
 ```
 
-- [ ] `@terminull/plugin-api` 타르볼에 `dist/` + `README.md`만 포함.
+- [ ] `terminull-plugin-api` 타르볼에 `dist/` + `README.md`만 포함.
 - [ ] `terminull` 타르볼에 `dist-pack/` · `web-dist/` · `scripts-pack/` ·
       `README.md`만 포함, bin이 `dist-pack/bin.js`를 가리킴.
 - [ ] 어느 쪽에도 소스맵 외 원본 소스·시크릿·`node_modules`가 없음.
 
 ## 2. 게시 (순서 고정 · OTP 필요)
 
-**순서: `@terminull/plugin-api` → `terminull`.** 작성 문서가 가리키는 공개
+**순서: `terminull-plugin-api` → `terminull`.** 작성 문서가 가리키는 공개
 라이브러리를 먼저 올린 뒤 제품 CLI를 올립니다. `<OTP>`는 라율의 인증 앱에서
 그 순간 읽은 6자리 TOTP 코드입니다 (memory `kordis-npm-publish-2fa` 패턴).
 
 ```sh
 # 2-1. 플러그인 API 먼저
-npm publish -w @terminull/plugin-api --access public --otp <OTP>
+cd packages/plugin-api && npm publish --access public --otp <OTP> && cd -
 
 # 2-2. 제품 CLI (tsup prepack이 워크스페이스 코드를 번들)
 cd packages/cli && npm publish --access public --otp <OTP> && cd -
 ```
 
-- [ ] 2-1 성공 → `npm view @terminull/plugin-api version` == `0.1.0`.
+- [ ] 2-1 성공 → `npm view terminull-plugin-api version` == `0.1.0`.
 - [ ] 2-2 성공 → `npm view terminull version` == `0.1.0`.
 - [ ] **게시 직후 라이브 확인** (증거 = 트랜스크립트에 남김):
   ```sh
@@ -117,7 +117,7 @@ gh release create v0.1.0 \
   동의 기반 diff 미리보기를 거치며, eject/uninstall이 바이트 단위로 복원합니다.
 - 딥 어댑터: Claude Code · Codex. 요약 어댑터: agy. 제네릭 PTY: 임의 CLI.
 - 다중 머신(SSH 릴레이), 하네스 편집, 에이전트 승인 인박스, 한/영 i18n.
-- 플러그인 작성 키트(@terminull/plugin-api + validate 오라클).
+- 플러그인 작성 키트(terminull-plugin-api + validate 오라클).
 
 ## 설치
 
@@ -145,7 +145,7 @@ npm은 24시간 이후 unpublish를 사실상 막으므로, **deprecate가 1차 
 ```sh
 # 5-1. 결함 버전을 deprecate — 설치는 되지만 경고를 띄움
 npm deprecate terminull@0.1.0 "결함 있음 — 0.1.1을 사용하세요" --otp <OTP>
-npm deprecate @terminull/plugin-api@0.1.0 "결함 있음 — 0.1.1을 사용하세요" --otp <OTP>
+npm deprecate terminull-plugin-api@0.1.0 "결함 있음 — 0.1.1을 사용하세요" --otp <OTP>
 
 # 5-2. 시크릿 유출 등 심각 사고면 72시간 내 unpublish 시도 (정책 제약 있음)
 #      npm unpublish terminull@0.1.0 --otp <OTP>

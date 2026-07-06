@@ -24,5 +24,18 @@ registerRenderer({
   Component: WriteCard,
 });
 
+import './kinds/ReasoningView';
+import './kinds/SidechainView';
+import './kinds/SystemView';
+import './kinds/ToolResultView';
+import './tools/AgentCard';
+import './tools/AskUserQuestionCard';
+import './tools/EditCard';
+import './tools/ExitPlanModeCard';
+import './tools/GlobCard';
+import './tools/GrepCard';
+import './tools/ReadCard';
+import './tools/TodoWriteCard';
+
 export { RendererHost } from './RendererHost';
 export * from './registry';

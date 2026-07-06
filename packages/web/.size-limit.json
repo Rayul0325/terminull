@@ -1,0 +1,14 @@
+[
+  {
+    "name": "shell entry (js, gzip)",
+    "path": "dist/assets/index-*.js",
+    "limit": "180 KB",
+    "gzip": true
+  },
+  {
+    "name": "shell css (gzip)",
+    "path": "dist/assets/*.css",
+    "limit": "40 KB",
+    "gzip": true
+  }
+]

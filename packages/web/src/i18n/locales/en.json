@@ -1,5 +1,193 @@
 {
   "app": {
-    "title": "Terminull — one panel for every CLI coding agent"
+    "title": "Terminull — one panel for every CLI coding agent",
+    "name": "Terminull"
+  },
+  "nav": {
+    "workspace": "Workspace",
+    "settings": "Settings"
+  },
+  "common": {
+    "loading": "Loading…",
+    "close": "Close",
+    "delete": "Delete",
+    "dismiss": "Dismiss"
+  },
+  "conn": {
+    "ws": {
+      "connecting": "Connecting",
+      "online": "Live",
+      "resyncing": "Resyncing",
+      "offline": "Disconnected"
+    },
+    "host": {
+      "unknown": "Checking session host",
+      "up": "Session host connected",
+      "down": "Session host down"
+    },
+    "seq": "event #{{seq}}"
+  },
+  "home": {
+    "attention": {
+      "title": "Needs your attention",
+      "sinceConnect": "Showing items received since this page connected (history API pending)",
+      "empty": "Nothing needs attention right now.",
+      "kind": {
+        "ask": "Question",
+        "permission": "Permission",
+        "confirmation": "Approval"
+      }
+    },
+    "fleet": {
+      "title": "Sessions",
+      "generatedAt": "as of {{time}}",
+      "openWorkspace": "Open workspace",
+      "unknownProject": "Unknown location",
+      "sessionCount": "{{count}}",
+      "more": "+{{count}} more"
+    }
+  },
+  "fleet": {
+    "loadFailed": "Failed to load sessions ({{code}})",
+    "collectorFailed": "Some collectors failed: {{adapters}}",
+    "empty": "No sessions to show.",
+    "live": "live"
+  },
+  "chat": {
+    "role": {
+      "user": "User",
+      "agent": "Agent",
+      "tool": "Tool",
+      "system": "System"
+    },
+    "kind": {
+      "message": "message",
+      "tool_call": "tool call",
+      "tool_result": "tool result",
+      "event": "event",
+      "reasoning": "reasoning",
+      "sidechain": "subagent",
+      "system": "system"
+    },
+    "generic": {
+      "noText": "Nothing to display.",
+      "truncated": "Content truncated."
+    },
+    "rendererFailed": "Renderer failed ({{id}}) — using fallback",
+    "tool": {
+      "bash": "Bash",
+      "write": "Write",
+      "openTerminal": "Open terminal",
+      "resultMissing": "Result not received — awaiting parser extension",
+      "resultError": "error",
+      "showOutput": "Show output",
+      "hideOutput": "Hide output",
+      "writeSize": "{{count}} chars",
+      "detail": "Details",
+      "contentUnavailable": "No content"
+    }
+  },
+  "composer": {
+    "placeholder": "Type a directive…",
+    "send": "Send",
+    "state": {
+      "sending": "Sending ⏳",
+      "delivered": "Delivered ✓",
+      "queued": "Queued for next turn",
+      "pendingConfirmation": "Awaiting user approval",
+      "failed": "Send failed ({{code}})"
+    }
+  },
+  "session": {
+    "noId": "Missing session information.",
+    "noTranscript": "This session provides no transcript ({{reason}})",
+    "loadError": "Failed to load transcript ({{code}})",
+    "truncatedHead": "Older history omitted",
+    "empty": "No conversation yet."
+  },
+  "panel": {
+    "kind": {
+      "session": "Session",
+      "terminal": "Terminal",
+      "fleet": "Sessions",
+      "files": "Files",
+      "editor": "Editor",
+      "diff": "Diff",
+      "preview": "Preview",
+      "board": "Board",
+      "session-empty": "No session",
+      "terminal-empty": "No terminal"
+    },
+    "placeholder": {
+      "title": "Coming soon",
+      "notice": "This panel is not implemented yet — it only reserves its place in the layout."
+    }
+  },
+  "layout": {
+    "template": "Template",
+    "apply": "Apply…",
+    "saveNamePlaceholder": "New template name",
+    "saveAs": "Save current layout",
+    "defaultFor": "Default template",
+    "noDefault": "None",
+    "popout": "Pop out",
+    "notice": {
+      "template_failed": "Template failed to load — fell back to the default layout",
+      "last_layout_failed": "Could not restore the previous layout — starting from the default"
+    },
+    "builtin": {
+      "chat": "Chat-first",
+      "ide": "IDE",
+      "ops": "Operations",
+      "preview": "Preview"
+    }
+  },
+  "terminal": {
+    "readOnly": "read-only",
+    "domRenderer": "WebGL unavailable — DOM renderer",
+    "notice": {
+      "user_required": "Input requires user auth (/auth?token=…) — switched to read-only",
+      "read_only": "This attachment is read-only"
+    }
+  },
+  "detail": {
+    "markdownPending": "Markdown preview pending — showing raw text",
+    "kindUnavailable": "Detail view for '{{kind}}' is not available yet."
+  },
+  "keys": {
+    "nextTab": "Next tab",
+    "prevTab": "Previous tab",
+    "nextGroup": "Next panel group",
+    "goHome": "Go home",
+    "goSettings": "Open settings"
+  },
+  "settings": {
+    "general": {
+      "title": "General",
+      "locale": "Language",
+      "localeKo": "한국어",
+      "localeEn": "English",
+      "theme": "Theme",
+      "themeAuto": "Follow system",
+      "themeLight": "Light",
+      "themeDark": "Dark"
+    },
+    "keys": {
+      "title": "Keyboard shortcuts",
+      "unbound": "Unbound",
+      "notInTerminal": "inactive in terminal",
+      "pressNow": "Press a key… (Esc to cancel)",
+      "rebind": "Rebind",
+      "resetOne": "Default",
+      "resetAll": "Reset all",
+      "scopeRule": "While a terminal has focus, only ⌘/Ctrl+Alt combos fire — every other key goes to the terminal.",
+      "conflicts": "{{count}} conflicting shortcuts"
+    },
+    "layout": {
+      "title": "Layout templates",
+      "synced": "Synced across devices",
+      "deviceLocal": "Stored on this device only (server sync pending: {{code}})",
+      "none": "No saved templates."
+    }
   }
 }

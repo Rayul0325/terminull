@@ -1,5 +1,193 @@
 {
   "app": {
-    "title": "Terminull — 모든 CLI 코딩 에이전트를 위한 하나의 패널"
+    "title": "Terminull — 모든 CLI 코딩 에이전트를 위한 하나의 패널",
+    "name": "Terminull"
+  },
+  "nav": {
+    "workspace": "워크스페이스",
+    "settings": "설정"
+  },
+  "common": {
+    "loading": "불러오는 중…",
+    "close": "닫기",
+    "delete": "삭제",
+    "dismiss": "지우기"
+  },
+  "conn": {
+    "ws": {
+      "connecting": "연결 중",
+      "online": "실시간 연결됨",
+      "resyncing": "재동기화 중",
+      "offline": "연결 끊김"
+    },
+    "host": {
+      "unknown": "세션 호스트 확인 중",
+      "up": "세션 호스트 연결됨",
+      "down": "세션 호스트 끊김"
+    },
+    "seq": "이벤트 #{{seq}}"
+  },
+  "home": {
+    "attention": {
+      "title": "지금 확인이 필요한 일",
+      "sinceConnect": "접속 이후 수신분만 표시됩니다 (이전 내역 API는 준비 중)",
+      "empty": "지금은 확인할 일이 없습니다.",
+      "kind": {
+        "ask": "질문",
+        "permission": "권한 대기",
+        "confirmation": "승인 대기"
+      }
+    },
+    "fleet": {
+      "title": "세션",
+      "generatedAt": "{{time}} 기준",
+      "openWorkspace": "워크스페이스 열기",
+      "unknownProject": "위치 미상",
+      "sessionCount": "{{count}}개",
+      "more": "+{{count}}개 더"
+    }
+  },
+  "fleet": {
+    "loadFailed": "세션 목록을 불러오지 못했습니다 ({{code}})",
+    "collectorFailed": "일부 도구의 세션 수집에 실패했습니다: {{adapters}}",
+    "empty": "표시할 세션이 없습니다.",
+    "live": "실행 중"
+  },
+  "chat": {
+    "role": {
+      "user": "사용자",
+      "agent": "에이전트",
+      "tool": "도구",
+      "system": "시스템"
+    },
+    "kind": {
+      "message": "메시지",
+      "tool_call": "도구 호출",
+      "tool_result": "도구 결과",
+      "event": "이벤트",
+      "reasoning": "사고 과정",
+      "sidechain": "서브에이전트",
+      "system": "시스템"
+    },
+    "generic": {
+      "noText": "표시할 내용이 없습니다.",
+      "truncated": "내용이 길어 일부만 표시했습니다."
+    },
+    "rendererFailed": "렌더러 오류 ({{id}}) — 기본 표시로 대체",
+    "tool": {
+      "bash": "Bash",
+      "write": "Write",
+      "openTerminal": "터미널에서 보기",
+      "resultMissing": "결과 미수신 — 파서 확장 대기 중",
+      "resultError": "오류",
+      "showOutput": "출력 보기",
+      "hideOutput": "출력 접기",
+      "writeSize": "{{count}}자",
+      "detail": "상세보기",
+      "contentUnavailable": "내용 없음"
+    }
+  },
+  "composer": {
+    "placeholder": "지시를 입력하세요…",
+    "send": "보내기",
+    "state": {
+      "sending": "전달 대기 ⏳",
+      "delivered": "전달됨 ✓",
+      "queued": "다음 턴에 전달 예정",
+      "pendingConfirmation": "사용자 승인 대기",
+      "failed": "전송 실패 ({{code}})"
+    }
+  },
+  "session": {
+    "noId": "세션 정보가 없습니다.",
+    "noTranscript": "이 세션은 대화 기록을 제공하지 않습니다 ({{reason}})",
+    "loadError": "대화 기록을 불러오지 못했습니다 ({{code}})",
+    "truncatedHead": "이전 내역은 생략되었습니다",
+    "empty": "아직 대화 내용이 없습니다."
+  },
+  "panel": {
+    "kind": {
+      "session": "세션",
+      "terminal": "터미널",
+      "fleet": "세션 목록",
+      "files": "파일 트리",
+      "editor": "에디터",
+      "diff": "변경 비교",
+      "preview": "미리보기",
+      "board": "작업 보드",
+      "session-empty": "세션 없음",
+      "terminal-empty": "터미널 없음"
+    },
+    "placeholder": {
+      "title": "준비 중",
+      "notice": "이 패널은 아직 구현 전입니다. 레이아웃 자리만 잡아둔 상태예요."
+    }
+  },
+  "layout": {
+    "template": "템플릿",
+    "apply": "적용하기…",
+    "saveNamePlaceholder": "새 템플릿 이름",
+    "saveAs": "현재 배치 저장",
+    "defaultFor": "기본 템플릿",
+    "noDefault": "지정 안 함",
+    "popout": "새 창으로",
+    "notice": {
+      "template_failed": "템플릿을 불러오지 못해 기본 배치로 대체했습니다",
+      "last_layout_failed": "이전 배치를 복원하지 못해 기본 배치로 시작합니다"
+    },
+    "builtin": {
+      "chat": "대화 중심",
+      "ide": "IDE형",
+      "ops": "관제형",
+      "preview": "미리보기형"
+    }
+  },
+  "terminal": {
+    "readOnly": "읽기 전용",
+    "domRenderer": "WebGL 미지원 — 기본 렌더러",
+    "notice": {
+      "user_required": "입력에는 사용자 인증이 필요합니다 (/auth?token=…) — 읽기 전용으로 전환됨",
+      "read_only": "읽기 전용 세션에는 입력할 수 없습니다"
+    }
+  },
+  "detail": {
+    "markdownPending": "마크다운 미리보기 준비 전 — 원문 표시",
+    "kindUnavailable": "이 형식({{kind}})의 상세보기는 아직 준비 전입니다."
+  },
+  "keys": {
+    "nextTab": "다음 탭",
+    "prevTab": "이전 탭",
+    "nextGroup": "다음 패널 그룹",
+    "goHome": "홈으로",
+    "goSettings": "설정 열기"
+  },
+  "settings": {
+    "general": {
+      "title": "일반",
+      "locale": "언어",
+      "localeKo": "한국어",
+      "localeEn": "English",
+      "theme": "테마",
+      "themeAuto": "시스템 설정 따르기",
+      "themeLight": "라이트",
+      "themeDark": "다크"
+    },
+    "keys": {
+      "title": "단축키",
+      "unbound": "지정 안 됨",
+      "notInTerminal": "터미널에서는 비활성",
+      "pressNow": "키를 누르세요… (Esc 취소)",
+      "rebind": "변경",
+      "resetOne": "기본값",
+      "resetAll": "전체 초기화",
+      "scopeRule": "터미널에 포커스가 있을 때는 ⌘/Ctrl+Alt 조합만 동작합니다 — 나머지 키는 모두 터미널로 전달됩니다.",
+      "conflicts": "충돌하는 단축키가 {{count}}건 있습니다"
+    },
+    "layout": {
+      "title": "레이아웃 템플릿",
+      "synced": "기기 간 동기화 중",
+      "deviceLocal": "이 기기에만 저장됩니다 (서버 동기화 준비 중: {{code}})",
+      "none": "저장된 템플릿이 없습니다."
+    }
   }
 }

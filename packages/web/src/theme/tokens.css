@@ -1,0 +1,171 @@
+/**
+ * Terminull semantic tokens — "Clear" theme (Toss-leaning neutral), light+dark.
+ * Components consume ONLY these variables; raw hex in components is a smell.
+ * The second theme ("Warm", control-tower heritage) lands as a token override
+ * file in a later packet — same variable names, different values.
+ */
+:root {
+  color-scheme: light dark;
+
+  --tn-font-sans:
+    'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Noto Sans KR', sans-serif;
+  --tn-font-mono: 'JetBrains Mono', 'SF Mono', Menlo, Consolas, 'Noto Sans Mono', monospace;
+
+  --tn-bg: #f7f8fa;
+  --tn-bg-elevated: #ffffff;
+  --tn-bg-sunken: #eef0f3;
+  --tn-fg: #191f28;
+  --tn-fg-muted: #6b7684;
+  --tn-fg-faint: #8b95a1;
+  --tn-border: #e5e8eb;
+  --tn-accent: #3182f6;
+  --tn-accent-fg: #ffffff;
+  --tn-ok: #22a06b;
+  --tn-warn: #d9730d;
+  --tn-danger: #e5484d;
+  --tn-chip-bg: #f2f4f6;
+  --tn-radius: 10px;
+  --tn-radius-sm: 6px;
+  --tn-gap: 12px;
+  --tn-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --tn-bg: #101216;
+    --tn-bg-elevated: #17191f;
+    --tn-bg-sunken: #0b0d10;
+    --tn-fg: #e8eaed;
+    --tn-fg-muted: #9aa3ad;
+    --tn-fg-faint: #6d7680;
+    --tn-border: #262a31;
+    --tn-accent: #4593fc;
+    --tn-accent-fg: #0b0d10;
+    --tn-ok: #3fb984;
+    --tn-warn: #eb9048;
+    --tn-danger: #f2626a;
+    --tn-chip-bg: #1f232a;
+    --tn-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  }
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --tn-bg: #101216;
+  --tn-bg-elevated: #17191f;
+  --tn-bg-sunken: #0b0d10;
+  --tn-fg: #e8eaed;
+  --tn-fg-muted: #9aa3ad;
+  --tn-fg-faint: #6d7680;
+  --tn-border: #262a31;
+  --tn-accent: #4593fc;
+  --tn-accent-fg: #0b0d10;
+  --tn-ok: #3fb984;
+  --tn-warn: #eb9048;
+  --tn-danger: #f2626a;
+  --tn-chip-bg: #1f232a;
+  --tn-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: var(--tn-font-sans);
+  font-size: 14px;
+  line-height: 1.55;
+  background: var(--tn-bg);
+  color: var(--tn-fg);
+  /* Korean line breaking: never split inside a word. */
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
+
+button {
+  font: inherit;
+}
+
+/* Minimal utility layer shared by shell components. */
+.tn-card {
+  background: var(--tn-bg-elevated);
+  border: 1px solid var(--tn-border);
+  border-radius: var(--tn-radius);
+  box-shadow: var(--tn-shadow);
+}
+
+.tn-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--tn-chip-bg);
+  color: var(--tn-fg-muted);
+  font-size: 12px;
+}
+
+.tn-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--tn-fg-faint);
+  flex: none;
+}
+.tn-dot--live {
+  background: var(--tn-ok);
+}
+.tn-dot--warn {
+  background: var(--tn-warn);
+}
+.tn-dot--down {
+  background: var(--tn-danger);
+}
+
+.tn-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--tn-radius-sm);
+  border: 1px solid var(--tn-border);
+  background: var(--tn-bg-elevated);
+  color: var(--tn-fg);
+  cursor: pointer;
+}
+.tn-btn:hover {
+  border-color: var(--tn-fg-faint);
+}
+.tn-btn--primary {
+  background: var(--tn-accent);
+  border-color: var(--tn-accent);
+  color: var(--tn-accent-fg);
+}
+.tn-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.tn-input {
+  padding: 8px 10px;
+  border-radius: var(--tn-radius-sm);
+  border: 1px solid var(--tn-border);
+  background: var(--tn-bg-elevated);
+  color: var(--tn-fg);
+  width: 100%;
+}
+.tn-input:focus {
+  outline: 2px solid var(--tn-accent);
+  outline-offset: -1px;
+}

@@ -4,6 +4,7 @@
 import js from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import i18next from 'eslint-plugin-i18next';
+import reactHooks from 'eslint-plugin-react-hooks';
 import globals from 'globals';
 
 export default tseslint.config(
@@ -33,6 +34,25 @@ export default tseslint.config(
     },
     rules: {
       'no-undef': 'off',
+      // `_`-prefixed args/vars are intentionally unused (interface-mandated
+      // params, React error-boundary signatures, placeholder props).
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' },
+      ],
+    },
+  },
+  {
+    // React hooks correctness for the web app (validates the exhaustive-deps
+    // disable comments already present in the workspace panels).
+    files: ['packages/web/src/**/*.{ts,tsx}'],
+    plugins: { 'react-hooks': reactHooks },
+    rules: {
+      // Classic hooks correctness — the set the in-code disable comments assume.
+      // (The newer recommended preset's opinionated rules like set-state-in-effect
+      //  are deferred; revisit as a dedicated cleanup, not a v1 adoption blocker.)
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'warn',
     },
   },
   {

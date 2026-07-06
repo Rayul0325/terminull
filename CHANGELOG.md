@@ -4,6 +4,36 @@ All notable changes to Terminull. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] — 2026-07-07
+
+The "Observatory" redesign — the panel now carries the warm control-tower
+design language and its at-a-glance monitoring, on real renderers.
+
+### Added
+
+- **Observatory design system** as the default theme (warm paper + forest-green
+  accent + Instrument Serif display), light and dark. The previous blue theme
+  stays selectable as "Clear" (Settings → theme style). Two axes:
+  `data-theme-family` × `data-theme`; self-hosted OFL fonts.
+- **Fleet glanceability**: a health status line (정상 / 개입 필요 / 연결 끊김),
+  collapsible per-project session tree, and session rows with a human title,
+  a "작업 중 · N분 전" subline, and a "what is it doing now" one-liner backed by
+  a new server `lastActivity` fleet projection (honest 확인 중 when absent).
+- **Chat renderers** (RENDERERS.md P0): dedicated cards for Edit (inline diff +
+  diff detail), Read, Grep, Glob, Agent, AskUserQuestion, ExitPlanMode,
+  TodoWrite, plus reasoning / sidechain / tool-result / system kind views.
+- **Markdown**: assistant text renders through an XSS-safe subset in chat
+  bubbles; the detail panel renders full markdown via marked + DOMPurify,
+  lazy-loaded only when a markdown detail opens (shell bundle unaffected).
+
+### Fixed
+
+- The duplicate `시스템 / 시스템` chip on system items (now one subtype-keyed chip).
+- Tool results dumping as a bare `cat -n` `<pre>` (now a proper result card).
+- Raw `<task-notification>` / `<system-reminder>` hook tags leaking into user
+  bubbles (now a muted system chip).
+- Fleet session names truncating to a single character in narrow panels.
+
 ## [0.1.1] — 2026-07-06
 
 Patch release for `terminull` (CLI) only — `terminull-plugin-api` stays 0.1.0.

@@ -28,11 +28,16 @@ describe('runChildMergedTail', () => {
   });
 
   it('merges stdout and stderr into one tail', async () => {
-    await expect(
-      runScripted(
-        `process.stderr.write('stderr-part '); process.stdout.write('stdout-part'); process.exit(3);`,
-      ),
-    ).rejects.toThrow(/exited 3: .*stderr-part.*stdout-part/s);
+    // Chunk arrival order across stdout/stderr is platform/timing dependent
+    // (observed 'stderr-part' before 'stdout-part' on Linux, reversed on
+    // macOS) — assert both pieces landed in the tail without pinning order.
+    let message = '';
+    await runScripted(
+      `process.stderr.write('stderr-part '); process.stdout.write('stdout-part'); process.exit(3);`,
+    ).catch((err: Error) => (message = err.message));
+    expect(message).toMatch(/exited 3: /);
+    expect(message).toContain('stderr-part');
+    expect(message).toContain('stdout-part');
   });
 
   it(`truncates the merged tail to the last ${CHILD_OUTPUT_TAIL_CHARS} chars`, async () => {

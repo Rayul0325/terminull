@@ -11,6 +11,7 @@ import type {
   AccountResult,
   ChatItem,
   ModelInfo,
+  ToolCapabilities,
   WhoamiInfo,
 } from '@terminull/adapter-sdk';
 import type {
@@ -23,13 +24,28 @@ import type {
 import type {
   AgentChatAccepted,
   AgentStatusDto,
+  CustomHarnessGroupDto,
+  CustomHarnessItemDto,
   Envelope,
+  HarnessBackupDto,
+  HarnessFileDto,
+  HarnessGroupDto,
+  HarnessReadDto,
+  HarnessRestoreRequest,
+  HarnessWriteRequest,
+  HarnessWriteResponse,
+  KeybindingsDto,
+  LocalizedText,
   MachineConnectionState,
   MachineStateDto,
   MachineStatePayload,
   PendingApprovalCard,
   PermissionClass,
   PermissionSettingsDto,
+  ProfileSwitchResponse,
+  ProfilesDto,
+  SessionStatusDto,
+  ToolProfileDto,
   UsageGaugeDto,
 } from '@terminull/shared';
 
@@ -38,9 +54,19 @@ export type {
   AgentChatAccepted,
   AgentStatusDto,
   ChatItem,
+  CustomHarnessGroupDto,
+  CustomHarnessItemDto,
   Envelope,
   FleetSession,
   FleetSnapshot,
+  HarnessBackupDto,
+  HarnessFileDto,
+  HarnessGroupDto,
+  HarnessReadDto,
+  HarnessRestoreRequest,
+  HarnessWriteRequest,
+  HarnessWriteResponse,
+  KeybindingsDto,
   MachineConnectionState,
   MachineStateDto,
   MachineStatePayload,
@@ -48,6 +74,10 @@ export type {
   PendingApprovalCard,
   PermissionClass,
   PermissionSettingsDto,
+  ProfileSwitchResponse,
+  ProfilesDto,
+  SessionStatusDto,
+  ToolProfileDto,
   UsageGaugeDto,
 };
 
@@ -130,6 +160,18 @@ export interface AgentApprovalsResponse {
  */
 export type AgentResolveResponse = ApproveResponse | { rejected: boolean };
 
+/** One `GET /api/tools` entry — DECLARED capabilities only (no probe). */
+export interface ToolListEntry {
+  id: string;
+  displayName: LocalizedText;
+  capabilities: ToolCapabilities;
+}
+
+/** `GET /api/tools` */
+export interface ToolsResponse {
+  tools: ToolListEntry[];
+}
+
 /** `GET /api/tools/:toolId/models` — the dynamic model registry passthrough. */
 export interface ToolModelsResponse {
   models: ModelInfo[];
@@ -140,4 +182,27 @@ export interface ToolModelsResponse {
 export interface ToolAccountResponse {
   whoami: AccountResult<WhoamiInfo>;
   profiles: AccountResult<AccountProfile[]>;
+}
+
+// --- M9 contract surfaces (harness editor, profiles, statusbar, prefs) ---
+
+/** `GET /api/harness/files` */
+export interface HarnessFilesResponse {
+  groups: HarnessGroupDto[];
+}
+
+/** `GET /api/harness/files/:fileId/backups` (newest first). */
+export interface HarnessBackupsResponse {
+  backups: HarnessBackupDto[];
+}
+
+/** `POST /api/profiles` (201). */
+export interface ProfileCreateResponse {
+  created: true;
+  profile: ToolProfileDto;
+}
+
+/** `GET /api/sessions/:sid/status` — null = honest "no statusline data". */
+export interface SessionStatusResponse {
+  status: SessionStatusDto | null;
 }

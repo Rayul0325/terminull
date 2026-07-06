@@ -6,8 +6,9 @@
  */
 import { useEffect, useState, type ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
+import { AccountCenterSection } from '../account/AccountCenterSection';
 import { AgentPermissionsSection } from '../agent/AgentPermissionsSection';
-import { ToolUsageSection } from '../agent/ToolUsageSection';
+import { HarnessSection } from '../harness/HarnessSection';
 import { MachinesSection } from '../machines/MachinesSection';
 import { KEY_ACTIONS } from '../keybindings/defaults';
 import { comboAllowedInTerminal, keybindings, normalizeCombo } from '../keybindings/manager';
@@ -142,6 +143,15 @@ export function SettingsPage(): ReactElement {
           </button>
         </div>
         <p style={{ fontSize: 12, color: 'var(--tn-fg-muted)' }}>{t('settings.keys.scopeRule')}</p>
+        <p style={{ fontSize: 12, color: 'var(--tn-fg-faint)' }}>
+          {prefs.keybindsSync === 'synced'
+            ? t('settings.keys.roamingSynced')
+            : prefs.keybindsSync === 'syncing'
+              ? t('settings.keys.roamingSyncing')
+              : prefs.keybindsSync === 'error'
+                ? t('settings.keys.roamingLocal', { code: prefs.keybindsSyncCode ?? '' })
+                : null}
+        </p>
         {conflicts.length > 0 ? (
           <div style={{ color: 'var(--tn-danger)', fontSize: 13 }}>
             {t('settings.keys.conflicts', { count: conflicts.length })}
@@ -162,9 +172,10 @@ export function SettingsPage(): ReactElement {
         </table>
       </section>
 
+      <AccountCenterSection />
+      <HarnessSection />
       <MachinesSection />
       <AgentPermissionsSection />
-      <ToolUsageSection />
 
       <section className="tn-card" style={{ padding: 16 }}>
         <h2 style={{ margin: '0 0 8px', fontSize: 16 }}>{t('settings.layout.title')}</h2>

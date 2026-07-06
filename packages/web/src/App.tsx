@@ -2,11 +2,17 @@
  * App shell: top navigation + connection pill + route outlet, plus the
  * global keydown → KeybindingManager bridge (terminal-scope rule enforced in
  * the manager, not here).
+ *
+ * At the phone breakpoint the shell renders the bottom-tab MobileShell
+ * INSTEAD of the routed outlet — the dockview tiling workspace is never
+ * mounted on mobile (M9 W8 invariant, see lib/viewport.ts).
  */
 import { useEffect, type ReactElement } from 'react';
 import { Link, Outlet, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { keybindings } from './keybindings/manager';
+import { useIsPhone } from './lib/viewport';
+import { MobileShell } from './mobile/MobileShell';
 import { useConnectionStore } from './stores/connection';
 import { usePrefsStore } from './stores/prefs';
 
@@ -15,6 +21,7 @@ export function App(): ReactElement {
   const navigate = useNavigate();
   const wsStatus = useConnectionStore((s) => s.wsStatus);
   const keybindOverrides = usePrefsStore((s) => s.keybindOverrides);
+  const phone = useIsPhone();
 
   useEffect(() => {
     keybindings.setOverrides(keybindOverrides);
@@ -41,6 +48,11 @@ export function App(): ReactElement {
       : wsStatus === 'offline'
         ? 'tn-dot--down'
         : 'tn-dot--warn';
+
+  if (phone) {
+    // Phone breakpoint: bottom-tab shell, no tiled workspace (invariant).
+    return <MobileShell />;
+  }
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>

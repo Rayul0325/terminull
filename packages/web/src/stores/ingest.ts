@@ -10,6 +10,18 @@ import { useApprovalsStore } from './approvals';
 import { useConnectionStore } from './connection';
 import { useFleetStore } from './fleet';
 import { useMachinesStore } from './machines';
+import { usePrefsStore } from './prefs';
+import { useSessionStatusStore } from './sessionStatus';
+
+/** Seed pending confirmations from REST (M9 W7 — survives a reload). */
+function seedConfirmations(): void {
+  void api
+    .confirmations()
+    .then((res) => useConnectionStore.getState().seedConfirmations(res.pending))
+    .catch(() => {
+      /* stream events still populate the list — no fake entries on failure */
+    });
+}
 
 let stream: EventStream | null = null;
 let unsubscribeFleetSeed: (() => void) | null = null;
@@ -28,11 +40,13 @@ export function startIngest(): EventStream {
         useMachinesStore.getState().applyEvents(batch);
         useApprovalsStore.getState().applyEvents(batch);
         useAgentChatStore.getState().applyEvents(batch);
+        useSessionStatusStore.getState().applyEvents(batch);
       },
       onGap: () => {
         // Stream history was lost — snapshot stores refetch from REST.
         void useFleetStore.getState().refresh();
         void useApprovalsStore.getState().refresh();
+        seedConfirmations();
       },
     },
   });
@@ -55,6 +69,10 @@ export function startIngest(): EventStream {
       /* stays null (unknown) — honest */
     });
   void useFleetStore.getState().refresh();
+  // Pending confirmations survive a reload via the REST seed (M9 W7), and the
+  // server-roamed keybinding overrides seed the prefs store (D6 merge order).
+  seedConfirmations();
+  void usePrefsStore.getState().loadServerKeybinds();
   return stream;
 }
 

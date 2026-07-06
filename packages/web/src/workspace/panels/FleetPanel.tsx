@@ -51,20 +51,16 @@ export function FleetPanel(): ReactElement {
         const machineId = sessionMachineId(s);
         const machineStale = machines[machineId]?.state === 'stale';
         return (
-          <button
-            type="button"
+          <div
             key={s.id}
-            onClick={() => workspace?.openSessionPanel(s.id, s.tool)}
             className="tn-card"
             style={{
               display: 'flex',
               gap: 8,
               alignItems: 'center',
               width: '100%',
-              textAlign: 'left',
               padding: '8px 10px',
               margin: '4px 0',
-              cursor: 'pointer',
               border: '1px solid var(--tn-border)',
               // Stale-snapshot state: the machine stopped responding, so this
               // row is last-known data — visibly dimmed, never a live dot.
@@ -72,16 +68,25 @@ export function FleetPanel(): ReactElement {
             }}
           >
             <span className={`tn-dot ${s.live && !machineStale ? 'tn-dot--live' : ''}`} />
-            <span
+            <button
+              type="button"
+              onClick={() => workspace?.openSessionPanel(s.id, s.tool)}
               style={{
                 flex: 1,
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 whiteSpace: 'nowrap',
+                textAlign: 'left',
+                background: 'none',
+                border: 'none',
+                color: 'inherit',
+                font: 'inherit',
+                cursor: 'pointer',
+                padding: 0,
               }}
             >
               {s.title ?? s.id}
-            </span>
+            </button>
             {machineId !== LOCAL_MACHINE ? (
               <span className="tn-chip" title={machineId}>
                 {machineLabel(t, machineId, machines[machineId])}
@@ -95,7 +100,16 @@ export function FleetPanel(): ReactElement {
             ) : s.live ? (
               <span className="tn-chip">{t('fleet.live')}</span>
             ) : null}
-          </button>
+            {/* Explicit rw attach entry (M9 W6); plain open stays read-only. */}
+            <button
+              type="button"
+              className="tn-btn"
+              style={{ padding: '0 8px', fontSize: 12 }}
+              onClick={() => workspace?.openTerminalPanel(s.id, 'rw')}
+            >
+              {t('terminal.attachRw')}
+            </button>
+          </div>
         );
       })}
     </div>

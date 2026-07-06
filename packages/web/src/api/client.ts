@@ -13,16 +13,30 @@ import type {
   AgentStatusDto,
   ApproveResponse,
   ConfirmationsResponse,
+  CustomHarnessGroupDto,
   DirectiveResponse,
   EventsResponse,
   FleetSnapshot,
+  HarnessBackupsResponse,
+  HarnessFilesResponse,
+  HarnessReadDto,
+  HarnessRestoreRequest,
+  HarnessWriteRequest,
+  HarnessWriteResponse,
   HealthResponse,
+  KeybindingsDto,
   MachinesResponse,
   PermissionClass,
   PermissionSettingsDto,
+  ProfileCreateResponse,
+  ProfileSwitchResponse,
+  ProfilesDto,
+  SessionStatusResponse,
   SpawnResponse,
   ToolAccountResponse,
   ToolModelsResponse,
+  ToolProfileDto,
+  ToolsResponse,
   TranscriptResponse,
   UsageGaugeDto,
 } from './types';
@@ -93,6 +107,8 @@ export const api = {
     label?: string;
     /** Target machine id; omitted = 'local' (M8 contract, additive). */
     machine?: string;
+    /** Account profile for the NEW spawn; omitted = the active one (M9). */
+    profile?: string;
   }) => request<SpawnResponse>('POST', '/api/sessions', body),
   deleteSession: (sessionId: string, confirmPhrase: string) =>
     request<{ deleted: boolean; exited: boolean }>(
@@ -128,10 +144,51 @@ export const api = {
     ),
 
   // --- Tool adapter surfaces (/api/tools/*, M7 contract) ---
+  tools: () => request<ToolsResponse>('GET', '/api/tools'),
   toolUsage: (toolId: string) =>
     request<UsageGaugeDto>('GET', `/api/tools/${encodeURIComponent(toolId)}/usage`),
   toolModels: (toolId: string) =>
     request<ToolModelsResponse>('GET', `/api/tools/${encodeURIComponent(toolId)}/models`),
   toolAccount: (toolId: string) =>
     request<ToolAccountResponse>('GET', `/api/tools/${encodeURIComponent(toolId)}/account`),
+
+  // --- Harness editor (/api/harness/*, M9 contract) ---
+  harnessFiles: () => request<HarnessFilesResponse>('GET', '/api/harness/files'),
+  harnessRead: (fileId: string) =>
+    request<HarnessReadDto>('GET', `/api/harness/files/${encodeURIComponent(fileId)}`),
+  harnessWrite: (fileId: string, body: HarnessWriteRequest) =>
+    request<HarnessWriteResponse>('PUT', `/api/harness/files/${encodeURIComponent(fileId)}`, body),
+  harnessBackups: (fileId: string) =>
+    request<HarnessBackupsResponse>(
+      'GET',
+      `/api/harness/files/${encodeURIComponent(fileId)}/backups`,
+    ),
+  harnessRestore: (fileId: string, body: HarnessRestoreRequest) =>
+    request<HarnessWriteResponse>(
+      'POST',
+      `/api/harness/files/${encodeURIComponent(fileId)}/restore`,
+      body,
+    ),
+  harnessCustom: () => request<CustomHarnessGroupDto>('GET', '/api/harness/custom'),
+
+  // --- Account profiles (/api/profiles, M9 contract) ---
+  profiles: () => request<ProfilesDto>('GET', '/api/profiles'),
+  createProfile: (body: ToolProfileDto) =>
+    request<ProfileCreateResponse>('POST', '/api/profiles', body),
+  deleteProfile: (toolId: string, profileId: string) =>
+    request<{ deleted: true }>(
+      'DELETE',
+      `/api/profiles/${encodeURIComponent(toolId)}/${encodeURIComponent(profileId)}`,
+    ),
+  switchProfile: (toolId: string, profileId: string) =>
+    request<ProfileSwitchResponse>('POST', '/api/profiles/switch', { toolId, profileId }),
+
+  // --- Session statusbar seed (M9 contract; :sid = TOOL-NATIVE session id) ---
+  sessionStatus: (sid: string) =>
+    request<SessionStatusResponse>('GET', `/api/sessions/${encodeURIComponent(sid)}/status`),
+
+  // --- Roaming keybinding prefs (M9 contract; PUT = full replace, user-only) ---
+  keybindings: () => request<KeybindingsDto>('GET', '/api/prefs/keybindings'),
+  putKeybindings: (dto: KeybindingsDto) =>
+    request<KeybindingsDto>('PUT', '/api/prefs/keybindings', dto),
 };

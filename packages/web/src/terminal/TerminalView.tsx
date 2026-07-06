@@ -14,6 +14,7 @@ import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import { WebglAddon } from '@xterm/addon-webgl';
 import '@xterm/xterm/css/xterm.css';
+import { closeNotice, isReconnectableNotice, noticeAfterAttach } from './closeNotice';
 import { connectPty, type PtyConnection } from './connectPty';
 
 const KEYBAR: Array<{ label: string; bytes: number[] }> = [
@@ -39,6 +40,9 @@ export default function TerminalView({
   const [notice, setNotice] = useState<string | null>(null);
   const [effectiveMode, setEffectiveMode] = useState<'rw' | 'ro'>(mode);
   const [renderer, setRenderer] = useState<'webgl' | 'dom'>('webgl');
+  // Bumped by the reconnect affordance after an abnormal close (1006 etc.) —
+  // re-runs the connection effect with a fresh WS.
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     const el = hostRef.current;
@@ -61,16 +65,20 @@ export default function TerminalView({
     fit.fit();
 
     const conn = connectPty(sessionId, effectiveMode, {
+      // Reconnect label truth: a successful attach clears any stale closed_*
+      // chip from the previous link (never a permanently stuck "끊김").
+      onAttached: () => setNotice((n) => noticeAfterAttach(n)),
       onOutput: (data) => term.write(data),
       onErrorCode: (code) => setNotice(code),
       onClose: ({ code }) => {
-        if (code === 4403 && effectiveMode === 'rw') {
+        const outcome = closeNotice(code, effectiveMode);
+        if (outcome.downgradeToRo) {
           // No user credential — honest downgrade to read-only.
-          setNotice('user_required');
+          setNotice(outcome.notice);
           setEffectiveMode('ro');
           return;
         }
-        if (code !== 1000) setNotice(`closed_${code}`);
+        if (outcome.notice !== null) setNotice(outcome.notice);
       },
     });
     connRef.current = conn;
@@ -92,7 +100,7 @@ export default function TerminalView({
       connRef.current = null;
       term.dispose();
     };
-  }, [sessionId, effectiveMode]);
+  }, [sessionId, effectiveMode, attempt]);
 
   return (
     <div
@@ -117,6 +125,16 @@ export default function TerminalView({
             <span className="tn-chip" style={{ color: 'var(--tn-warn)' }}>
               {t(`terminal.notice.${notice}`, notice)}
             </span>
+          ) : null}
+          {isReconnectableNotice(notice) ? (
+            <button
+              type="button"
+              className="tn-btn"
+              style={{ padding: '0 8px', fontSize: 12 }}
+              onClick={() => setAttempt((n) => n + 1)}
+            >
+              {t('terminal.reconnect')}
+            </button>
           ) : null}
           {renderer === 'dom' ? <span className="tn-chip">{t('terminal.domRenderer')}</span> : null}
         </div>

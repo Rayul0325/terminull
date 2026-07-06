@@ -159,7 +159,10 @@ export function DockWorkspace({
   function openTerminal(sessionId: string, mode: 'rw' | 'ro'): void {
     const api = apiRef.current;
     if (!api) return;
-    const id = `terminal:${sessionId}`;
+    // Mode-scoped panel id: an rw request must never silently focus an
+    // existing read-only terminal (M9 W6). The ro id keeps the legacy shape
+    // so saved layouts stay valid.
+    const id = mode === 'rw' ? `terminal:${sessionId}:rw` : `terminal:${sessionId}`;
     const existing = api.getPanel(id);
     if (existing) {
       existing.api.setActive();
@@ -168,7 +171,7 @@ export function DockWorkspace({
     api.addPanel({
       id,
       component: 'terminal',
-      title: t('panel.kind.terminal'),
+      title: mode === 'rw' ? t('terminal.attachRw') : t('panel.kind.terminal'),
       params: { sessionId, mode },
     });
   }

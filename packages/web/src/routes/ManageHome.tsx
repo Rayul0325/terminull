@@ -7,9 +7,12 @@
  * new-session stepper are later M6 packets — not faked here.
  */
 import { useState, type ReactElement } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ApprovalsInbox } from '../agent/ApprovalsInbox';
+import { AttentionSection } from '../inbox/AttentionSection';
+import { SessionCreateStepper } from '../sessions/SessionCreateStepper';
+import { useSpawnStepperStore } from '../stores/spawnStepper';
 import { MachinesStrip, machineLabel } from '../machines/MachinesStrip';
 import { groupByProject, projectIdOf, sessionMachineId, useFleetStore } from '../stores/fleet';
 import { LOCAL_MACHINE, useMachinesStore } from '../stores/machines';
@@ -49,53 +52,6 @@ function StatusStrip(): ReactElement {
   );
 }
 
-function AttentionSection(): ReactElement {
-  const { t } = useTranslation();
-  const attention = useConnectionStore((s) => s.attention);
-  const navigate = useNavigate();
-  return (
-    <section className="tn-card" style={{ padding: 16 }}>
-      <h2 style={{ margin: '0 0 4px', fontSize: 16 }}>{t('home.attention.title')}</h2>
-      <p style={{ margin: '0 0 8px', fontSize: 12, color: 'var(--tn-fg-faint)' }}>
-        {t('home.attention.sinceConnect')}
-      </p>
-      {attention.length === 0 ? (
-        <div style={{ color: 'var(--tn-fg-muted)' }}>{t('home.attention.empty')}</div>
-      ) : (
-        attention.map((a) => (
-          <button
-            key={a.key}
-            type="button"
-            className="tn-card"
-            style={{
-              display: 'flex',
-              gap: 8,
-              alignItems: 'center',
-              width: '100%',
-              textAlign: 'left',
-              padding: '8px 10px',
-              margin: '4px 0',
-              cursor: a.sessionId ? 'pointer' : 'default',
-            }}
-            onClick={() => {
-              if (a.sessionId) void navigate(`/session/${encodeURIComponent(a.sessionId)}`);
-            }}
-          >
-            <span className="tn-dot tn-dot--warn" />
-            <span className="tn-chip">{t(`home.attention.kind.${a.kind}`)}</span>
-            <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              {a.summary ?? a.sessionId ?? ''}
-            </span>
-            <span style={{ fontSize: 11, color: 'var(--tn-fg-faint)' }}>
-              {new Date(a.ts).toLocaleTimeString()}
-            </span>
-          </button>
-        ))
-      )}
-    </section>
-  );
-}
-
 export function ManageHome(): ReactElement {
   const { t } = useTranslation();
   const snapshot = useFleetStore((s) => s.snapshot);
@@ -126,6 +82,13 @@ export function ManageHome(): ReactElement {
             </span>
           ) : null}
           <span style={{ flex: 1 }} />
+          <button
+            type="button"
+            className="tn-btn tn-btn--primary"
+            onClick={() => useSpawnStepperStore.getState().openStepper()}
+          >
+            {t('stepper.open')}
+          </button>
           <Link to="/workspace/all" className="tn-btn">
             {t('home.fleet.openWorkspace')}
           </Link>
@@ -208,6 +171,7 @@ export function ManageHome(): ReactElement {
           </div>
         ))}
       </section>
+      <SessionCreateStepper />
     </div>
   );
 }

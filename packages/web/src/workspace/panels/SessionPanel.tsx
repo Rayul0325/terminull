@@ -17,6 +17,7 @@ import type { SessionPanelParams } from '../panelRegistry';
 import { useWorkspace } from '../WorkspaceContext';
 import { Composer } from './Composer';
 import { DetailPanel } from './DetailPanel';
+import { SessionStatusBar } from './SessionStatusBar';
 
 const POLL_MS = 2500;
 
@@ -61,6 +62,7 @@ export function SessionPanel(props: IDockviewPanelProps<SessionPanelParams>): Re
   return (
     <div style={{ height: '100%', display: 'flex' }}>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+        <SessionStatusBar toolId={adapterId} sessionId={sessionId} />
         <div style={{ flex: 1, overflow: 'auto', padding: '8px 12px' }}>
           {entry?.supported === false ? (
             <div style={{ color: 'var(--tn-fg-muted)' }}>

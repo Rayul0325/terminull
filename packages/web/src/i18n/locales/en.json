@@ -11,7 +11,9 @@
     "loading": "Loading…",
     "close": "Close",
     "delete": "Delete",
-    "dismiss": "Dismiss"
+    "dismiss": "Dismiss",
+    "cancel": "Cancel",
+    "confirm": "Confirm"
   },
   "conn": {
     "ws": {
@@ -183,8 +185,11 @@
     "notice": {
       "user_required": "Input requires user auth (/auth?token=…) — switched to read-only",
       "read_only": "This attachment is read-only",
-      "closed_1011": "Host link lost — reattach once the machine reconnects"
-    }
+      "closed_1011": "Host link lost — reattach once the machine reconnects",
+      "closed_1006": "Connection lost — use 'Reconnect' to reattach"
+    },
+    "reconnect": "Reconnect",
+    "attachRw": "Terminal (input)"
   },
   "detail": {
     "markdownPending": "Markdown preview pending — showing raw text",
@@ -217,7 +222,10 @@
       "resetOne": "Default",
       "resetAll": "Reset all",
       "scopeRule": "While a terminal has focus, only ⌘/Ctrl+Alt combos fire — every other key goes to the terminal.",
-      "conflicts": "{{count}} conflicting shortcuts"
+      "conflicts": "{{count}} conflicting shortcuts",
+      "roamingSynced": "Synced with the server — the same shortcuts apply on other devices",
+      "roamingLocal": "Stored on this device only (server sync failed: {{code}})",
+      "roamingSyncing": "Syncing…"
     },
     "layout": {
       "title": "Layout templates",
@@ -255,6 +263,8 @@
     "session_interrupt": "Interrupt sessions",
     "session_delete": "Delete sessions",
     "harness_edit": "Edit harness settings",
+    "harness_write": "Save harness files",
+    "harness_write_danger": "Save danger harness files (settings.json etc.)",
     "account_switch": "Switch accounts",
     "board_edit": "Create board cards"
   },
@@ -350,5 +360,162 @@
     "resets": "resets {{time}}",
     "empty": "No usage windows reported",
     "account": "Account: {{account}}"
+  },
+  "account": {
+    "title": "Account center",
+    "subtitle": "Per-tool identity and profiles. Credentials are never copied or moved — a profile is only a pointer at an isolated config home.",
+    "whoami": {
+      "unavailable": "unavailable",
+      "plan": "Plan: {{plan}}"
+    },
+    "profiles": {
+      "title": "Profiles",
+      "default": "Default (real home)",
+      "active": "active",
+      "empty": "No profiles registered.",
+      "loadFailed": "Failed to load profiles ({{code}})",
+      "use": "Switch to this profile",
+      "deleteNote": "Only the registry entry is removed — the config home contents stay untouched."
+    },
+    "create": {
+      "title": "Add profile",
+      "id": "Profile id (lowercase, digits, -, _)",
+      "label": "Display name",
+      "configHome": "Absolute config-home path",
+      "submit": "Add",
+      "failed": "Failed to add the profile ({{code}})"
+    },
+    "switch": {
+      "title": "Confirm account switch",
+      "newSpawnsOnly": "The switch applies to NEW sessions only.",
+      "liveWarning": "{{count}} running sessions keep their current account — they are never restarted.",
+      "confirm": "Switch",
+      "done": "Switched — {{count}} running sessions keep their previous account.",
+      "failed": "Switch failed ({{code}})"
+    },
+    "error": {
+      "unknown_profile": "Unknown profile",
+      "profile_id_reserved": "'default' is a reserved id",
+      "profile_id_duplicate": "A profile with this id already exists for this tool",
+      "profile_unsupported": "This tool does not support profile isolation",
+      "profile_machine_unsupported": "Profiles are not available on remote machines (v1)",
+      "profiles_file_invalid": "The server-side profiles file is corrupted"
+    }
+  },
+  "harness": {
+    "title": "Harness files",
+    "subtitle": "Edit tool config files through the validated, backed-up pipeline. Every save shows a diff preview first and keeps the last 20 backups.",
+    "loadFailed": "Failed to load the file list ({{code}})",
+    "missing": "File absent — saving creates it",
+    "directory": "Directory — not directly editable",
+    "customGroup": "My custom",
+    "customReadOnly": "read-only detection",
+    "customScannedAt": "scanned {{time}}",
+    "customTruncated": "Too many items — showing a truncated list",
+    "customEmpty": "No custom items detected.",
+    "customLoadFailed": "Failed to load custom items ({{code}})",
+    "kind": {
+      "hook": "hook",
+      "statusline": "statusline",
+      "skill": "skill",
+      "agent": "agent",
+      "command": "command",
+      "mcp": "MCP server",
+      "other": "other"
+    },
+    "editor": {
+      "raw": "Raw",
+      "guided": "Guided form",
+      "readFailed": "Failed to read the file ({{code}})",
+      "dangerNote": "High risk — a bad save can take the whole tool down. Review the diff preview below before saving."
+    },
+    "diff": {
+      "title": "Diff preview",
+      "none": "No changes."
+    },
+    "save": "Save",
+    "saveDanger": "I reviewed the changes — save",
+    "saving": "Saving…",
+    "saved": "Saved",
+    "saveFailed": "Save failed ({{code}})",
+    "validation": {
+      "full": "fully parsed",
+      "lint": "structural lint only (not a full parse)",
+      "none": "no machine validation for this format"
+    },
+    "conflict": {
+      "title": "The file changed elsewhere",
+      "body": "The file was modified since you last read it, so nothing was saved. Reload and re-apply your changes.",
+      "reload": "Reload"
+    },
+    "parseError": "Save refused — {{format}} parse error",
+    "parseErrorLine": "line {{line}}",
+    "error": {
+      "unknown_file": "Unknown file",
+      "directory_not_editable": "Directories are not directly editable",
+      "sha_mismatch": "The file changed elsewhere",
+      "parse_invalid": "Format validation failed",
+      "path_jailbreak": "Path escapes the allowed roots",
+      "file_too_large": "File too large (1MB cap)",
+      "backup_not_found": "Backup not found"
+    },
+    "backups": {
+      "title": "Backups",
+      "empty": "No backups.",
+      "loadFailed": "Failed to load backups ({{code}})",
+      "restore": "Restore",
+      "confirm": "Restore this backup? The current content is backed up first, so a restore is undoable.",
+      "restored": "Restored",
+      "bytes": "{{count}} bytes"
+    }
+  },
+  "statusbar": {
+    "model": "Model",
+    "context": "Context",
+    "cost": "Cost",
+    "noData": "No status data",
+    "asOf": "as of {{time}}"
+  },
+  "stepper": {
+    "open": "New session",
+    "title": "Create a session",
+    "step": {
+      "tool": "Tool",
+      "machine": "Machine",
+      "cwd": "Working directory",
+      "model": "Model",
+      "permission": "Permission mode",
+      "confirm": "Confirm"
+    },
+    "next": "Next",
+    "back": "Back",
+    "spawn": "Start session",
+    "spawning": "Starting…",
+    "cwdPlaceholder": "/absolute/path",
+    "toolsLoadFailed": "Failed to load tools ({{code}})",
+    "machineNote": "Only connected machines can be selected.",
+    "modelDefault": "Use default",
+    "modelUnsupported": "This tool does not support model discovery — starting with its default model",
+    "modelsLoadFailed": "Failed to load models ({{code}})",
+    "permissionDefault": "default",
+    "permissionNone": "This tool declares no permission modes — starting with its default",
+    "profileBadge": "Account profile: {{profile}}",
+    "spawnFailed": "Failed to start the session ({{code}})",
+    "created": "Session started"
+  },
+  "mobile": {
+    "tab": {
+      "status": "Status",
+      "sessions": "Sessions",
+      "inbox": "Inbox",
+      "ops": "Ops",
+      "account": "Account"
+    },
+    "noTiling": "On mobile, full-screen views replace the tiled workspace.",
+    "sessionsEmpty": "No sessions to show."
+  },
+  "attention": {
+    "answerPlaceholder": "Type an answer…",
+    "answerSend": "Send answer"
   }
 }

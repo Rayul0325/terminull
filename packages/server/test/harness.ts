@@ -114,3 +114,26 @@ export async function waitFor<T>(
     await new Promise((r) => setTimeout(r, intervalMs));
   }
 }
+
+/**
+ * Poll `read` until `predicate` accepts its value or the deadline elapses,
+ * then return the LAST value read either way. Callers run their exact content
+ * assertions on the returned snapshot: the oracle never weakens, and a timeout
+ * surfaces as the original assertion's own failure. Asserting on the matched
+ * snapshot (instead of re-reading) also keeps checks consistent when the state
+ * keeps moving underneath (e.g. auto-redial closing a stale window).
+ */
+export async function expectEventually<T>(
+  read: () => T | Promise<T>,
+  predicate: (value: T) => boolean,
+  opts: { timeoutMs?: number; intervalMs?: number } = {},
+): Promise<T> {
+  const { timeoutMs = 10_000, intervalMs = 50 } = opts;
+  const deadline = Date.now() + timeoutMs;
+  for (;;) {
+    const value = await read();
+    if (predicate(value)) return value;
+    if (Date.now() > deadline) return value;
+    await new Promise((r) => setTimeout(r, intervalMs));
+  }
+}

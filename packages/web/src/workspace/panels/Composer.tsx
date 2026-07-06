@@ -7,6 +7,7 @@
  */
 import type { ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Icon } from '../../components/Icon';
 import { useComposerStore, type DirectiveSendState } from '../../stores/composer';
 
 const STATE_KEY: Record<DirectiveSendState, string> = {
@@ -43,6 +44,7 @@ export function Composer({ sessionId }: { sessionId: string }): ReactElement {
                 onClick={() => dismiss(p.localId)}
                 aria-label={t('common.dismiss')}
                 style={{
+                  display: 'inline-flex',
                   border: 'none',
                   background: 'none',
                   cursor: 'pointer',
@@ -50,7 +52,7 @@ export function Composer({ sessionId }: { sessionId: string }): ReactElement {
                   padding: 0,
                 }}
               >
-                {'×'}
+                <Icon name="close" size={11} strokeWidth={2} />
               </button>
             </span>
           ))}

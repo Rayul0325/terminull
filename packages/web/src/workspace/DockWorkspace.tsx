@@ -180,7 +180,37 @@ export function DockWorkspace({
     const api = apiRef.current;
     const target = api?.activeGroup ?? api?.activePanel?.group;
     if (!api || !target) return;
-    void api.addPopoutGroup(target, { popoutUrl: '/popout.html' });
+    void api.addPopoutGroup(target, {
+      popoutUrl: '/popout.html',
+      // POPOUT THEME SYNC — investigated 2026-07-06 (M9 track D):
+      // dockview-core's PopoutWindow already clones every stylesheet from
+      // `window.document.styleSheets` into the popout document on its
+      // `load` event (dockview-core/dist/esm/popoutWindow.js `addStyles`),
+      // so tokens.css — including the `@font-face` rules — and dockview.css
+      // DO reach '/popout.html' automatically. No manual <link> injection
+      // is needed for that part.
+      //
+      // What does NOT travel automatically is the *root element's*
+      // `data-theme` / `data-theme-family` dataset: the popout gets a fresh
+      // <html> with no attributes. Because the bare `:root` selector in
+      // tokens.css IS Observatory light/system-dark, an 'auto' + Observatory
+      // user sees the popout match anyway — but an explicit theme override
+      // (dark pinned, or the Clear family) would otherwise silently revert
+      // to Observatory light in the popout window. Copy the two dataset
+      // attributes across explicitly so the popout always matches the main
+      // window's resolved theme, regardless of the user's pin.
+      onDidOpen: ({ window: popoutWindow }) => {
+        const syncTheme = (): void => {
+          const src = document.documentElement.dataset;
+          const dst = popoutWindow.document.documentElement.dataset;
+          if (src['themeFamily']) dst['themeFamily'] = src['themeFamily'];
+          if (src['theme']) dst['theme'] = src['theme'];
+          else delete dst['theme'];
+        };
+        if (popoutWindow.document.readyState === 'complete') syncTheme();
+        else popoutWindow.addEventListener('load', syncTheme, { once: true });
+      },
+    });
   }
 
   const actions = useMemo<WorkspaceActions>(
@@ -215,12 +245,12 @@ export function DockWorkspace({
     <WorkspaceContext.Provider value={actions}>
       <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
         <div
+          className="tn-hairline"
           style={{
             display: 'flex',
             gap: 6,
             alignItems: 'center',
             padding: '4px 8px',
-            borderBottom: '1px solid var(--tn-border)',
             flexWrap: 'wrap',
           }}
         >

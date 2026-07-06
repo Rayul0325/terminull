@@ -38,12 +38,12 @@ export function SessionStatusBar({
 
   const bar = (children: ReactElement | ReactElement[]): ReactElement => (
     <div
+      className="tn-hairline"
       style={{
         display: 'flex',
         gap: 6,
         alignItems: 'center',
         padding: '3px 10px',
-        borderBottom: '1px solid var(--tn-border)',
         background: 'var(--tn-bg-sunken)',
         fontSize: 12,
         flexWrap: 'wrap',

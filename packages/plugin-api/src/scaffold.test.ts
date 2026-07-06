@@ -8,11 +8,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { CONTRIBUTION_POINTS } from './manifest.js';
-import {
-  FIRST_CLASS_POINTS,
-  normalizeScaffoldPoint,
-  scaffoldPlugin,
-} from './scaffold.js';
+import { FIRST_CLASS_POINTS, normalizeScaffoldPoint, scaffoldPlugin } from './scaffold.js';
 import { validatePluginDir } from './validate.js';
 
 let dir: string;

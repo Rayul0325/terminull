@@ -326,7 +326,10 @@ export const MESSAGES = {
     en: 'scaffold validated ✓ — edit the module, then `terminull plugins validate`',
     ko: '스캐폴드 검증 통과 ✓ — 모듈을 수정한 뒤 `terminull plugins validate`를 실행하세요',
   },
-  'plugins.addNotFound': { en: 'plugin source not found: {source}', ko: '플러그인 소스를 찾을 수 없습니다: {source}' },
+  'plugins.addNotFound': {
+    en: 'plugin source not found: {source}',
+    ko: '플러그인 소스를 찾을 수 없습니다: {source}',
+  },
   'plugins.addNotDir': {
     en: 'tarball install is not supported in v0.x — pass a plugin directory: {source}',
     ko: 'v0.x에서는 tarball 설치를 지원하지 않습니다 — 플러그인 디렉터리를 지정하세요: {source}',
@@ -335,7 +338,10 @@ export const MESSAGES = {
     en: 'refusing to add invalid plugin: {source}',
     ko: '유효하지 않은 플러그인은 추가하지 않습니다: {source}',
   },
-  'plugins.added': { en: 'plugin {name} added at {dir}', ko: '플러그인 {name}을 {dir}에 추가했습니다' },
+  'plugins.added': {
+    en: 'plugin {name} added at {dir}',
+    ko: '플러그인 {name}을 {dir}에 추가했습니다',
+  },
 } as const satisfies Record<string, LocalizedText>;
 
 export type MessageKey = keyof typeof MESSAGES;

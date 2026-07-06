@@ -30,7 +30,12 @@ export function parseUrlSafe(raw: string): URL | null {
 export function isLoopbackUrl(raw: string): boolean {
   const u = parseUrlSafe(raw);
   if (!u) return false;
-  if (u.protocol !== 'http:' && u.protocol !== 'https:' && u.protocol !== 'ws:' && u.protocol !== 'wss:')
+  if (
+    u.protocol !== 'http:' &&
+    u.protocol !== 'https:' &&
+    u.protocol !== 'ws:' &&
+    u.protocol !== 'wss:'
+  )
     return false;
   return isLoopbackHostname(u.hostname);
 }

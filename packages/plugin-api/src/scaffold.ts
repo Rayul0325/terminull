@@ -16,11 +16,7 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
-import {
-  CONTRIBUTION_POINTS,
-  PLUGIN_API_VERSION,
-  type ContributionPoint,
-} from './manifest.js';
+import { CONTRIBUTION_POINTS, PLUGIN_API_VERSION, type ContributionPoint } from './manifest.js';
 
 /** The contribution points shipped with bespoke, first-class templates. */
 export const FIRST_CLASS_POINTS = ['themes', 'panels', 'locales'] as const;

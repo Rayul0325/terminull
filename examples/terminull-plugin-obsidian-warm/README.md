@@ -10,11 +10,11 @@ contract; it passes `terminull plugins validate` out of the box.
 
 ## Anatomy
 
-| File | Role |
-| --- | --- |
-| `terminull.plugin.json` | The manifest — one `themes` contribution, `kind: "dark"`, both `en`+`ko` labels (the i18n rule). |
-| `theme.json` | The contribution module — a map of `--tn-*` token overrides. Omitted tokens inherit the base theme. |
-| `package.json` | npm packaging (name `terminull-plugin-*`, MIT). |
+| File                    | Role                                                                                                |
+| ----------------------- | --------------------------------------------------------------------------------------------------- |
+| `terminull.plugin.json` | The manifest — one `themes` contribution, `kind: "dark"`, both `en`+`ko` labels (the i18n rule).    |
+| `theme.json`            | The contribution module — a map of `--tn-*` token overrides. Omitted tokens inherit the base theme. |
+| `package.json`          | npm packaging (name `terminull-plugin-*`, MIT).                                                     |
 
 ## Validate
 

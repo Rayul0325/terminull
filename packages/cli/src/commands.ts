@@ -180,7 +180,8 @@ export async function runSetup(
 
 function healthcheckLine(tool: InjectableTool, res: HealthcheckResult): string {
   if (res.status === 'passed') return t('setup.healthOk', { tool });
-  if (res.status === 'unavailable') return t('setup.healthUnavailable', { tool, detail: res.detail });
+  if (res.status === 'unavailable')
+    return t('setup.healthUnavailable', { tool, detail: res.detail });
   return t('setup.healthFailed', { tool, detail: res.detail });
 }
 
@@ -309,7 +310,8 @@ export async function runUninstall(
   for (const tool of INJECTABLE_TOOLS) {
     if (!(await engine.status(tool))) continue;
     const report = await ejectTool(tool, { home: deps.home, engine });
-    for (const f of report.files) deps.stdout(t('eject.file', { path: f.path, outcome: f.outcome }));
+    for (const f of report.files)
+      deps.stdout(t('eject.file', { path: f.path, outcome: f.outcome }));
     if (!report.clean) {
       allClean = false;
       deps.stderr(t('eject.drift', { tool }));

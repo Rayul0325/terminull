@@ -118,9 +118,9 @@ describe('mode: serve command resolution', () => {
     });
   });
   it('honors TERMINULL_SERVE_CMD full override (JSON array)', () => {
-    expect(resolveServeCommand({ TERMINULL_SERVE_CMD: '["node","/tmp/fake.mjs","serve"]' })).toEqual(
-      { cmd: 'node', args: ['/tmp/fake.mjs', 'serve'] },
-    );
+    expect(
+      resolveServeCommand({ TERMINULL_SERVE_CMD: '["node","/tmp/fake.mjs","serve"]' }),
+    ).toEqual({ cmd: 'node', args: ['/tmp/fake.mjs', 'serve'] });
   });
   it('rejects a malformed TERMINULL_SERVE_CMD', () => {
     expect(() => resolveServeCommand({ TERMINULL_SERVE_CMD: 'not json' })).toThrow();

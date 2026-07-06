@@ -49,7 +49,12 @@ export function isNavigationAllowed(rawUrl: string, appHost: string | null): boo
 export function isBlockedResource(rawUrl: string): boolean {
   const u = parseUrlSafe(rawUrl);
   if (!u) return false; // let electron reject unparseable itself
-  if (u.protocol !== 'http:' && u.protocol !== 'https:' && u.protocol !== 'ws:' && u.protocol !== 'wss:')
+  if (
+    u.protocol !== 'http:' &&
+    u.protocol !== 'https:' &&
+    u.protocol !== 'ws:' &&
+    u.protocol !== 'wss:'
+  )
     return false; // data:/blob:/about:/devtools:/file: are local, not remote
   return !isLoopbackUrl(rawUrl);
 }

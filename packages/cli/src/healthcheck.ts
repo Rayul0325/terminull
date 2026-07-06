@@ -54,11 +54,12 @@ export const realExecFile: ExecFileFn = (file, args, opts) =>
       args,
       { env: opts.env, timeout: opts.timeoutMs },
       (err, stdout, stderr) => {
-        const code = err && typeof (err as { code?: number }).code === 'number'
-          ? (err as { code: number }).code
-          : err
-            ? 1
-            : 0;
+        const code =
+          err && typeof (err as { code?: number }).code === 'number'
+            ? (err as { code: number }).code
+            : err
+              ? 1
+              : 0;
         resolve({ code, stdout: String(stdout), stderr: String(stderr) });
       },
     );
@@ -167,7 +168,11 @@ export async function syntheticHealthcheck(opts: {
     while (Date.now() < deadline) {
       const feed = await feedSince(url, sinceSeq, fetchImpl);
       if (feed && feed.events.some((ev) => invocation.matches(ev, marker))) {
-        return { ok: true, status: 'passed', detail: `synthetic ${tool} event observed on the panel` };
+        return {
+          ok: true,
+          status: 'passed',
+          detail: `synthetic ${tool} event observed on the panel`,
+        };
       }
       await new Promise((r) => setTimeout(r, 100));
     }

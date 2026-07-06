@@ -124,7 +124,9 @@ describe('DarwinServiceManager (fake launchctl + fake LaunchAgents dir)', () => 
     const runnerLoaded = {
       run: (args: string[]): Promise<RunResult> =>
         Promise.resolve(
-          args[0] === 'list' ? { code: 0, stdout: 'ok', stderr: '' } : { code: 0, stdout: '', stderr: '' },
+          args[0] === 'list'
+            ? { code: 0, stdout: 'ok', stderr: '' }
+            : { code: 0, stdout: '', stderr: '' },
         ),
     };
     const mgr = new DarwinServiceManager(agents, runnerLoaded.run);

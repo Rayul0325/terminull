@@ -6,12 +6,12 @@ Each is a real, npm-shaped package (`package.json`, `terminull.plugin.json`,
 `packages/plugin-api/src/examples.test.ts`, and each also carries a
 self-contained `node --test test.mjs`.
 
-| Directory | Point | What it shows |
-| --- | --- | --- |
-| [`terminull-plugin-obsidian-warm`](./terminull-plugin-obsidian-warm) | `themes` | A warm-neutral dark theme as `--tn-*` token overrides. |
-| [`terminull-plugin-scratchpad`](./terminull-plugin-scratchpad) | `panels` | A markdown sidebar panel — and its test **dogfoods the real `PluginHost`** loader. |
-| [`terminull-plugin-locale-ja`](./terminull-plugin-locale-ja) | `locales` | The full Japanese (`ja`) translation of the core UI keys. Core ships ko+en; ja is a plugin. |
-| [`terminull-plugin-broken`](./terminull-plugin-broken) | — | **Intentionally invalid.** The validator must FAIL on it with actionable errors (gate's negative half). |
+| Directory                                                            | Point     | What it shows                                                                                           |
+| -------------------------------------------------------------------- | --------- | ------------------------------------------------------------------------------------------------------- |
+| [`terminull-plugin-obsidian-warm`](./terminull-plugin-obsidian-warm) | `themes`  | A warm-neutral dark theme as `--tn-*` token overrides.                                                  |
+| [`terminull-plugin-scratchpad`](./terminull-plugin-scratchpad)       | `panels`  | A markdown sidebar panel — and its test **dogfoods the real `PluginHost`** loader.                      |
+| [`terminull-plugin-locale-ja`](./terminull-plugin-locale-ja)         | `locales` | The full Japanese (`ja`) translation of the core UI keys. Core ships ko+en; ja is a plugin.             |
+| [`terminull-plugin-broken`](./terminull-plugin-broken)               | —         | **Intentionally invalid.** The validator must FAIL on it with actionable errors (gate's negative half). |
 
 ## Run the whole set
 

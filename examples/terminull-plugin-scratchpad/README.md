@@ -9,11 +9,11 @@ server uses loads this directory and registers the panel (see `test.mjs`).
 
 ## Anatomy
 
-| File | Role |
-| --- | --- |
-| `terminull.plugin.json` | The manifest — one `panels` contribution (`location: "sidebar"`, `en`+`ko` titles). |
-| `panel.mjs` | The contribution module — declarative panel metadata. Panels carry **no executable registration code**; the host stores the metadata and a web layer renders from it. |
-| `package.json` | npm packaging. |
+| File                    | Role                                                                                                                                                                  |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `terminull.plugin.json` | The manifest — one `panels` contribution (`location: "sidebar"`, `en`+`ko` titles).                                                                                   |
+| `panel.mjs`             | The contribution module — declarative panel metadata. Panels carry **no executable registration code**; the host stores the metadata and a web layer renders from it. |
+| `package.json`          | npm packaging.                                                                                                                                                        |
 
 ## Validate + dogfood
 

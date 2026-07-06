@@ -74,9 +74,7 @@ function installSessionGuards(sess: Electron.Session): void {
   });
   sess.webRequest.onHeadersReceived((details, cb) => {
     const headers = { ...details.responseHeaders };
-    const hasCsp = Object.keys(headers).some(
-      (k) => k.toLowerCase() === 'content-security-policy',
-    );
+    const hasCsp = Object.keys(headers).some((k) => k.toLowerCase() === 'content-security-policy');
     if (!hasCsp) {
       headers['Content-Security-Policy'] = [
         "default-src 'self'; " +
@@ -155,9 +153,9 @@ function killManagedServer(): void {
 }
 
 /** Resolve a port to load, spawning a managed server if none is live. */
-async function resolvePort(stateDir: string): Promise<
-  { ok: true; port: number } | { ok: false; screen: string }
-> {
+async function resolvePort(
+  stateDir: string,
+): Promise<{ ok: true; port: number } | { ok: false; screen: string }> {
   const mode = decideMode(stateDir);
   if (mode.kind === 'attach') return { ok: true, port: mode.port };
   try {

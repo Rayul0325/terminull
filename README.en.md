@@ -23,13 +23,13 @@ below. **Don't guess — trust this table; it is exactly what the code does.**
 
 ### Per-tool injection (file by file)
 
-| Tool | Files touched | Exactly what is added | Original handling |
-| --- | --- | --- | --- |
-| **Claude Code** | `~/.claude/terminull/hooks/*.sh` (new dir) | Copies 8 hook scripts (7 event hooks + the shared `terminull-lib.sh`) | New directory — no pre-existing files |
-| **Claude Code** | `~/.claude/settings.json` | Adds 7 entries under `hooks`: `SessionStart`, `UserPromptSubmit`, `PreToolUse` (matcher `AskUserQuestion`), `PostToolUse` (matcher `ExitPlanMode`), `Notification`, `Stop`, `SessionEnd`. **Your existing hooks/settings keep their order and values**; ours are appended after | Original backed up verbatim to `settings.json.terminull.bak-<timestamp>`, then atomic replace |
-| **Codex** | `~/.codex/terminull/hooks/*.sh` (new dir) | Copies 2 notify wrapper scripts (`terminull-codex-notify.sh` + `terminull-lib.sh`) | New directory |
-| **Codex** | `~/.codex/config.toml` | **A single line only** — surgically edits the top-level `notify = [...]` array. Our wrapper goes at the front, then chain-execs the original notify client → Codex Desktop behaviour unchanged. If no array exists, a fresh `notify` line is inserted before the first `[table]` header | Original backed up to `config.toml.terminull.bak-<timestamp>`. **Your `[projects."..."]` trust tables (per-directory `trust_level`) survive byte-identically** — the TOML is never reserialized |
-| **agy (Antigravity)** | — none — | agy exposes no hooks. Terminull only detects and drives it; it **touches no config file** (honest limitation) | N/A |
+| Tool                  | Files touched                              | Exactly what is added                                                                                                                                                                                                                                                                   | Original handling                                                                                                                                                                               |
+| --------------------- | ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Claude Code**       | `~/.claude/terminull/hooks/*.sh` (new dir) | Copies 8 hook scripts (7 event hooks + the shared `terminull-lib.sh`)                                                                                                                                                                                                                   | New directory — no pre-existing files                                                                                                                                                           |
+| **Claude Code**       | `~/.claude/settings.json`                  | Adds 7 entries under `hooks`: `SessionStart`, `UserPromptSubmit`, `PreToolUse` (matcher `AskUserQuestion`), `PostToolUse` (matcher `ExitPlanMode`), `Notification`, `Stop`, `SessionEnd`. **Your existing hooks/settings keep their order and values**; ours are appended after         | Original backed up verbatim to `settings.json.terminull.bak-<timestamp>`, then atomic replace                                                                                                   |
+| **Codex**             | `~/.codex/terminull/hooks/*.sh` (new dir)  | Copies 2 notify wrapper scripts (`terminull-codex-notify.sh` + `terminull-lib.sh`)                                                                                                                                                                                                      | New directory                                                                                                                                                                                   |
+| **Codex**             | `~/.codex/config.toml`                     | **A single line only** — surgically edits the top-level `notify = [...]` array. Our wrapper goes at the front, then chain-execs the original notify client → Codex Desktop behaviour unchanged. If no array exists, a fresh `notify` line is inserted before the first `[table]` header | Original backed up to `config.toml.terminull.bak-<timestamp>`. **Your `[projects."..."]` trust tables (per-directory `trust_level`) survive byte-identically** — the TOML is never reserialized |
+| **agy (Antigravity)** | — none —                                   | agy exposes no hooks. Terminull only detects and drives it; it **touches no config file** (honest limitation)                                                                                                                                                                           | N/A                                                                                                                                                                                             |
 
 ### Every change is consent-gated (diff preview)
 
@@ -148,13 +148,13 @@ points: `adapters` · `renderers` · `panels` · `themes` · `locales` · `keyma
 
 ## Supported-tools matrix (tier honesty)
 
-| Tool | Tier | Detect | Drive (PTY) | Transcript render | Harness inject |
-| --- | --- | --- | --- | --- | --- |
-| **Claude Code** | deep | ✅ PID registry | ✅ keymap/quirks | ✅ native parse | ✅ 7 hooks |
-| **Codex** | deep | ✅ rollout | ✅ `exec --json` | ✅ rollout parser | ✅ notify line |
-| **agy (Antigravity)** | summary | ✅ | ✅ | 🟡 summary cards (step-level not promised for v1) | ❌ none (no hooks) |
-| **ACP agents** | generic | protocol | 🟡 | generic | ❌ (scaffold stage) |
-| **Any CLI** | generic PTY | manual | ✅ raw PTY | raw terminal | ❌ |
+| Tool                  | Tier        | Detect          | Drive (PTY)      | Transcript render                                 | Harness inject      |
+| --------------------- | ----------- | --------------- | ---------------- | ------------------------------------------------- | ------------------- |
+| **Claude Code**       | deep        | ✅ PID registry | ✅ keymap/quirks | ✅ native parse                                   | ✅ 7 hooks          |
+| **Codex**             | deep        | ✅ rollout      | ✅ `exec --json` | ✅ rollout parser                                 | ✅ notify line      |
+| **agy (Antigravity)** | summary     | ✅              | ✅               | 🟡 summary cards (step-level not promised for v1) | ❌ none (no hooks)  |
+| **ACP agents**        | generic     | protocol        | 🟡               | generic                                           | ❌ (scaffold stage) |
+| **Any CLI**           | generic PTY | manual          | ✅ raw PTY       | raw terminal                                      | ❌                  |
 
 "Deep" = native transcript parsing plus driving and hook injection; "generic" =
 PTY passthrough for any CLI. The honest per-feature gap detail lives in

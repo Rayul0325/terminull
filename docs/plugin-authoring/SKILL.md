@@ -27,16 +27,16 @@ Every contribution has a unique `id` (per point), a plugin-relative `module`
 path, and a localized label. Only `adapters` has a live factory contract; the
 other seven are validated metadata stored for web/server consumers.
 
-| Point | Label field | Extra required | Optional | Module is |
-| --- | --- | --- | --- | --- |
-| `adapters` | `displayName` | — | — | a `.mjs`/`.js` whose **default export is a zero-arg factory** returning a `ToolAdapter` |
-| `renderers` | `displayName` | — | `mimeTypes: string[]` | a module (renders transcript/output) |
-| `panels` | `title` | — | `location: sidebar\|main\|statusbar` | a data module (no code run at registration) |
-| `themes` | `label` | `kind: light\|dark` | — | a `.json` of `--tn-*` token overrides |
-| `locales` | `label` | `locale: string` (BCP-47) | — | a `.json` message pack |
-| `keymaps` | `label` | — | — | a `.json`/module of key bindings |
-| `harnessForms` | `title` | — | `targets: string[]` | a declarative form module |
-| `commands` | `title` | — | — | a module exposing an action |
+| Point          | Label field   | Extra required            | Optional                             | Module is                                                                               |
+| -------------- | ------------- | ------------------------- | ------------------------------------ | --------------------------------------------------------------------------------------- |
+| `adapters`     | `displayName` | —                         | —                                    | a `.mjs`/`.js` whose **default export is a zero-arg factory** returning a `ToolAdapter` |
+| `renderers`    | `displayName` | —                         | `mimeTypes: string[]`                | a module (renders transcript/output)                                                    |
+| `panels`       | `title`       | —                         | `location: sidebar\|main\|statusbar` | a data module (no code run at registration)                                             |
+| `themes`       | `label`       | `kind: light\|dark`       | —                                    | a `.json` of `--tn-*` token overrides                                                   |
+| `locales`      | `label`       | `locale: string` (BCP-47) | —                                    | a `.json` message pack                                                                  |
+| `keymaps`      | `label`       | —                         | —                                    | a `.json`/module of key bindings                                                        |
+| `harnessForms` | `title`       | —                         | `targets: string[]`                  | a declarative form module                                                               |
+| `commands`     | `title`       | —                         | —                                    | a module exposing an action                                                             |
 
 ## Manifest JSON-schema (the whole contract)
 
@@ -88,7 +88,8 @@ allowed).
       "additionalProperties": { "type": "string" }
     },
     "adapter": {
-      "type": "object", "additionalProperties": false,
+      "type": "object",
+      "additionalProperties": false,
       "required": ["id", "module", "displayName"],
       "properties": {
         "id": { "type": "string", "minLength": 1 },
@@ -97,7 +98,8 @@ allowed).
       }
     },
     "renderer": {
-      "type": "object", "additionalProperties": false,
+      "type": "object",
+      "additionalProperties": false,
       "required": ["id", "module", "displayName"],
       "properties": {
         "id": { "type": "string", "minLength": 1 },
@@ -107,7 +109,8 @@ allowed).
       }
     },
     "panel": {
-      "type": "object", "additionalProperties": false,
+      "type": "object",
+      "additionalProperties": false,
       "required": ["id", "module", "title"],
       "properties": {
         "id": { "type": "string", "minLength": 1 },
@@ -117,7 +120,8 @@ allowed).
       }
     },
     "theme": {
-      "type": "object", "additionalProperties": false,
+      "type": "object",
+      "additionalProperties": false,
       "required": ["id", "module", "label", "kind"],
       "properties": {
         "id": { "type": "string", "minLength": 1 },
@@ -127,7 +131,8 @@ allowed).
       }
     },
     "locale": {
-      "type": "object", "additionalProperties": false,
+      "type": "object",
+      "additionalProperties": false,
       "required": ["id", "module", "locale", "label"],
       "properties": {
         "id": { "type": "string", "minLength": 1 },
@@ -137,7 +142,8 @@ allowed).
       }
     },
     "keymap": {
-      "type": "object", "additionalProperties": false,
+      "type": "object",
+      "additionalProperties": false,
       "required": ["id", "module", "label"],
       "properties": {
         "id": { "type": "string", "minLength": 1 },
@@ -146,7 +152,8 @@ allowed).
       }
     },
     "harnessForm": {
-      "type": "object", "additionalProperties": false,
+      "type": "object",
+      "additionalProperties": false,
       "required": ["id", "module", "title"],
       "properties": {
         "id": { "type": "string", "minLength": 1 },
@@ -156,7 +163,8 @@ allowed).
       }
     },
     "command": {
-      "type": "object", "additionalProperties": false,
+      "type": "object",
+      "additionalProperties": false,
       "required": ["id", "module", "title"],
       "properties": {
         "id": { "type": "string", "minLength": 1 },
@@ -236,18 +244,18 @@ existence/JSON checks; fill in real content after).
 `validate` returns `{ ok, manifestSource, manifest, errors[], warnings[] }`.
 `ok` is true only when `errors` is empty; warnings never flip `ok`.
 
-| `code` | Meaning → fix |
-| --- | --- |
-| `dir_not_found` | The path is not a directory. Point at the plugin folder. |
-| `manifest_missing` | No `terminull.plugin.json` and no `terminull` field in `package.json`. Add one. |
-| `manifest_unparseable` | The manifest is not valid JSON. Fix the syntax at the reported file. |
-| `manifest_invalid` | A schema violation; `at` is the exact field path (e.g. `contributes.themes[0].kind`). Make it match the schema above. |
-| `plugin_api_incompatible` | `pluginApi` range excludes host v1. Use `^1`. |
-| `module_path_escapes` | `module` is absolute or climbs out of the plugin dir. Use a relative path inside the package. |
-| `module_missing` | The `module` file does not exist. Create it or fix the path. |
-| `module_json_invalid` | A `.json` module does not parse. Fix its JSON. |
-| `duplicate_contribution_id` | Two contributions share an `id` within one point. Ids must be unique per point. |
-| `name_convention` (**warning**) | Name is not `terminull-plugin-*`. Advisory only — never blocks. |
+| `code`                          | Meaning → fix                                                                                                         |
+| ------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `dir_not_found`                 | The path is not a directory. Point at the plugin folder.                                                              |
+| `manifest_missing`              | No `terminull.plugin.json` and no `terminull` field in `package.json`. Add one.                                       |
+| `manifest_unparseable`          | The manifest is not valid JSON. Fix the syntax at the reported file.                                                  |
+| `manifest_invalid`              | A schema violation; `at` is the exact field path (e.g. `contributes.themes[0].kind`). Make it match the schema above. |
+| `plugin_api_incompatible`       | `pluginApi` range excludes host v1. Use `^1`.                                                                         |
+| `module_path_escapes`           | `module` is absolute or climbs out of the plugin dir. Use a relative path inside the package.                         |
+| `module_missing`                | The `module` file does not exist. Create it or fix the path.                                                          |
+| `module_json_invalid`           | A `.json` module does not parse. Fix its JSON.                                                                        |
+| `duplicate_contribution_id`     | Two contributions share an `id` within one point. Ids must be unique per point.                                       |
+| `name_convention` (**warning**) | Name is not `terminull-plugin-*`. Advisory only — never blocks.                                                       |
 
 ## Working examples in this repo
 

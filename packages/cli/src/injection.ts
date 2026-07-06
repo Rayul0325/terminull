@@ -55,8 +55,7 @@ interface ToolWiring {
 const WIRING: Record<InjectableTool, ToolWiring> = {
   claude: {
     bin: 'claude',
-    injector: (harnessDir) =>
-      new ClaudeHarnessInjector(harnessDir ? { harnessDir } : {}),
+    injector: (harnessDir) => new ClaudeHarnessInjector(harnessDir ? { harnessDir } : {}),
     configPath: (home) => path.join(home, '.claude', 'settings.json'),
     hooksDir: (home) => path.join(home, '.claude', 'terminull', 'hooks'),
     anchor: 'hooks',
@@ -161,7 +160,8 @@ export async function injectTool(
   const ctx: HarnessContext = { home };
   const configPath = wiring.configPath(home);
   const before = await readMaybe(configPath);
-  const backupPath = before !== null ? await writeVerbatimBackup(stateDir, tool, configPath, before) : null;
+  const backupPath =
+    before !== null ? await writeVerbatimBackup(stateDir, tool, configPath, before) : null;
 
   const status = await injectorFor(tool).install(ctx);
   if (!status.installed) {

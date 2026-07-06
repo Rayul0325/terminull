@@ -79,7 +79,8 @@ function runSmoke(
         if (m && results.length < stdout.split('SMOKE_RESULT').length - 1) {
           try {
             const parsed = JSON.parse(m[1]) as Record<string, unknown>;
-            if (!results.some((r) => JSON.stringify(r) === JSON.stringify(parsed))) results.push(parsed);
+            if (!results.some((r) => JSON.stringify(r) === JSON.stringify(parsed)))
+              results.push(parsed);
           } catch {
             /* partial line — ignore */
           }
@@ -111,11 +112,11 @@ beforeAll(() => {
     [
       "import fs from 'node:fs';",
       "import path from 'node:path';",
-      "const dir = process.env.TERMINULL_STATE_DIR;",
-      "fs.mkdirSync(dir, { recursive: true });",
+      'const dir = process.env.TERMINULL_STATE_DIR;',
+      'fs.mkdirSync(dir, { recursive: true });',
       "fs.writeFileSync(path.join(dir, 'server.json'), JSON.stringify({ port: 45999, pid: process.pid }));",
       "process.stdout.write('FAKE_SERVE_LISTENING\\n');",
-      "const t = setInterval(() => {}, 1000);",
+      'const t = setInterval(() => {}, 1000);',
       "process.on('SIGTERM', () => { clearInterval(t); process.exit(0); });",
     ].join('\n'),
   );

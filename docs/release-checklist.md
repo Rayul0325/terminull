@@ -112,6 +112,7 @@ gh release create v0.1.0 \
 모든 CLI 코딩 에이전트를 위한 하나의 패널. `npx terminull setup`으로 시작하세요.
 
 ## 하이라이트
+
 - 신뢰 우선 설치: setup이 무엇을 주입하는지 파일 단위로 보여주고, 모든 변경은
   동의 기반 diff 미리보기를 거치며, eject/uninstall이 바이트 단위로 복원합니다.
 - 딥 어댑터: Claude Code · Codex. 요약 어댑터: agy. 제네릭 PTY: 임의 CLI.
@@ -119,12 +120,15 @@ gh release create v0.1.0 \
 - 플러그인 작성 키트(@terminull/plugin-api + validate 오라클).
 
 ## 설치
+
     npx terminull setup
 
 ## 보안
+
 패널은 감사·거버넌스 계층이지 샌드박스가 아닙니다. 자세한 내용은 SECURITY.md.
 
 ## 알려진 한계
+
 - 서비스 관리는 darwin(launchd) 전용. 데스크톱 셸은 서명 없는 로컬 빌드.
 - v1.1 백로그: OpenCode 딥 어댑터 · 플러그인 스토어 UI · Windows · 서명 빌드.
 

@@ -9,11 +9,11 @@ An example **locale** plugin for [Terminull](../../README.md). It ships **`ja`
 
 ## Anatomy
 
-| File | Role |
-| --- | --- |
-| `terminull.plugin.json` | The manifest — one `locales` contribution (`locale: "ja"`, tri-lingual label). |
-| `ja.json` | The contribution module — every key from `packages/web/src/i18n/locales/en.json`, translated to natural Japanese, with all `{{interpolation}}` tokens preserved verbatim. |
-| `package.json` | npm packaging. |
+| File                    | Role                                                                                                                                                                      |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `terminull.plugin.json` | The manifest — one `locales` contribution (`locale: "ja"`, tri-lingual label).                                                                                            |
+| `ja.json`               | The contribution module — every key from `packages/web/src/i18n/locales/en.json`, translated to natural Japanese, with all `{{interpolation}}` tokens preserved verbatim. |
+| `package.json`          | npm packaging.                                                                                                                                                            |
 
 ## Keeping it in sync
 

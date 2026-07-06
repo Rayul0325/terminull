@@ -4,8 +4,19 @@
   "description": "Terminull locale plugin — Japanese (ja) message pack for the core web UI. Core ships ko+en; ja lives here as an example plugin.",
   "type": "module",
   "license": "MIT",
-  "keywords": ["terminull", "terminull-plugin", "locale", "i18n", "japanese"],
-  "files": ["ja.json", "terminull.plugin.json", "README.md", "LICENSE"],
+  "keywords": [
+    "terminull",
+    "terminull-plugin",
+    "locale",
+    "i18n",
+    "japanese"
+  ],
+  "files": [
+    "ja.json",
+    "terminull.plugin.json",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "test": "node --test test.mjs"
   }

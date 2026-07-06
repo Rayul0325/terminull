@@ -23,10 +23,6 @@ export {
   type ServeCommand,
   type ShellMode,
 } from './mode.js';
-export {
-  isAllowedPopout,
-  isBlockedResource,
-  isNavigationAllowed,
-} from './popout.js';
+export { isAllowedPopout, isBlockedResource, isNavigationAllowed } from './popout.js';
 export { dataUrl, SCREENS, screenHtml } from './screens.js';
 export { isLoopbackHostname, isLoopbackUrl, panelOrigin, parseUrlSafe } from './urls.js';

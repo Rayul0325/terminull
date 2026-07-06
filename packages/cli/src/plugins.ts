@@ -34,10 +34,7 @@ function printResult(result: PluginValidationResult, io: Io, asJson: boolean): v
 }
 
 /** `terminull plugins validate <dir> [--json]` → exit 1 on any error. */
-export function runPluginsValidate(
-  dir: string,
-  opts: Io & { json?: boolean },
-): number {
+export function runPluginsValidate(dir: string, opts: Io & { json?: boolean }): number {
   const result = validatePluginDir(path.resolve(dir));
   if (opts.json) {
     opts.stdout(JSON.stringify(result, null, 2));

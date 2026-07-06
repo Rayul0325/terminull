@@ -61,7 +61,9 @@ describe('injectTool / ejectTool — codex config.toml (byte-identical + drift)'
     expect(fs.readFileSync(configRec!.backupPath!, 'utf8')).toBe(CODEX_CONFIG);
     expect(configRec!.backupPath!.startsWith(injectedBackupDir(stateDir))).toBe(true);
     // the trust table survived the patch byte-for-byte
-    expect(fs.readFileSync(configPath, 'utf8')).toContain('[projects."/Users/rayul/한글 프로젝트"]');
+    expect(fs.readFileSync(configPath, 'utf8')).toContain(
+      '[projects."/Users/rayul/한글 프로젝트"]',
+    );
 
     // second inject = idempotent no-op (ledger is SoT)
     expect((await injectTool('codex', { home, stateDir, engine })).status).toBe('already');

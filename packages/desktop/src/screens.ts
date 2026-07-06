@@ -41,8 +41,7 @@ export function dataUrl(html: string): string {
 
 /** The two honest failure states the shell can hit. */
 export const SCREENS = {
-  managedFailed: (detail: string): string =>
-    screenHtml('패널 서버를 시작하지 못했습니다', detail),
+  managedFailed: (detail: string): string => screenHtml('패널 서버를 시작하지 못했습니다', detail),
   managedUnavailable: (detail: string): string =>
     screenHtml('실행 중인 패널 서버가 없습니다', detail),
 } as const;

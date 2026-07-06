@@ -4,8 +4,17 @@
   "description": "Terminull panel plugin — a markdown scratchpad surface for the sidebar.",
   "type": "module",
   "license": "MIT",
-  "keywords": ["terminull", "terminull-plugin", "panel"],
-  "files": ["panel.mjs", "terminull.plugin.json", "README.md", "LICENSE"],
+  "keywords": [
+    "terminull",
+    "terminull-plugin",
+    "panel"
+  ],
+  "files": [
+    "panel.mjs",
+    "terminull.plugin.json",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "test": "node --test test.mjs"
   }

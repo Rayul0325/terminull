@@ -90,7 +90,11 @@ function fakeService(): ServiceManager & { installed: boolean } {
       return Promise.resolve({ ok: true as const, code: 'ok' as const });
     },
     status(): Promise<ServiceStatus> {
-      return Promise.resolve({ supported: true, installed: this.installed, loaded: this.installed });
+      return Promise.resolve({
+        supported: true,
+        installed: this.installed,
+        loaded: this.installed,
+      });
     },
     start() {
       return Promise.resolve({ ok: true as const, code: 'ok' as const });
@@ -103,10 +107,16 @@ function fakeService(): ServiceManager & { installed: boolean } {
 
 function detectAll(present: string[]): (bin: string) => Promise<ToolDetection> {
   return (bin) =>
-    Promise.resolve(present.includes(bin) ? { present: true, version: '1.0.0' } : { present: false });
+    Promise.resolve(
+      present.includes(bin) ? { present: true, version: '1.0.0' } : { present: false },
+    );
 }
 
-function makeDeps(over: Partial<SetupDeps> = {}): { deps: SetupDeps; out: string[]; err: string[] } {
+function makeDeps(over: Partial<SetupDeps> = {}): {
+  deps: SetupDeps;
+  out: string[];
+  err: string[];
+} {
   const out: string[] = [];
   const err: string[] = [];
   const home = tmp();

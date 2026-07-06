@@ -14,11 +14,11 @@ npm install @terminull/plugin-api
 
 ## Three entry points
 
-| Import | Runtime | Contents |
-| --- | --- | --- |
-| `@terminull/plugin-api` | pure (zod only — web-safe) | `PluginManifestSchema` + the 8 `*ContributionSchema`, `LocalizedTextSchema`, `CONTRIBUTION_POINTS`, `PLUGIN_API_VERSION`, and `rangeSatisfies` (the semver gate). |
-| `@terminull/plugin-api/validate` | Node (`node:fs`) | `validatePluginDir(dir)` — the machine oracle behind `terminull plugins validate`. |
-| `@terminull/plugin-api/scaffold` | Node (`node:fs`) | `scaffoldPlugin({ point, name, targetDir })` — writes a validate-green package. |
+| Import                           | Runtime                    | Contents                                                                                                                                                          |
+| -------------------------------- | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@terminull/plugin-api`          | pure (zod only — web-safe) | `PluginManifestSchema` + the 8 `*ContributionSchema`, `LocalizedTextSchema`, `CONTRIBUTION_POINTS`, `PLUGIN_API_VERSION`, and `rangeSatisfies` (the semver gate). |
+| `@terminull/plugin-api/validate` | Node (`node:fs`)           | `validatePluginDir(dir)` — the machine oracle behind `terminull plugins validate`.                                                                                |
+| `@terminull/plugin-api/scaffold` | Node (`node:fs`)           | `scaffoldPlugin({ point, name, targetDir })` — writes a validate-green package.                                                                                   |
 
 The `.` entry is pure so it can ship inside a browser bundle; the `/validate`
 and `/scaffold` subpaths touch the filesystem and are Node-only.

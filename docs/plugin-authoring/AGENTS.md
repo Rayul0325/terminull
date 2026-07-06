@@ -29,16 +29,16 @@ Programmatic equivalents (Node-only): `validatePluginDir` from
 Each contribution: unique `id` per point, plugin-relative `module`, a localized
 label. Only `adapters` runs a factory; the rest are validated metadata.
 
-| Point | Label field | Extra required | Optional |
-| --- | --- | --- | --- |
-| `adapters` | `displayName` | — | — (module default-exports a zero-arg ToolAdapter factory) |
-| `renderers` | `displayName` | — | `mimeTypes: string[]` |
-| `panels` | `title` | — | `location: sidebar\|main\|statusbar` |
-| `themes` | `label` | `kind: light\|dark` | — |
-| `locales` | `label` | `locale: string` | — |
-| `keymaps` | `label` | — | — |
-| `harnessForms` | `title` | — | `targets: string[]` |
-| `commands` | `title` | — | — |
+| Point          | Label field   | Extra required      | Optional                                                  |
+| -------------- | ------------- | ------------------- | --------------------------------------------------------- |
+| `adapters`     | `displayName` | —                   | — (module default-exports a zero-arg ToolAdapter factory) |
+| `renderers`    | `displayName` | —                   | `mimeTypes: string[]`                                     |
+| `panels`       | `title`       | —                   | `location: sidebar\|main\|statusbar`                      |
+| `themes`       | `label`       | `kind: light\|dark` | —                                                         |
+| `locales`      | `label`       | `locale: string`    | —                                                         |
+| `keymaps`      | `label`       | —                   | —                                                         |
+| `harnessForms` | `title`       | —                   | `targets: string[]`                                       |
+| `commands`     | `title`       | —                   | —                                                         |
 
 ## Manifest schema
 
@@ -56,8 +56,11 @@ requires both `en` and `ko`.
   "properties": {
     "name": { "type": "string", "minLength": 1 },
     "version": { "type": "string", "minLength": 1 },
-    "pluginApi": { "type": "string", "minLength": 1,
-      "description": "semver range over host API major 1: '^1', '1', '>=1 <2'" },
+    "pluginApi": {
+      "type": "string",
+      "minLength": 1,
+      "description": "semver range over host API major 1: '^1', '1', '>=1 <2'"
+    },
     "displayName": { "$ref": "#/$defs/localizedText" },
     "contributes": {
       "type": "object",
@@ -76,56 +79,99 @@ requires both `en` and `ko`.
   },
   "$defs": {
     "localizedText": {
-      "type": "object", "required": ["en", "ko"],
-      "properties": { "en": { "type": "string", "minLength": 1 },
-        "ko": { "type": "string", "minLength": 1 } },
+      "type": "object",
+      "required": ["en", "ko"],
+      "properties": {
+        "en": { "type": "string", "minLength": 1 },
+        "ko": { "type": "string", "minLength": 1 }
+      },
       "additionalProperties": { "type": "string" }
     },
-    "adapter": { "type": "object", "additionalProperties": false,
+    "adapter": {
+      "type": "object",
+      "additionalProperties": false,
       "required": ["id", "module", "displayName"],
-      "properties": { "id": { "type": "string", "minLength": 1 },
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
         "module": { "type": "string", "minLength": 1 },
-        "displayName": { "$ref": "#/$defs/localizedText" } } },
-    "renderer": { "type": "object", "additionalProperties": false,
+        "displayName": { "$ref": "#/$defs/localizedText" }
+      }
+    },
+    "renderer": {
+      "type": "object",
+      "additionalProperties": false,
       "required": ["id", "module", "displayName"],
-      "properties": { "id": { "type": "string", "minLength": 1 },
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
         "module": { "type": "string", "minLength": 1 },
         "displayName": { "$ref": "#/$defs/localizedText" },
-        "mimeTypes": { "type": "array", "items": { "type": "string", "minLength": 1 } } } },
-    "panel": { "type": "object", "additionalProperties": false,
+        "mimeTypes": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+      }
+    },
+    "panel": {
+      "type": "object",
+      "additionalProperties": false,
       "required": ["id", "module", "title"],
-      "properties": { "id": { "type": "string", "minLength": 1 },
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
         "module": { "type": "string", "minLength": 1 },
         "title": { "$ref": "#/$defs/localizedText" },
-        "location": { "enum": ["sidebar", "main", "statusbar"] } } },
-    "theme": { "type": "object", "additionalProperties": false,
+        "location": { "enum": ["sidebar", "main", "statusbar"] }
+      }
+    },
+    "theme": {
+      "type": "object",
+      "additionalProperties": false,
       "required": ["id", "module", "label", "kind"],
-      "properties": { "id": { "type": "string", "minLength": 1 },
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
         "module": { "type": "string", "minLength": 1 },
         "label": { "$ref": "#/$defs/localizedText" },
-        "kind": { "enum": ["light", "dark"] } } },
-    "locale": { "type": "object", "additionalProperties": false,
+        "kind": { "enum": ["light", "dark"] }
+      }
+    },
+    "locale": {
+      "type": "object",
+      "additionalProperties": false,
       "required": ["id", "module", "locale", "label"],
-      "properties": { "id": { "type": "string", "minLength": 1 },
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
         "module": { "type": "string", "minLength": 1 },
         "locale": { "type": "string", "minLength": 1 },
-        "label": { "$ref": "#/$defs/localizedText" } } },
-    "keymap": { "type": "object", "additionalProperties": false,
+        "label": { "$ref": "#/$defs/localizedText" }
+      }
+    },
+    "keymap": {
+      "type": "object",
+      "additionalProperties": false,
       "required": ["id", "module", "label"],
-      "properties": { "id": { "type": "string", "minLength": 1 },
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
         "module": { "type": "string", "minLength": 1 },
-        "label": { "$ref": "#/$defs/localizedText" } } },
-    "harnessForm": { "type": "object", "additionalProperties": false,
+        "label": { "$ref": "#/$defs/localizedText" }
+      }
+    },
+    "harnessForm": {
+      "type": "object",
+      "additionalProperties": false,
       "required": ["id", "module", "title"],
-      "properties": { "id": { "type": "string", "minLength": 1 },
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
         "module": { "type": "string", "minLength": 1 },
         "title": { "$ref": "#/$defs/localizedText" },
-        "targets": { "type": "array", "items": { "type": "string", "minLength": 1 } } } },
-    "command": { "type": "object", "additionalProperties": false,
+        "targets": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+      }
+    },
+    "command": {
+      "type": "object",
+      "additionalProperties": false,
       "required": ["id", "module", "title"],
-      "properties": { "id": { "type": "string", "minLength": 1 },
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
         "module": { "type": "string", "minLength": 1 },
-        "title": { "$ref": "#/$defs/localizedText" } } }
+        "title": { "$ref": "#/$defs/localizedText" }
+      }
+    }
   }
 }
 ```
@@ -177,18 +223,18 @@ Write the referenced module file next to the manifest (`{}` JSON or a stub
 
 ## Error codes (fix by `code` + `at`)
 
-| `code` | Fix |
-| --- | --- |
-| `dir_not_found` | Point at an existing plugin directory. |
-| `manifest_missing` | Add `terminull.plugin.json` or a `terminull` field in `package.json`. |
-| `manifest_unparseable` | Fix the manifest JSON syntax. |
-| `manifest_invalid` | Schema violation; `at` is the exact field path. Match the schema. |
-| `plugin_api_incompatible` | `pluginApi` excludes host v1 → use `^1`. |
-| `module_path_escapes` | Use a relative path inside the package (no `..`, no absolute). |
-| `module_missing` | Create the `module` file or fix the path. |
-| `module_json_invalid` | Fix the `.json` module's JSON. |
-| `duplicate_contribution_id` | Make ids unique per point. |
-| `name_convention` (warning) | Advisory: prefer `terminull-plugin-*`. Never blocks. |
+| `code`                      | Fix                                                                   |
+| --------------------------- | --------------------------------------------------------------------- |
+| `dir_not_found`             | Point at an existing plugin directory.                                |
+| `manifest_missing`          | Add `terminull.plugin.json` or a `terminull` field in `package.json`. |
+| `manifest_unparseable`      | Fix the manifest JSON syntax.                                         |
+| `manifest_invalid`          | Schema violation; `at` is the exact field path. Match the schema.     |
+| `plugin_api_incompatible`   | `pluginApi` excludes host v1 → use `^1`.                              |
+| `module_path_escapes`       | Use a relative path inside the package (no `..`, no absolute).        |
+| `module_missing`            | Create the `module` file or fix the path.                             |
+| `module_json_invalid`       | Fix the `.json` module's JSON.                                        |
+| `duplicate_contribution_id` | Make ids unique per point.                                            |
+| `name_convention` (warning) | Advisory: prefer `terminull-plugin-*`. Never blocks.                  |
 
 ## Examples in this repo
 

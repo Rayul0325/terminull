@@ -22,7 +22,12 @@ afterEach(() => {
   for (const d of tmpdirs.splice(0)) fs.rmSync(d, { recursive: true, force: true });
 });
 
-function io(): { stdout: (l: string) => void; stderr: (l: string) => void; out: string[]; err: string[] } {
+function io(): {
+  stdout: (l: string) => void;
+  stderr: (l: string) => void;
+  out: string[];
+  err: string[];
+} {
   const out: string[] = [];
   const err: string[] = [];
   return { stdout: (l) => out.push(l), stderr: (l) => err.push(l), out, err };
@@ -82,9 +87,9 @@ describe('plugins add', () => {
     expect(code).toBe(0);
     const dest = path.join(stateDir, 'plugins', 'terminull-plugin-warm');
     expect(fs.existsSync(path.join(dest, 'terminull.plugin.json'))).toBe(true);
-    const registry = JSON.parse(
-      fs.readFileSync(path.join(stateDir, 'plugins.json'), 'utf8'),
-    ) as { plugins: { name: string; addedAt: number }[] };
+    const registry = JSON.parse(fs.readFileSync(path.join(stateDir, 'plugins.json'), 'utf8')) as {
+      plugins: { name: string; addedAt: number }[];
+    };
     expect(registry.plugins[0]?.name).toBe('terminull-plugin-warm');
     expect(registry.plugins[0]?.addedAt).toBe(42);
   });
@@ -103,6 +108,8 @@ describe('plugins add', () => {
     fs.writeFileSync(tar, 'binary');
     const sink = io();
     expect(await runPluginsAdd(tar, { ...sink, stateDir: tmp() })).toBe(2);
-    expect(sink.err.join('\n')).toMatch(/tarball install is not supported|tarball 설치를 지원하지 않습니다/);
+    expect(sink.err.join('\n')).toMatch(
+      /tarball install is not supported|tarball 설치를 지원하지 않습니다/,
+    );
   });
 });

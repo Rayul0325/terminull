@@ -38,10 +38,10 @@ remote.
 
 ## Modes
 
-| Mode | When | What the shell does |
-| --- | --- | --- |
-| **attach** | a live server is found via `<stateDir>/server.json` (pid liveness-checked) | load `http://127.0.0.1:<port>/` |
-| **managed** | no live server | spawn `terminull serve` (stdio piped), poll `server.json` until live (15s timeout), load it, kill the child on quit |
+| Mode        | When                                                                       | What the shell does                                                                                                 |
+| ----------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| **attach**  | a live server is found via `<stateDir>/server.json` (pid liveness-checked) | load `http://127.0.0.1:<port>/`                                                                                     |
+| **managed** | no live server                                                             | spawn `terminull serve` (stdio piped), poll `server.json` until live (15s timeout), load it, kill the child on quit |
 
 When neither yields a server, the window shows an **honest Korean error screen**
 (`src/screens.ts`) — never a blank window.
@@ -81,11 +81,11 @@ TERMINULL_PANEL_URL=http://localhost:5173 pnpm --filter @terminull/desktop dev
 
 ### Environment overrides
 
-| Var | Effect |
-| --- | --- |
-| `TERMINULL_STATE_DIR` | where `server.json` is discovered (default `~/.terminull`) |
+| Var                   | Effect                                                                        |
+| --------------------- | ----------------------------------------------------------------------------- |
+| `TERMINULL_STATE_DIR` | where `server.json` is discovered (default `~/.terminull`)                    |
 | `TERMINULL_PANEL_URL` | load this URL instead of the discovered origin — **honored only if loopback** |
-| `TERMINULL_BIN` | executable used for the managed `… serve` spawn (default `terminull`) |
+| `TERMINULL_BIN`       | executable used for the managed `… serve` spawn (default `terminull`)         |
 
 ## Tests / smoke (gate g)
 

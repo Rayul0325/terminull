@@ -314,7 +314,14 @@ export class Supervisor implements ManageAgent {
     if (index > this.caps.maxActionsPerTurn) {
       // Over the per-turn action cap: refuse without touching the executor.
       const kind = parsed.success ? parsed.data.kind : claimedKind(event.action);
-      this.emitDenied(proposalId, turnId, kind, parsed.success ? PROPOSED_ACTION_PERMISSION[parsed.data.kind] : 'none', reason, 'action_cap');
+      this.emitDenied(
+        proposalId,
+        turnId,
+        kind,
+        parsed.success ? PROPOSED_ACTION_PERMISSION[parsed.data.kind] : 'none',
+        reason,
+        'action_cap',
+      );
       return { summary: `${proposalId} (${kind}): denied (action_cap)`, pending: false };
     }
 
@@ -333,7 +340,10 @@ export class Supervisor implements ManageAgent {
       // Runtime guard mirroring the type-level rule — unreachable unless the
       // union and the map ever drift.
       this.emitDenied(proposalId, turnId, action.kind, 'none', reason, 'action_not_allowed');
-      return { summary: `${proposalId} (${action.kind}): denied (action_not_allowed)`, pending: false };
+      return {
+        summary: `${proposalId} (${action.kind}): denied (action_not_allowed)`,
+        pending: false,
+      };
     }
 
     // Defense-in-depth pre-check; the server-side gate remains the authority.
@@ -364,7 +374,10 @@ export class Supervisor implements ManageAgent {
             pending: true,
           };
         case 'denied':
-          return { summary: `${proposalId} (${action.kind}): denied (${outcome.code})`, pending: false };
+          return {
+            summary: `${proposalId} (${action.kind}): denied (${outcome.code})`,
+            pending: false,
+          };
       }
     } catch {
       // Executor crash — audited as failed; the outcome stays honest.

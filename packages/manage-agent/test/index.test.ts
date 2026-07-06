@@ -62,7 +62,12 @@ describe('@terminull/manage-agent contract surface', () => {
 
   it('has NO verb that could widen the agent permissions (hard rule)', () => {
     const mapped = Object.values(PROPOSED_ACTION_PERMISSION);
-    for (const escalation of ['permission.grant', 'account.switch', 'harness.edit', 'session.delete']) {
+    for (const escalation of [
+      'permission.grant',
+      'account.switch',
+      'harness.edit',
+      'session.delete',
+    ]) {
       expect(mapped).not.toContain(escalation);
     }
   });

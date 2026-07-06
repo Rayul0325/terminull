@@ -40,7 +40,10 @@ export interface BrainChildProcess {
   stdin: Writable | null;
   kill(signal?: NodeJS.Signals): boolean;
   on(event: 'error', listener: (err: Error) => void): unknown;
-  on(event: 'close', listener: (code: number | null, signal: NodeJS.Signals | null) => void): unknown;
+  on(
+    event: 'close',
+    listener: (code: number | null, signal: NodeJS.Signals | null) => void,
+  ): unknown;
 }
 
 /** Options the adapter passes to its spawner. No `shell` — by design. */
@@ -58,8 +61,7 @@ export type BrainSpawn = (
 ) => BrainChildProcess;
 
 /** Production spawner — a thin wrapper keeping the seam type exact. */
-const defaultSpawn: BrainSpawn = (command, args, options) =>
-  nodeSpawn(command, [...args], options);
+const defaultSpawn: BrainSpawn = (command, args, options) => nodeSpawn(command, [...args], options);
 
 // ---------------------------------------------------------------------------
 // Options
@@ -202,7 +204,11 @@ function eventsFromResult(rec: Record<string, unknown>): BrainEvent[] {
     if (typeof u.input_tokens === 'number') usage.inputTokens = u.input_tokens;
     if (typeof u.output_tokens === 'number') usage.outputTokens = u.output_tokens;
   }
-  if (usage.costUsd !== undefined || usage.inputTokens !== undefined || usage.outputTokens !== undefined) {
+  if (
+    usage.costUsd !== undefined ||
+    usage.inputTokens !== undefined ||
+    usage.outputTokens !== undefined
+  ) {
     events.push(usage);
   }
   if (rec.is_error === true || rec.subtype !== 'success') {
@@ -322,7 +328,11 @@ export class ClaudeBrainAdapter implements BrainAdapter {
         stdio: ['pipe', 'pipe', 'pipe'],
       });
     } catch (err) {
-      yield { kind: 'error', code: 'spawn_error', detail: err instanceof Error ? err.message : String(err) };
+      yield {
+        kind: 'error',
+        code: 'spawn_error',
+        detail: err instanceof Error ? err.message : String(err),
+      };
       yield { kind: 'done', stopReason: 'error' };
       return;
     }

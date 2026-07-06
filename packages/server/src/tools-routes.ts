@@ -179,7 +179,10 @@ export function registerToolsRoutes(r: Router, deps: ToolsRouteDeps): void {
       params: { toolId: adapter.id, profileId: body.data.profileId },
       execute: async (actor) => {
         if (!adapter.accounts) {
-          return { status: 422, body: { code: 'adapter_unsupported', operation: 'account.switch' } };
+          return {
+            status: 422,
+            body: { code: 'adapter_unsupported', operation: 'account.switch' },
+          };
         }
         const result = await adapter.accounts.switchProfile(body.data.profileId, deps.harnessCtx());
         if (!result.available) {
@@ -212,9 +215,11 @@ export function registerToolsRoutes(r: Router, deps: ToolsRouteDeps): void {
       // verify() is the honest state: a pending/hash-trust condition surfaces
       // as installed:false + detail — never silent-green.
       injectorStatus = await adapter.injector.verify(ctx);
-      const planFn = (adapter.injector as HarnessInjector & {
-        plan?: (c: HarnessContext) => Promise<unknown>;
-      }).plan;
+      const planFn = (
+        adapter.injector as HarnessInjector & {
+          plan?: (c: HarnessContext) => Promise<unknown>;
+        }
+      ).plan;
       if (typeof planFn === 'function') {
         try {
           preview = await planFn.call(adapter.injector, ctx);
@@ -266,7 +271,8 @@ export function registerToolsRoutes(r: Router, deps: ToolsRouteDeps): void {
           return { status: 422, body: { code: 'adapter_unsupported', operation: 'harness.edit' } };
         }
         const ctx = deps.harnessCtx();
-        const status = op === 'install' ? await injector.install(ctx) : await injector.uninstall(ctx);
+        const status =
+          op === 'install' ? await injector.install(ctx) : await injector.uninstall(ctx);
         deps.store.append('harness.edited', {
           actor,
           tool: adapter.id,

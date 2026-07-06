@@ -197,9 +197,7 @@ export interface AgentStatusDto {
 // ---------------------------------------------------------------------------
 
 /** Body of `POST /api/agent/chat` (user actor only). */
-export const AgentChatRequestSchema = z
-  .object({ text: z.string().min(1).max(8000) })
-  .strict();
+export const AgentChatRequestSchema = z.object({ text: z.string().min(1).max(8000) }).strict();
 export type AgentChatRequest = z.infer<typeof AgentChatRequestSchema>;
 
 /** 202 response: the turn runs async; progress streams on `WS /ws`. */

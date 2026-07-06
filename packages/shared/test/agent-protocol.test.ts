@@ -68,8 +68,7 @@ describe('request bodies', () => {
 
   it('permission-settings put: classes constrained to the wire union', () => {
     expect(
-      PermissionSettingsPutSchema.safeParse({ changes: { 'session.spawn': 'autonomous' } })
-        .success,
+      PermissionSettingsPutSchema.safeParse({ changes: { 'session.spawn': 'autonomous' } }).success,
     ).toBe(true);
     expect(
       PermissionSettingsPutSchema.safeParse({ changes: { 'session.spawn': 'always' } }).success,

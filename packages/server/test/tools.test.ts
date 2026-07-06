@@ -140,9 +140,7 @@ describe('GET /api/tools/:toolId/account', () => {
     expect(asUser.body.operation).toBe('account.switch');
     expect(asUser.body.reason.en).toBeTruthy();
     // No profile switch happened → no event minted.
-    expect(
-      stack.server.store.inbox.some((e) => e.type === 'account.profile_switched'),
-    ).toBe(false);
+    expect(stack.server.store.inbox.some((e) => e.type === 'account.profile_switched')).toBe(false);
   });
 });
 
@@ -210,7 +208,10 @@ describe('/api/tools/:toolId/harness', () => {
       user: true,
     });
     expect(noInjector.status).toBe(422);
-    expect(noInjector.body).toMatchObject({ code: 'adapter_unsupported', operation: 'harness.edit' });
+    expect(noInjector.body).toMatchObject({
+      code: 'adapter_unsupported',
+      operation: 'harness.edit',
+    });
 
     // harness.edit defaults to confirm for agents → parked, not executed.
     const gated = await api(stack, 'POST', '/api/tools/codex/harness', {

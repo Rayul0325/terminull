@@ -183,9 +183,7 @@ describe('PanelActions executor audit chain', () => {
     const outcome = await stack.server.agentActions.execute(action, meta(2));
     expect(outcome).toEqual({ status: 'denied', code: 'forbidden' });
     expect(phasesOf(stack, 'p-2')).toEqual(['proposed', 'denied']);
-    expect(
-      stack.server.store.inbox.filter((e) => e.type === 'permission.checked').length,
-    ).toBe(1);
+    expect(stack.server.store.inbox.filter((e) => e.type === 'permission.checked').length).toBe(1);
   });
 
   it('an unparseable action is denied WITHOUT reaching the permission gate', async () => {

@@ -95,7 +95,14 @@ describe('ClaudeBrainAdapter.runTurn', () => {
     // sonnet — never a hardcoded top tier), no shell option at all.
     expect(calls).toHaveLength(1);
     expect(calls[0]!.command).toBe('claude');
-    expect(calls[0]!.args).toEqual(['-p', '--output-format', 'stream-json', '--verbose', '--model', 'sonnet']);
+    expect(calls[0]!.args).toEqual([
+      '-p',
+      '--output-format',
+      'stream-json',
+      '--verbose',
+      '--model',
+      'sonnet',
+    ]);
     expect('shell' in calls[0]!.options).toBe(false);
 
     // Prompt travels via stdin (system + conversation), not argv.
@@ -225,7 +232,12 @@ describe('parseStreamJsonLine', () => {
 
   it('maps an error result record to error + done:error', () => {
     const events = parseStreamJsonLine(
-      JSON.stringify({ type: 'result', subtype: 'error_max_turns', is_error: true, total_cost_usd: 0.002 }),
+      JSON.stringify({
+        type: 'result',
+        subtype: 'error_max_turns',
+        is_error: true,
+        total_cost_usd: 0.002,
+      }),
     );
     expect(events).toEqual([
       { kind: 'usage', costUsd: 0.002 },

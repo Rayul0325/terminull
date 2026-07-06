@@ -160,7 +160,10 @@ describe('proposal pipeline', () => {
     await settled(audits);
 
     expect(actionsHandle.executed).toHaveLength(1);
-    expect(actionsHandle.executed[0]!.action).toEqual({ kind: 'create_board_card', title: 'triage' });
+    expect(actionsHandle.executed[0]!.action).toEqual({
+      kind: 'create_board_card',
+      title: 'triage',
+    });
     expect(actionsHandle.executed[0]!.meta).toEqual({
       proposalId: `${turnId}-p1`,
       turnId,
@@ -361,7 +364,11 @@ describe('injection fencing', () => {
       asks: [{ askId: 'a1', sessionId: 's1', summary: hostileAsk }],
       pendingApprovals: 3,
     };
-    const { agent, brain, audits } = harness([[DONE]], {}, fakeActions({ status: 'executed' }, snapshot));
+    const { agent, brain, audits } = harness(
+      [[DONE]],
+      {},
+      fakeActions({ status: 'executed' }, snapshot),
+    );
     await agent.chat('what is going on?');
     await settled(audits);
 

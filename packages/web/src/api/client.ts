@@ -17,6 +17,7 @@ import type {
   EventsResponse,
   FleetSnapshot,
   HealthResponse,
+  MachinesResponse,
   PermissionClass,
   PermissionSettingsDto,
   SpawnResponse,
@@ -78,6 +79,7 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
 export const api = {
   health: () => request<HealthResponse>('GET', '/api/health'),
   fleet: () => request<FleetSnapshot>('GET', '/api/fleet'),
+  machines: () => request<MachinesResponse>('GET', '/api/machines'),
   eventsSince: (seq: number) => request<EventsResponse>('GET', `/api/events?since=${seq}`),
   sendDirective: (sessionId: string, text: string) =>
     request<DirectiveResponse>('POST', '/api/directive', { sessionId, text }),
@@ -89,6 +91,8 @@ export const api = {
     cmd?: string;
     args?: string[];
     label?: string;
+    /** Target machine id; omitted = 'local' (M8 contract, additive). */
+    machine?: string;
   }) => request<SpawnResponse>('POST', '/api/sessions', body),
   deleteSession: (sessionId: string, confirmPhrase: string) =>
     request<{ deleted: boolean; exited: boolean }>(

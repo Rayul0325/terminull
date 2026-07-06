@@ -53,6 +53,40 @@
     "empty": "표시할 세션이 없습니다.",
     "live": "실행 중"
   },
+  "machines": {
+    "title": "머신",
+    "local": "이 컴퓨터",
+    "filterAll": "전체",
+    "state": {
+      "connected": "연결됨",
+      "connecting": "연결 중",
+      "stale": "응답 없음",
+      "disabled": "비활성"
+    },
+    "lastSeen": {
+      "seconds": "마지막 확인 {{count}}초 전",
+      "minutes": "마지막 확인 {{count}}분 전",
+      "hours": "마지막 확인 {{count}}시간 전",
+      "days": "마지막 확인 {{count}}일 전",
+      "never": "연결 이력 없음"
+    },
+    "attempts": "재시도 {{count}}회",
+    "staleSnapshot": "응답 없음 시점의 정보",
+    "error": {
+      "unknown_machine": "알 수 없는 머신입니다",
+      "machine_unavailable": "머신이 응답하지 않아 실행할 수 없습니다"
+    },
+    "settings": {
+      "title": "머신",
+      "empty": "등록된 원격 머신이 없습니다.",
+      "loadFailed": "머신 목록을 불러오지 못했습니다 ({{code}})",
+      "enrollTitle": "원격 머신 등록 (CLI로 등록)",
+      "enrollHint": "GUI 등록은 지원하지 않습니다 — 아래 명령을 터미널에서 실행하세요. SSH 인증은 사용자의 ssh 설정을 그대로 사용합니다.",
+      "copy": "복사",
+      "copied": "복사됨 ✓",
+      "copyFailed": "복사 실패 — 직접 선택해 복사하세요"
+    }
+  },
   "chat": {
     "role": {
       "user": "사용자",
@@ -148,7 +182,8 @@
     "domRenderer": "WebGL 미지원 — 기본 렌더러",
     "notice": {
       "user_required": "입력에는 사용자 인증이 필요합니다 (/auth?token=…) — 읽기 전용으로 전환됨",
-      "read_only": "읽기 전용 세션에는 입력할 수 없습니다"
+      "read_only": "읽기 전용 세션에는 입력할 수 없습니다",
+      "closed_1011": "호스트 연결이 끊겼습니다 — 머신이 다시 연결되면 재접속하세요"
     }
   },
   "detail": {

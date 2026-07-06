@@ -8,6 +8,7 @@ import { useEffect, useState, type ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AgentPermissionsSection } from '../agent/AgentPermissionsSection';
 import { ToolUsageSection } from '../agent/ToolUsageSection';
+import { MachinesSection } from '../machines/MachinesSection';
 import { KEY_ACTIONS } from '../keybindings/defaults';
 import { comboAllowedInTerminal, keybindings, normalizeCombo } from '../keybindings/manager';
 import { layoutSync, useLayoutStore } from '../stores/layout';
@@ -161,6 +162,7 @@ export function SettingsPage(): ReactElement {
         </table>
       </section>
 
+      <MachinesSection />
       <AgentPermissionsSection />
       <ToolUsageSection />
 

@@ -24,6 +24,9 @@ import type {
   AgentChatAccepted,
   AgentStatusDto,
   Envelope,
+  MachineConnectionState,
+  MachineStateDto,
+  MachineStatePayload,
   PendingApprovalCard,
   PermissionClass,
   PermissionSettingsDto,
@@ -38,6 +41,9 @@ export type {
   Envelope,
   FleetSession,
   FleetSnapshot,
+  MachineConnectionState,
+  MachineStateDto,
+  MachineStatePayload,
   ModelInfo,
   PendingApprovalCard,
   PermissionClass,
@@ -53,6 +59,11 @@ export interface HealthResponse {
   sessions: { count: number; known: boolean };
   host: { connected: boolean };
   uptime: number;
+}
+
+/** `GET /api/machines` — registered machines plus the implicit 'local' mirror. */
+export interface MachinesResponse {
+  machines: MachineStateDto[];
 }
 
 /** `GET /api/events?since=` */

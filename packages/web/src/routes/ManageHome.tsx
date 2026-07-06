@@ -6,11 +6,13 @@
  * section says so instead of implying completeness. The supervisor chat and
  * new-session stepper are later M6 packets — not faked here.
  */
-import type { ReactElement } from 'react';
+import { useState, type ReactElement } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ApprovalsInbox } from '../agent/ApprovalsInbox';
-import { groupByProject, projectIdOf, useFleetStore } from '../stores/fleet';
+import { MachinesStrip, machineLabel } from '../machines/MachinesStrip';
+import { groupByProject, projectIdOf, sessionMachineId, useFleetStore } from '../stores/fleet';
+import { LOCAL_MACHINE, useMachinesStore } from '../stores/machines';
 import { useConnectionStore } from '../stores/connection';
 
 function StatusStrip(): ReactElement {
@@ -98,7 +100,14 @@ export function ManageHome(): ReactElement {
   const { t } = useTranslation();
   const snapshot = useFleetStore((s) => s.snapshot);
   const errorCode = useFleetStore((s) => s.errorCode);
-  const groups = snapshot ? [...groupByProject(snapshot.sessions).entries()] : [];
+  const machines = useMachinesStore((s) => s.machines);
+  // Machine filter (M8) — sits alongside the cwd grouping: pick a machine in
+  // the strip and the project groups below narrow to that machine's sessions.
+  const [machineFilter, setMachineFilter] = useState<string | null>(null);
+  const visibleSessions = (snapshot?.sessions ?? []).filter(
+    (s) => machineFilter === null || sessionMachineId(s) === machineFilter,
+  );
+  const groups = snapshot ? [...groupByProject(visibleSessions).entries()] : [];
   const brokenAdapters = snapshot?.adapters.filter((a) => !a.ok) ?? [];
 
   return (
@@ -120,6 +129,9 @@ export function ManageHome(): ReactElement {
           <Link to="/workspace/all" className="tn-btn">
             {t('home.fleet.openWorkspace')}
           </Link>
+        </div>
+        <div style={{ margin: '4px 0 8px' }}>
+          <MachinesStrip selected={machineFilter} onSelect={setMachineFilter} />
         </div>
         {errorCode !== null ? (
           <div style={{ color: 'var(--tn-danger)' }}>
@@ -153,22 +165,40 @@ export function ManageHome(): ReactElement {
               </span>
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-              {sessions.slice(0, 12).map((s) => (
-                <Link
-                  key={s.id}
-                  to={`/session/${encodeURIComponent(s.id)}`}
-                  className="tn-chip"
-                  style={{ textDecoration: 'none', maxWidth: 280 }}
-                  title={s.title ?? s.id}
-                >
-                  <span className={`tn-dot ${s.live ? 'tn-dot--live' : ''}`} />
-                  <span
-                    style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+              {sessions.slice(0, 12).map((s) => {
+                const machineId = sessionMachineId(s);
+                const machineStale = machines[machineId]?.state === 'stale';
+                return (
+                  <Link
+                    key={s.id}
+                    to={`/session/${encodeURIComponent(s.id)}`}
+                    className="tn-chip"
+                    style={{
+                      textDecoration: 'none',
+                      maxWidth: 280,
+                      // Stale machine ⇒ last-known snapshot, never a live dot.
+                      opacity: machineStale ? 0.55 : 1,
+                    }}
+                    title={
+                      machineStale
+                        ? `${s.title ?? s.id} — ${t('machines.staleSnapshot')}`
+                        : (s.title ?? s.id)
+                    }
                   >
-                    {s.title ?? s.id}
-                  </span>
-                </Link>
-              ))}
+                    <span className={`tn-dot ${s.live && !machineStale ? 'tn-dot--live' : ''}`} />
+                    <span
+                      style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                    >
+                      {s.title ?? s.id}
+                    </span>
+                    {machineId !== LOCAL_MACHINE ? (
+                      <span style={{ fontSize: 11, color: 'var(--tn-fg-faint)' }}>
+                        {machineLabel(t, machineId, machines[machineId])}
+                      </span>
+                    ) : null}
+                  </Link>
+                );
+              })}
               {sessions.length > 12 ? (
                 <span className="tn-chip">
                   {t('home.fleet.more', { count: sessions.length - 12 })}

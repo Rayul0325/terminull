@@ -45,6 +45,33 @@ export const I18N_KEYS = [
   'fleet.empty',
   'fleet.live',
 
+  // Machine registry (M8). `machines.state.*` / `machines.lastSeen.*` are
+  // dynamic families — known members listed, call sites go through helpers.
+  'machines.title',
+  'machines.local',
+  'machines.filterAll',
+  'machines.state.connected',
+  'machines.state.connecting',
+  'machines.state.stale',
+  'machines.state.disabled',
+  'machines.lastSeen.seconds',
+  'machines.lastSeen.minutes',
+  'machines.lastSeen.hours',
+  'machines.lastSeen.days',
+  'machines.lastSeen.never',
+  'machines.attempts',
+  'machines.staleSnapshot',
+  'machines.error.unknown_machine',
+  'machines.error.machine_unavailable',
+  'machines.settings.title',
+  'machines.settings.empty',
+  'machines.settings.loadFailed',
+  'machines.settings.enrollTitle',
+  'machines.settings.enrollHint',
+  'machines.settings.copy',
+  'machines.settings.copied',
+  'machines.settings.copyFailed',
+
   'chat.role.user',
   'chat.role.agent',
   'chat.role.tool',
@@ -115,6 +142,8 @@ export const I18N_KEYS = [
   'terminal.domRenderer',
   'terminal.notice.user_required',
   'terminal.notice.read_only',
+  // 1011 = machine/host link lost mid-attach (M8 remote machines).
+  'terminal.notice.closed_1011',
 
   'detail.markdownPending',
   'detail.kindUnavailable',

@@ -19,7 +19,15 @@ interface FleetState {
   sessionById(id: string): FleetSession | undefined;
 }
 
-const REFRESH_EVENT_TYPES = new Set(['session.start', 'session.end', 'host.up', 'host.down']);
+// machine.state included: a machine transition changes which sessions the
+// server includes in the snapshot (stale machines contribute zero sessions).
+const REFRESH_EVENT_TYPES = new Set([
+  'session.start',
+  'session.end',
+  'host.up',
+  'host.down',
+  'machine.state',
+]);
 const THROTTLE_MS = 2000;
 
 let throttleTimer: ReturnType<typeof setTimeout> | null = null;
@@ -59,6 +67,23 @@ export const useFleetStore = create<FleetState>((set, get) => ({
 
   sessionById: (id) => get().snapshot?.sessions.find((s) => s.id === id),
 }));
+
+/** The machine a fleet session lives on ('local' when untagged — M8 additive field). */
+export function sessionMachineId(session: FleetSession): string {
+  return session.machine ?? 'local';
+}
+
+/** Group fleet sessions by machine id, mirroring {@link groupByProject}. */
+export function groupByMachine(sessions: FleetSession[]): Map<string, FleetSession[]> {
+  const groups = new Map<string, FleetSession[]>();
+  for (const s of sessions) {
+    const key = sessionMachineId(s);
+    const list = groups.get(key) ?? [];
+    list.push(s);
+    groups.set(key, list);
+  }
+  return groups;
+}
 
 /** Group fleet sessions into projects by cwd ('' = cwd unknown, honest bucket). */
 export function groupByProject(sessions: FleetSession[]): Map<string, FleetSession[]> {

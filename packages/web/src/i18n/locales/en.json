@@ -53,6 +53,40 @@
     "empty": "No sessions to show.",
     "live": "live"
   },
+  "machines": {
+    "title": "Machines",
+    "local": "This machine",
+    "filterAll": "All",
+    "state": {
+      "connected": "Connected",
+      "connecting": "Connecting",
+      "stale": "Unresponsive",
+      "disabled": "Disabled"
+    },
+    "lastSeen": {
+      "seconds": "last seen {{count}}s ago",
+      "minutes": "last seen {{count}}m ago",
+      "hours": "last seen {{count}}h ago",
+      "days": "last seen {{count}}d ago",
+      "never": "never reached"
+    },
+    "attempts": "{{count}} attempts",
+    "staleSnapshot": "stale snapshot",
+    "error": {
+      "unknown_machine": "Unknown machine",
+      "machine_unavailable": "Machine is unresponsive — cannot run there"
+    },
+    "settings": {
+      "title": "Machines",
+      "empty": "No remote machines registered.",
+      "loadFailed": "Failed to load machines ({{code}})",
+      "enrollTitle": "Enroll a remote machine (CLI)",
+      "enrollHint": "GUI enrollment is not supported — run this command in a terminal. SSH auth uses your own ssh setup.",
+      "copy": "Copy",
+      "copied": "Copied ✓",
+      "copyFailed": "Copy failed — select the text manually"
+    }
+  },
   "chat": {
     "role": {
       "user": "User",
@@ -148,7 +182,8 @@
     "domRenderer": "WebGL unavailable — DOM renderer",
     "notice": {
       "user_required": "Input requires user auth (/auth?token=…) — switched to read-only",
-      "read_only": "This attachment is read-only"
+      "read_only": "This attachment is read-only",
+      "closed_1011": "Host link lost — reattach once the machine reconnects"
     }
   },
   "detail": {

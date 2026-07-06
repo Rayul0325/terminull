@@ -9,8 +9,10 @@ import { useAgentChatStore } from './agentChat';
 import { useApprovalsStore } from './approvals';
 import { useConnectionStore } from './connection';
 import { useFleetStore } from './fleet';
+import { useMachinesStore } from './machines';
 
 let stream: EventStream | null = null;
+let unsubscribeFleetSeed: (() => void) | null = null;
 
 /** Start the global ingest loop (idempotent). Returns the stream for tests. */
 export function startIngest(): EventStream {
@@ -23,6 +25,7 @@ export function startIngest(): EventStream {
       onEvents: (batch) => {
         useConnectionStore.getState().applyEvents(batch);
         useFleetStore.getState().applyEvents(batch);
+        useMachinesStore.getState().applyEvents(batch);
         useApprovalsStore.getState().applyEvents(batch);
         useAgentChatStore.getState().applyEvents(batch);
       },
@@ -34,6 +37,13 @@ export function startIngest(): EventStream {
     },
   });
   stream.start();
+  // The fleet snapshot carries `machines[]` — mirror it into the machine store
+  // whenever a new snapshot lands (REST authoritative, WS events in between).
+  unsubscribeFleetSeed = useFleetStore.subscribe((state, prev) => {
+    if (state.snapshot !== prev.snapshot) {
+      useMachinesStore.getState().seedFromFleet(state.snapshot?.machines);
+    }
+  });
   // Seed host state from health once; afterwards host.up/down events keep it
   // current. A failure leaves hostConnected=null → the UI shows "확인 중".
   void api
@@ -52,4 +62,6 @@ export function startIngest(): EventStream {
 export function stopIngest(): void {
   stream?.stop();
   stream = null;
+  unsubscribeFleetSeed?.();
+  unsubscribeFleetSeed = null;
 }

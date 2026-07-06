@@ -227,6 +227,24 @@ describe('MachineManager FSM', () => {
     expect(closed).toBe(true);
   }, 15_000);
 
+  it('attachment: ring replay survives the reply and replay coalescing into one chunk', async () => {
+    // The daemon writes `attached` and the ring replay in the same tick; on a
+    // loaded reader both land in ONE stream chunk (macos-14 CI, 2026-07-06).
+    // The replay bytes must reach the consumer even though its onOut handler
+    // registers only after openAttachment resolves.
+    const { manager } = startManager([
+      fakeMachine('m1', ['--session=7', '--replay=m8-ring-replay']),
+    ]);
+    await waitFor(() => manager.get('m1')?.state === 'connected', 10_000);
+    const att = await manager.openAttachment('m1', 7, {});
+    expect(att.headSeq).toBe('m8-ring-replay'.length);
+    const out: Buffer[] = [];
+    att.onOut((d) => out.push(d));
+    await waitFor(() => Buffer.concat(out).toString('utf8').includes('m8-ring-replay'), 5_000);
+    expect(Buffer.concat(out).toString('utf8')).toContain('m8-ring-replay');
+    att.close();
+  }, 15_000);
+
   it('refuses reserved/duplicate ids at construction and reload (atomically)', async () => {
     expect(
       () =>

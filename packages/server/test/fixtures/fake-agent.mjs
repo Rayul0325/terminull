@@ -15,12 +15,17 @@
  *   --session=<sid>   advertise one pre-existing running session in helloOk
  *   --fail-spawn      answer `spawn` with a ctrl error (host detail test)
  *   --attach-delay=<ms> delay every `attached` reply (mid-dial close test)
+ *   --replay=<text>   answer `attach` with the `attached` reply AND a ring
+ *                     replay OUT frame concatenated into ONE stdout write —
+ *                     the coalesced arrival a loaded reader produces (the
+ *                     macos-14 CI ring-replay flake, 2026-07-06)
  *   --pid-dir=<dir>   write `<dir>/<pid>` at boot (relay child census test)
  *   --stderr=<msg>    write one line to stderr at boot (stderr sink test)
  *   --spawn-sid=<sid> spawn replies with this FIXED sid — pair with
  *                     --session=<sid> so fresh relay children (separate
  *                     processes, separate session maps) can attach to it
  */
+import { Buffer } from 'node:buffer';
 import fs from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
@@ -120,8 +125,26 @@ process.stdin.on('data', (chunk) => {
           ctrl({ t: 'error', reqId: msg.reqId, code: 'NOT_FOUND', msg: 'no such sid' });
           break;
         }
-        const attached = () =>
+        const replayText = argValue('--replay');
+        const attached = () => {
+          if (replayText !== null) {
+            // Reply + ring replay in ONE write ⇒ ONE 'data' event at the
+            // reader: the real daemon writes both in the same tick, and a
+            // loaded reader (macos-14 CI) receives them coalesced like this.
+            const reply = FrameEncoder.ctrl({
+              t: 'attached',
+              reqId: msg.reqId,
+              sid: msg.sid,
+              fromSeq: 0,
+              headSeq: replayText.length,
+              gap: false,
+            });
+            const out = FrameEncoder.out(msg.sid, 0n, Buffer.from(replayText, 'utf8'));
+            process.stdout.write(Buffer.concat([reply, out]));
+            return;
+          }
           ctrl({ t: 'attached', reqId: msg.reqId, sid: msg.sid, fromSeq: 0, headSeq: 0, gap: false });
+        };
         if (attachDelayMs > 0) setTimeout(attached, attachDelayMs);
         else attached();
         break;

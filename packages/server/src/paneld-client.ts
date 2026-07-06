@@ -559,6 +559,28 @@ export class PaneldClient {
       requestTimeoutMs: this.requestTimeoutMs,
     });
     const readOnly = opts.readOnly ?? false;
+    // The daemon streams the ring replay in the same tick as the `attached`
+    // reply, so on a delayed reader both land in ONE stream chunk and the
+    // replay frames are dispatched before this function resumes from the
+    // await below (macos-14 CI ring-replay flake, 2026-07-06). Register the
+    // conn-level sinks BEFORE the attach request goes out and hold early
+    // frames in a backlog until the consumer registers its handler (every
+    // consumer does so synchronously after openAttachment resolves).
+    const outListeners = new Set<(data: Buffer) => void>();
+    const exitListeners = new Set<(exit: HostExitInfo) => void>();
+    let outBacklog: Buffer[] | null = [];
+    let exitBacklog: HostExitInfo[] | null = [];
+    conn.onOut((outSid, _seq, data) => {
+      if (outSid !== sid) return;
+      if (outBacklog !== null) outBacklog.push(data);
+      else for (const fn of outListeners) fn(data);
+    });
+    conn.onCtrlMessage((msg) => {
+      if (msg.t !== 'exit' || msg.sid !== sid) return;
+      const exit: HostExitInfo = { sid: msg.sid, code: msg.code, signal: msg.signal ?? null };
+      if (exitBacklog !== null) exitBacklog.push(exit);
+      else for (const fn of exitListeners) fn(exit);
+    });
     let attached: Extract<HostControl, { t: 'attached' }>;
     try {
       const reply = await conn.request({
@@ -575,18 +597,6 @@ export class PaneldClient {
       throw e;
     }
 
-    const outListeners = new Set<(data: Buffer) => void>();
-    const exitListeners = new Set<(exit: HostExitInfo) => void>();
-    conn.onOut((outSid, _seq, data) => {
-      if (outSid === sid) for (const fn of outListeners) fn(data);
-    });
-    conn.onCtrlMessage((msg) => {
-      if (msg.t === 'exit' && msg.sid === sid) {
-        for (const fn of exitListeners)
-          fn({ sid: msg.sid, code: msg.code, signal: msg.signal ?? null });
-      }
-    });
-
     return {
       sid,
       fromSeq: attached.fromSeq,
@@ -595,8 +605,22 @@ export class PaneldClient {
       readOnly,
       write: (data) => conn.input(sid, data),
       resize: (cols, rows) => conn.send({ t: 'resize', sid, cols, rows }),
-      onOut: (fn) => outListeners.add(fn),
-      onExit: (fn) => exitListeners.add(fn),
+      onOut: (fn) => {
+        outListeners.add(fn);
+        if (outBacklog !== null) {
+          const backlog = outBacklog;
+          outBacklog = null;
+          for (const data of backlog) fn(data);
+        }
+      },
+      onExit: (fn) => {
+        exitListeners.add(fn);
+        if (exitBacklog !== null) {
+          const backlog = exitBacklog;
+          exitBacklog = null;
+          for (const exit of backlog) fn(exit);
+        }
+      },
       onClose: (fn) => conn.onClose(fn),
       close: () => conn.close(),
     };

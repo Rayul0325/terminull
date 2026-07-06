@@ -4,6 +4,30 @@ All notable changes to Terminull. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1] — 2026-07-06
+
+Patch release for `terminull` (CLI) only — `terminull-plugin-api` stays 0.1.0.
+
+### Fixed
+
+- `terminull serve` now actually hosts the web UI: the server gained built-in
+  static UI hosting (SPA fallback, path-traversal jail, smoke page demoted to
+  an honest fallback) and the CLI resolves the UI directory in both dev and
+  installed-tarball layouts. In 0.1.0, `npx terminull serve` returned an
+  M5-era placeholder (or a 500) instead of the panel. The pack-smoke CI job
+  now asserts "real UI from the installed tarball" on every push.
+- Claude transcript path encoding: every non-alphanumeric character of the
+  session cwd is dash-encoded (matching Claude Code's real project-dir rule),
+  fixing 502s for sessions whose cwd contains dots, spaces, or non-ASCII;
+  unresolvable transcripts degrade to an honest `supported: false`.
+
+### Added
+
+- `terminull migrate --from control-tower` (M11): dry-run by default;
+  `--execute` removes legacy hooks with user hooks byte-preserved + backup,
+  restores codex notify, archives the legacy LaunchAgent/state with a sha
+  manifest, prints an exact rollback block, and is idempotent.
+
 ## [0.1.0] — 2026-07-06
 
 First public release. Two packages are published to npm — `terminull` (the CLI

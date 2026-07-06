@@ -1,6 +1,6 @@
 {
   "name": "terminull",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Terminull — a local, consent-shaped control panel for your CLI coding agents (Claude Code, Codex). `npx terminull setup` injects a fully reversible hook harness; `terminull eject` removes it byte-for-byte.",
   "type": "module",
   "bin": {

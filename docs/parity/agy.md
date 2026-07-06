@@ -77,12 +77,12 @@ Per-conversation DB `conversations/<uuid>.db`:
 - `trajectory_meta(trajectory_id, cascade_id, trajectory_type, source)` — observed
   `trajectory_type=4, source=17`.
 - `steps(idx, step_type INT, status INT, has_subtrajectory, metadata BLOB,
-  error_details BLOB, permissions BLOB, task_details BLOB, render_info BLOB,
-  step_payload BLOB, step_format INT)` — **step content is opaque blobs (protobuf-like;
+error_details BLOB, permissions BLOB, task_details BLOB, render_info BLOB,
+step_payload BLOB, step_format INT)` — **step content is opaque blobs (protobuf-like;
   `step_format=0` observed); `step_type` is an integer enum.** Distinct values observed
   across 8 recent DBs: `7 8 9 14 15 21 23 31 33 98 101 132`.
 - `gen_metadata / executor_metadata / parent_references / battle_mode_infos /
-  trajectory_metadata_blob` — all `(idx, data BLOB)` shaped.
+trajectory_metadata_blob` — all `(idx, data BLOB)` shaped.
 
 Cross-conversation index `conversation_summaries.db` →
 `conversation_summaries(conversation_id, title, preview, step_count, last_modified_time,

@@ -4,6 +4,7 @@ Surveyed: 2026-07-06. Sandbox install `@anthropic-ai/claude-code@latest` → **2
 user's installed CLI → **2.1.201**. **Version delta: none.** agy/codex surveyed separately.
 
 How observed (evidence classes used below):
+
 - `help` — sandbox binary `--help` trees with `CLAUDE_CONFIG_DIR=~/.terminull-sandbox/home-claude` (never the real home).
 - `bin` — `strings` over the native binary (`node_modules/@anthropic-ai/claude-code/bin/claude.exe`, 231 MB Bun build).
 - `sdk` — `node_modules/@anthropic-ai/claude-code/sdk-tools.d.ts` (official tool I/O types, 3,515 lines).
@@ -21,22 +22,22 @@ manager), `auth`, `auto-mode`, `doctor`, `gateway` (enterprise auth/telemetry), 
 Flags that define adapter-relevant behaviour (full capture in the survey scratchpad; the
 load-bearing ones):
 
-| Flag | Adapter implication |
-|---|---|
-| `-p/--print`, `--output-format text\|json\|stream-json`, `--input-format stream-json` | headless co-drive channel (already declared `headless:'stream-json'`) |
-| `--include-hook-events`, `--include-partial-messages`, `--replay-user-messages` | stream-json enrichment M7-codex has no equivalent of |
-| `--bg/--background`, `claude agents` | background-agent system (supervisor daemon, `~/.claude/jobs/<id>/`, `~/.claude/daemon.log`) |
-| `--remote-control [name]`, `--remote-control-session-name-prefix` | remote-control session mode |
-| `-r/--resume [search]`, `--fork-session`, `--from-pr`, `--session-id`, `-c/--continue`, `-n/--name` | session lifecycle verbs a GUI should expose |
-| `--permission-mode` choices: `acceptEdits, auto, bypassPermissions, manual, dontAsk, plan` | **`auto` + `manual` are new vs the adapter's builtin fallback list** (probe already parses help — good) |
-| `--effort low\|medium\|high\|xhigh\|max` | effort is a first-class session dial |
-| `--model` aliases `fable/opus/sonnet` | **adapter `models.ts` fallback aliases lack `fable`** |
-| `-w/--worktree [name]`, `--tmux[=classic]` | worktree-per-session + tmux integration |
-| `--agents <json>`, `--agent <agent>` | session-scoped custom agents |
-| `--settings`, `--setting-sources user,project,local`, `--mcp-config`, `--strict-mcp-config`, `--plugin-dir`, `--plugin-url` | config layering knobs |
-| `--safe-mode`, `--bare` | customization-free boot modes (useful for Terminull probes) |
-| `--json-schema`, `--max-budget-usd`, `--fallback-model`, `--no-session-persistence`, `--prompt-suggestions` | headless/SDK extras |
-| `--ax-screen-reader`, `--chrome/--no-chrome`, `--ide`, `--brief`, `--betas`, `--file` | niche surfaces, low parity priority |
+| Flag                                                                                                                        | Adapter implication                                                                                     |
+| --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `-p/--print`, `--output-format text\|json\|stream-json`, `--input-format stream-json`                                       | headless co-drive channel (already declared `headless:'stream-json'`)                                   |
+| `--include-hook-events`, `--include-partial-messages`, `--replay-user-messages`                                             | stream-json enrichment M7-codex has no equivalent of                                                    |
+| `--bg/--background`, `claude agents`                                                                                        | background-agent system (supervisor daemon, `~/.claude/jobs/<id>/`, `~/.claude/daemon.log`)             |
+| `--remote-control [name]`, `--remote-control-session-name-prefix`                                                           | remote-control session mode                                                                             |
+| `-r/--resume [search]`, `--fork-session`, `--from-pr`, `--session-id`, `-c/--continue`, `-n/--name`                         | session lifecycle verbs a GUI should expose                                                             |
+| `--permission-mode` choices: `acceptEdits, auto, bypassPermissions, manual, dontAsk, plan`                                  | **`auto` + `manual` are new vs the adapter's builtin fallback list** (probe already parses help — good) |
+| `--effort low\|medium\|high\|xhigh\|max`                                                                                    | effort is a first-class session dial                                                                    |
+| `--model` aliases `fable/opus/sonnet`                                                                                       | **adapter `models.ts` fallback aliases lack `fable`**                                                   |
+| `-w/--worktree [name]`, `--tmux[=classic]`                                                                                  | worktree-per-session + tmux integration                                                                 |
+| `--agents <json>`, `--agent <agent>`                                                                                        | session-scoped custom agents                                                                            |
+| `--settings`, `--setting-sources user,project,local`, `--mcp-config`, `--strict-mcp-config`, `--plugin-dir`, `--plugin-url` | config layering knobs                                                                                   |
+| `--safe-mode`, `--bare`                                                                                                     | customization-free boot modes (useful for Terminull probes)                                             |
+| `--json-schema`, `--max-budget-usd`, `--fallback-model`, `--no-session-persistence`, `--prompt-suggestions`                 | headless/SDK extras                                                                                     |
+| `--ax-screen-reader`, `--chrome/--no-chrome`, `--ide`, `--brief`, `--betas`, `--file`                                       | niche surfaces, low parity priority                                                                     |
 
 ## 2. Slash commands
 
@@ -67,30 +68,30 @@ built-in list above should become a static catalog in the adapter (source-tagged
 suppressOutput, continue, stopReason`; exit 0=JSON processed, 2=blocking, else non-blocking.
 Hook types: `command, http, mcp_tool, prompt, agent`.
 
-| Event | Matcher | Key payload / output |
-|---|---|---|
-| SessionStart | startup/resume/clear/compact | out: `additionalContext, initialUserMessage, sessionTitle, watchPaths, reloadSkills` |
-| Setup | init/maintenance | `CLAUDE_ENV_FILE` |
-| UserPromptSubmit | — | `prompt`; exit2 blocks+erases; `decision:"block"`, `additionalContext` |
-| UserPromptExpansion | command name | `command_name, expanded_prompt` |
-| PreToolUse | tool name | `tool_name, tool_input`; out `permissionDecision allow/deny/ask/defer`, `updatedInput` |
-| PermissionRequest | tool name | out `decision:{behavior,updatedInput}` |
-| PermissionDenied | tool name | out `retry:true` |
-| PostToolUse | tool name | `tool_result`; out `updatedToolOutput`, `additionalContext` |
-| PostToolUseFailure | tool name | `error` |
-| PostToolBatch | — | `tool_results[]` |
-| Stop | — | `response`; exit2 prevents stop |
-| StopFailure | error type | `error_type, error_message` (logging only) |
-| SubagentStart / SubagentStop | agent type | `agent_type, agent_id` |
-| TaskCreated / TaskCompleted | — | `task_name, …`; exit2 rolls back / prevents completion |
-| TeammateIdle | — | exit2 keeps teammate working |
-| Notification | notification type | `notification_type, message` |
-| MessageDisplay | — | out `displayContent` |
-| CwdChanged / FileChanged / ConfigChange / InstructionsLoaded | varies | env/file/config observability |
-| PreCompact / PostCompact | manual/auto / — | exit2 blocks compaction / logging |
-| WorktreeCreate / WorktreeRemove | — | stdout=worktree path / cleanup |
-| Elicitation / ElicitationResult | MCP server | MCP elicitation interception |
-| SessionEnd | end reason | cleanup only |
+| Event                                                        | Matcher                      | Key payload / output                                                                   |
+| ------------------------------------------------------------ | ---------------------------- | -------------------------------------------------------------------------------------- |
+| SessionStart                                                 | startup/resume/clear/compact | out: `additionalContext, initialUserMessage, sessionTitle, watchPaths, reloadSkills`   |
+| Setup                                                        | init/maintenance             | `CLAUDE_ENV_FILE`                                                                      |
+| UserPromptSubmit                                             | —                            | `prompt`; exit2 blocks+erases; `decision:"block"`, `additionalContext`                 |
+| UserPromptExpansion                                          | command name                 | `command_name, expanded_prompt`                                                        |
+| PreToolUse                                                   | tool name                    | `tool_name, tool_input`; out `permissionDecision allow/deny/ask/defer`, `updatedInput` |
+| PermissionRequest                                            | tool name                    | out `decision:{behavior,updatedInput}`                                                 |
+| PermissionDenied                                             | tool name                    | out `retry:true`                                                                       |
+| PostToolUse                                                  | tool name                    | `tool_result`; out `updatedToolOutput`, `additionalContext`                            |
+| PostToolUseFailure                                           | tool name                    | `error`                                                                                |
+| PostToolBatch                                                | —                            | `tool_results[]`                                                                       |
+| Stop                                                         | —                            | `response`; exit2 prevents stop                                                        |
+| StopFailure                                                  | error type                   | `error_type, error_message` (logging only)                                             |
+| SubagentStart / SubagentStop                                 | agent type                   | `agent_type, agent_id`                                                                 |
+| TaskCreated / TaskCompleted                                  | —                            | `task_name, …`; exit2 rolls back / prevents completion                                 |
+| TeammateIdle                                                 | —                            | exit2 keeps teammate working                                                           |
+| Notification                                                 | notification type            | `notification_type, message`                                                           |
+| MessageDisplay                                               | —                            | out `displayContent`                                                                   |
+| CwdChanged / FileChanged / ConfigChange / InstructionsLoaded | varies                       | env/file/config observability                                                          |
+| PreCompact / PostCompact                                     | manual/auto / —              | exit2 blocks compaction / logging                                                      |
+| WorktreeCreate / WorktreeRemove                              | —                            | stdout=worktree path / cleanup                                                         |
+| Elicitation / ElicitationResult                              | MCP server                   | MCP elicitation interception                                                           |
+| SessionEnd                                                   | end reason                   | cleanup only                                                                           |
 
 Terminull's injector today registers 7 hooks on 7 events (`injector.ts`): SessionStart,
 UserPromptSubmit, PreToolUse(AskUserQuestion), PostToolUse(ExitPlanMode), Notification,
@@ -149,28 +150,28 @@ panel) would give M6 cost/context/PR data with zero transcript parsing.
 
 Top-level `type` (+ `system` subtypes), with observed counts:
 
-| type[:subtype] | n | Renderer need |
-|---|---|---|
-| `assistant` | 24,251 | text / tool_use / thinking blocks |
-| `user` | 12,633 | text, command chips, tool_result carrier |
-| `attachment` | 8,920 | attachment chip (file/dir context) |
-| `last-prompt` | 4,259 | session-meta stream (not chat) |
-| `ai-title` | 3,720 | session-meta (title) |
-| `mode` | 3,475 | session-meta (mode change event) |
-| `permission-mode` | 3,461 | session-meta / event chip |
-| `agent-name` | 3,080 | session-meta (named agent) |
-| `custom-title` | 3,025 | session-meta |
-| `queue-operation` | 2,138 | queued-prompt chip |
-| `file-history-snapshot` | 1,333 | checkpoint marker (rewind UI) |
-| `system:stop_hook_summary` | 766 | hook-result event chip |
-| `system:turn_duration` | 686 | telemetry (optional footer) |
-| `system:away_summary` | 259 | summary card |
-| `system:api_error` | 94 | error banner |
-| `system:compact_boundary` | 60 | compaction divider |
-| `system:local_command` | 55 | `!cmd` output chip |
-| `bridge-session` | 55 | remote-bridge marker |
-| `system:scheduled_task_fire` | 5 | scheduler event |
-| `system:bridge_status` | 3 | remote-bridge status |
+| type[:subtype]               | n      | Renderer need                            |
+| ---------------------------- | ------ | ---------------------------------------- |
+| `assistant`                  | 24,251 | text / tool_use / thinking blocks        |
+| `user`                       | 12,633 | text, command chips, tool_result carrier |
+| `attachment`                 | 8,920  | attachment chip (file/dir context)       |
+| `last-prompt`                | 4,259  | session-meta stream (not chat)           |
+| `ai-title`                   | 3,720  | session-meta (title)                     |
+| `mode`                       | 3,475  | session-meta (mode change event)         |
+| `permission-mode`            | 3,461  | session-meta / event chip                |
+| `agent-name`                 | 3,080  | session-meta (named agent)               |
+| `custom-title`               | 3,025  | session-meta                             |
+| `queue-operation`            | 2,138  | queued-prompt chip                       |
+| `file-history-snapshot`      | 1,333  | checkpoint marker (rewind UI)            |
+| `system:stop_hook_summary`   | 766    | hook-result event chip                   |
+| `system:turn_duration`       | 686    | telemetry (optional footer)              |
+| `system:away_summary`        | 259    | summary card                             |
+| `system:api_error`           | 94     | error banner                             |
+| `system:compact_boundary`    | 60     | compaction divider                       |
+| `system:local_command`       | 55     | `!cmd` output chip                       |
+| `bridge-session`             | 55     | remote-bridge marker                     |
+| `system:scheduled_task_fire` | 5      | scheduler event                          |
+| `system:bridge_status`       | 3      | remote-bridge status                     |
 
 Envelope keys (union, structural): `uuid parentUuid logicalParentUuid sessionId timestamp
 type subtype cwd gitBranch version entrypoint userType requestId isSidechain isMeta

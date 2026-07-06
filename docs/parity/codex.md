@@ -123,7 +123,7 @@ explicit decisions from PreToolUse hooks.
   concatenated root→leaf, capped at `project_doc_max_bytes` (32 KiB default), one file per
   dir. Follows the agents.md convention.
 - **Skills**: dir with `SKILL.md` (name/description frontmatter) + optional `scripts/
-  references/ assets/ agents/openai.yaml` (UI metadata, `policy.allow_implicit_invocation`,
+references/ assets/ agents/openai.yaml` (UI metadata, `policy.allow_implicit_invocation`,
   `dependencies`). Discovery: repo `.agents/skills` → `~/.agents/skills` →
   `/etc/codex/skills` → built-in. Skill-list context capped ~2%/8,000 chars.
 - **Plugins**: bundle of skills + app/MCP config; `codex plugin` CLI verb exists (`help`)
@@ -169,7 +169,7 @@ turn.failed item.started item.completed error`.
   `approvals_reviewer auto_review` policy file.
 - **Memories** (experimental): rollout-mined memories, consolidation models configurable.
 - **MCP**: client (`codex mcp add/list`, rich per-tool approval) and server (`codex
-  mcp-server`).
+mcp-server`).
 
 ## 9. Enumeration gaps (honest)
 

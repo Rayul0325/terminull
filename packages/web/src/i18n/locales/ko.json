@@ -53,7 +53,35 @@
     "loadFailed": "세션 목록을 불러오지 못했습니다 ({{code}})",
     "collectorFailed": "일부 도구의 세션 수집에 실패했습니다: {{adapters}}",
     "empty": "표시할 세션이 없습니다.",
-    "live": "실행 중"
+    "live": "실행 중",
+    "more": "+{{count}}개 더",
+    "health": {
+      "ok": "정상",
+      "attention": "개입 필요",
+      "offline": "연결 끊김"
+    },
+    "status": {
+      "running": "작업 중",
+      "idle": "대기",
+      "waiting": "응답 대기",
+      "ended": "종료"
+    },
+    "relative": {
+      "justNow": "방금",
+      "minutesAgo": "{{count}}분 전",
+      "hoursAgo": "{{count}}시간 전",
+      "daysAgo": "{{count}}일 전"
+    },
+    "activity": {
+      "unknown": "확인 중"
+    },
+    "group": {
+      "count": "{{count}}개"
+    },
+    "section": {
+      "live": "실행 중",
+      "ended": "최근 종료"
+    }
   },
   "machines": {
     "title": "머신",
@@ -103,7 +131,9 @@
       "event": "이벤트",
       "reasoning": "사고 과정",
       "sidechain": "서브에이전트",
-      "system": "시스템"
+      "system": "시스템",
+      "toolResult": "도구 결과",
+      "empty": "(내용 없음)"
     },
     "generic": {
       "noText": "표시할 내용이 없습니다.",
@@ -121,6 +151,69 @@
       "writeSize": "{{count}}자",
       "detail": "상세보기",
       "contentUnavailable": "내용 없음"
+    },
+    "toolLabel": {
+      "Bash": "명령 실행",
+      "Read": "파일 읽기",
+      "Edit": "파일 수정",
+      "Write": "파일 작성",
+      "NotebookEdit": "노트북 수정",
+      "Grep": "검색",
+      "Glob": "파일 찾기",
+      "Task": "에이전트",
+      "Agent": "에이전트",
+      "WebFetch": "웹 조회",
+      "WebSearch": "웹 검색",
+      "TodoWrite": "할 일",
+      "AskUserQuestion": "질문",
+      "ExitPlanMode": "플랜 승인 요청"
+    },
+    "field": {
+      "checking": "확인 중"
+    },
+    "edit": {
+      "title": "파일 수정",
+      "viewDiff": "변경 보기",
+      "noChange": "변경 없음"
+    },
+    "read": {
+      "title": "파일 읽기",
+      "range": "{{offset}}행부터 {{limit}}줄"
+    },
+    "grep": {
+      "title": "검색",
+      "scope": "범위"
+    },
+    "glob": {
+      "title": "파일 찾기",
+      "scope": "범위"
+    },
+    "agent": {
+      "title": "에이전트 실행",
+      "noPrompt": "(지시 없음)"
+    },
+    "ask": {
+      "title": "질문",
+      "awaiting": "답변 대기",
+      "answered": "답변됨"
+    },
+    "plan": {
+      "title": "플랜 승인 요청",
+      "viewPlan": "플랜 보기"
+    },
+    "todo": {
+      "title": "할 일",
+      "empty": "할 일 없음",
+      "done": "완료",
+      "inProgress": "진행 중",
+      "pending": "대기"
+    },
+    "result": {
+      "missing": "결과 미수신",
+      "error": "오류"
+    },
+    "system": {
+      "hookTag": "시스템 알림"
     }
   },
   "composer": {
@@ -193,7 +286,8 @@
   },
   "detail": {
     "markdownPending": "마크다운 미리보기 준비 전 — 원문 표시",
-    "kindUnavailable": "이 형식({{kind}})의 상세보기는 아직 준비 전입니다."
+    "kindUnavailable": "이 형식({{kind}})의 상세보기는 아직 준비 전입니다.",
+    "viewMarkdown": "마크다운"
   },
   "keys": {
     "nextTab": "다음 탭",
@@ -211,7 +305,10 @@
       "theme": "테마",
       "themeAuto": "시스템 설정 따르기",
       "themeLight": "라이트",
-      "themeDark": "다크"
+      "themeDark": "다크",
+      "themeFamily": "테마 스타일",
+      "familyObservatory": "옵저버토리 (웜)",
+      "familyClear": "클리어"
     },
     "keys": {
       "title": "단축키",

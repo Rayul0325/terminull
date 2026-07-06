@@ -16,6 +16,7 @@ import { ApiHttpError, api } from '../api/client';
 import i18n from '../i18n';
 
 export type ThemeMode = 'auto' | 'light' | 'dark';
+export type ThemeFamily = 'observatory' | 'clear';
 export type Density = 'comfortable' | 'compact';
 
 /** Roaming state of the keybinding overrides document. */
@@ -24,6 +25,8 @@ export type KeybindsSyncState = 'local' | 'syncing' | 'synced' | 'error';
 interface PrefsState {
   locale: string;
   theme: ThemeMode;
+  /** Which palette family renders — 'observatory' (warm, default) or 'clear'. */
+  themeFamily: ThemeFamily;
   density: Density;
   /** actionId → combo override (null = unbound). Missing key = default. */
   keybindOverrides: Record<string, string | null>;
@@ -33,6 +36,7 @@ interface PrefsState {
   keybindsSyncCode: string | null;
   setLocale(locale: string): void;
   setTheme(theme: ThemeMode): void;
+  setThemeFamily(family: ThemeFamily): void;
   setDensity(density: Density): void;
   setKeybindOverride(actionId: string, combo: string | null): void;
   resetKeybinds(): void;
@@ -44,6 +48,16 @@ function applyTheme(theme: ThemeMode): void {
   if (typeof document === 'undefined') return;
   if (theme === 'auto') delete document.documentElement.dataset['theme'];
   else document.documentElement.dataset['theme'] = theme;
+}
+
+/**
+ * Always stamp the family attribute (even 'observatory', the default) so the
+ * family selector wins deterministically over the bare `:root` fallback — the
+ * attribute is set, never deleted.
+ */
+function applyThemeFamily(family: ThemeFamily): void {
+  if (typeof document === 'undefined') return;
+  document.documentElement.dataset['themeFamily'] = family;
 }
 
 /** Full-replace PUT of the whole overrides map (contract: never a delta). */
@@ -64,6 +78,7 @@ export const usePrefsStore = create<PrefsState>()(
     (set, get) => ({
       locale: 'ko',
       theme: 'auto' as ThemeMode,
+      themeFamily: 'observatory' as ThemeFamily,
       density: 'comfortable' as Density,
       keybindOverrides: {},
       keybindsSync: 'local' as KeybindsSyncState,
@@ -76,6 +91,10 @@ export const usePrefsStore = create<PrefsState>()(
       setTheme: (theme) => {
         set({ theme });
         applyTheme(theme);
+      },
+      setThemeFamily: (family) => {
+        set({ themeFamily: family });
+        applyThemeFamily(family);
       },
       setDensity: (density) => set({ density }),
       setKeybindOverride: (actionId, combo) => {
@@ -110,12 +129,14 @@ export const usePrefsStore = create<PrefsState>()(
       partialize: (state) => ({
         locale: state.locale,
         theme: state.theme,
+        themeFamily: state.themeFamily,
         density: state.density,
         keybindOverrides: state.keybindOverrides,
       }),
       onRehydrateStorage: () => (state) => {
         if (!state) return;
         applyTheme(state.theme);
+        applyThemeFamily(state.themeFamily);
         if (state.locale !== i18n.language) void i18n.changeLanguage(state.locale);
       },
     },

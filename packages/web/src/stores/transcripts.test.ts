@@ -59,7 +59,10 @@ describe('transcript windows', () => {
     await store.fetchMore('s1');
     await store.fetchMore('s1');
     const entry = useTranscriptsStore.getState().entries['s1']!;
-    expect(calls).toEqual(['/api/sessions/s1/transcript', '/api/sessions/s1/transcript?cursor=100']);
+    expect(calls).toEqual([
+      '/api/sessions/s1/transcript',
+      '/api/sessions/s1/transcript?cursor=100',
+    ]);
     expect(entry.items.map((i) => i.id)).toEqual(['c0', 'c1', 'c2']);
     expect(entry.cursor).toBe(150);
     expect(entry.done).toBe(true);

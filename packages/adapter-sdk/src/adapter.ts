@@ -299,8 +299,7 @@ export interface ModelRegistry {
  * read.
  */
 export type AccountResult<T> =
-  | { available: true; value: T }
-  | { available: false; reason: LocalizedText };
+  { available: true; value: T } | { available: false; reason: LocalizedText };
 
 /** The signed-in identity. */
 export interface WhoamiInfo {

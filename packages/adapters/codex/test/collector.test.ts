@@ -68,53 +68,57 @@ afterEach(() => {
 });
 
 describe('createCodexCollector', () => {
-  it.skipIf(!hasSqlite)('discovers rollouts, applies the mtime liveness heuristic, and enriches from the state DB', async () => {
-    const now = Date.now();
-    writeRollout(['2026', '07', '06'], '2026-07-06T00-00-00', SID_LIVE, {
-      cwd: '/meta/cwd',
-      originator: 'cli',
-    });
-    const oldFile = writeRollout(['2026', '07', '01'], '2026-07-01T00-00-00', SID_OLD, {
-      cwd: '/old/cwd',
-      originator: 'vscode',
-    });
-    // Age the old rollout 10 minutes into the past (outside the 5-min live window).
-    const past = (now - 10 * 60 * 1000) / 1000;
-    fs.utimesSync(oldFile, past, past);
-    writeStateDb();
+  it.skipIf(!hasSqlite)(
+    'discovers rollouts, applies the mtime liveness heuristic, and enriches from the state DB',
+    async () => {
+      const now = Date.now();
+      writeRollout(['2026', '07', '06'], '2026-07-06T00-00-00', SID_LIVE, {
+        cwd: '/meta/cwd',
+        originator: 'cli',
+      });
+      const oldFile = writeRollout(['2026', '07', '01'], '2026-07-01T00-00-00', SID_OLD, {
+        cwd: '/old/cwd',
+        originator: 'vscode',
+      });
+      // Age the old rollout 10 minutes into the past (outside the 5-min live window).
+      const past = (now - 10 * 60 * 1000) / 1000;
+      fs.utimesSync(oldFile, past, past);
+      writeStateDb();
 
-    // session_index provides a thread_name title for the live session.
-    fs.writeFileSync(
-      path.join(codexHome, 'session_index.jsonl'),
-      JSON.stringify({ id: SID_LIVE, thread_name: 'Index Title', updated_at: '2026-07-06' }) + '\n',
-    );
+      // session_index provides a thread_name title for the live session.
+      fs.writeFileSync(
+        path.join(codexHome, 'session_index.jsonl'),
+        JSON.stringify({ id: SID_LIVE, thread_name: 'Index Title', updated_at: '2026-07-06' }) +
+          '\n',
+      );
 
-    const collector = createCodexCollector({ codexHome });
-    const detailed = await collector.collectDetailed({ now });
+      const collector = createCodexCollector({ codexHome });
+      const detailed = await collector.collectDetailed({ now });
 
-    const live = detailed.find((s) => s.id === SID_LIVE);
-    const old = detailed.find((s) => s.id === SID_OLD);
+      const live = detailed.find((s) => s.id === SID_LIVE);
+      const old = detailed.find((s) => s.id === SID_OLD);
 
-    expect(live?.live).toBe(true);
-    expect(old?.live).toBe(false);
+      expect(live?.live).toBe(true);
+      expect(old?.live).toBe(false);
 
-    // Liveness is never claimed as a hard fact.
-    expect(live?.liveConfidence).toBe('approx');
+      // Liveness is never claimed as a hard fact.
+      expect(live?.liveConfidence).toBe('approx');
 
-    // DB cwd overrides the session_meta cwd; DB model/branch/approval surfaced.
-    expect(live?.cwd).toBe('/db/cwd');
-    expect(live?.model).toBe('gpt-5-codex');
-    expect(live?.branch).toBe('main');
-    expect(live?.approvalMode).toBe('on-request');
-    // session_index thread_name wins as the title.
-    expect(live?.title).toBe('Index Title');
-    // originator from the rollout head.
-    expect(live?.originator).toBe('cli');
+      // DB cwd overrides the session_meta cwd; DB model/branch/approval surfaced.
+      expect(live?.cwd).toBe('/db/cwd');
+      expect(live?.model).toBe('gpt-5-codex');
+      expect(live?.branch).toBe('main');
+      expect(live?.approvalMode).toBe('on-request');
+      // session_index thread_name wins as the title.
+      expect(live?.title).toBe('Index Title');
+      // originator from the rollout head.
+      expect(live?.originator).toBe('cli');
 
-    // The un-enriched old session keeps its session_meta cwd.
-    expect(old?.cwd).toBe('/old/cwd');
-    expect(old?.transcriptRef).toEqual({ kind: 'file', path: oldFile });
-  });
+      // The un-enriched old session keeps its session_meta cwd.
+      expect(old?.cwd).toBe('/old/cwd');
+      expect(old?.transcriptRef).toEqual({ kind: 'file', path: oldFile });
+    },
+  );
 
   it('collect() returns the schema-strict shape (no Codex-rich extra keys)', async () => {
     writeRollout(['2026', '07', '06'], '2026-07-06T00-00-00', SID_LIVE, { cwd: '/meta/cwd' });

@@ -101,12 +101,7 @@ interface ToolResultBlock {
   /** Result payload: a plain string or an array of content blocks. */
   content?: unknown;
 }
-type ContentBlock =
-  | ToolUseBlock
-  | TextBlock
-  | ThinkingBlock
-  | ToolResultBlock
-  | { type: string };
+type ContentBlock = ToolUseBlock | TextBlock | ThinkingBlock | ToolResultBlock | { type: string };
 
 interface ClaudeRecord {
   type?: string;
@@ -143,12 +138,7 @@ const DEFERRED_TYPES: ReadonlySet<string> = new Set([
 ]);
 
 /** Record types normalised to a single `system` item carrying a `subtype`. */
-const SYSTEM_TYPES: ReadonlySet<string> = new Set([
-  'system',
-  'summary',
-  'compaction',
-  'progress',
-]);
+const SYSTEM_TYPES: ReadonlySet<string> = new Set(['system', 'summary', 'compaction', 'progress']);
 
 /** Flatten a tool_result `content` (string | block array) to a text preview. */
 function toolResultText(content: unknown): string {

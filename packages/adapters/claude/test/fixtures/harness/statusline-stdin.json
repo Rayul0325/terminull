@@ -37,9 +37,16 @@
   "exceeds_200k_tokens": false,
   "effort": { "level": "high" },
   "thinking": { "enabled": true },
-  "rate_limits": { "five_hour": { "used": 12, "limit": 100 }, "seven_day": { "used": 40, "limit": 900 } },
+  "rate_limits": {
+    "five_hour": { "used": 12, "limit": 100 },
+    "seven_day": { "used": 40, "limit": 900 }
+  },
   "vim": { "mode": "insert" },
   "agent": { "name": "mw-claude-ext" },
-  "pr": { "number": 42, "url": "https://github.com/example/proj/pull/42", "review_state": "APPROVED" },
+  "pr": {
+    "number": 42,
+    "url": "https://github.com/example/proj/pull/42",
+    "review_state": "APPROVED"
+  },
   "worktree": { "name": "parity", "path": "/home/u/proj-wt", "branch": "parity-work" }
 }

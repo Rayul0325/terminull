@@ -378,6 +378,16 @@ export interface ToolAdapter {
   models: ModelRegistry;
   accounts?: AccountProvider;
   harnessFiles?: HarnessFileSpec[];
+  /**
+   * Env var names that point this tool at an ISOLATED config home (account
+   * profiles, M9). At spawn time the server sets each listed var to the active
+   * profile's `configHome` (an absolute path) — for NEW spawns only; live
+   * sessions are never touched and credentials are never copied between homes.
+   * Examples: claude `['CLAUDE_CONFIG_DIR']`, codex `['CODEX_HOME']`.
+   * Absent/empty = the tool cannot be profile-isolated (the server refuses
+   * non-default profiles for it with a typed 422 — honesty, no silent default).
+   */
+  configHomeEnvVars?: readonly string[];
 }
 
 /**

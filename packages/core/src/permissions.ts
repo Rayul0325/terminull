@@ -66,6 +66,19 @@ export const AGENT_ACTIONS: readonly AgentActionDef[] = [
     requiresTwoStep: true,
   },
   { id: 'harness.edit', labelKey: 'perm.harness_edit', defaultClass: 'confirm', risk: 'high' },
+  // M9 harness editor: file WRITES are separate from injector install/remove.
+  // Danger-risk files (settings.json, config.toml — anything riskLevel 'high')
+  // resolve through harness.write_danger, whose 'confirm' FLOOR is immutable:
+  // an agent write can never bypass the confirmation queue even if the
+  // settings file widens it (enforced server-side by action selection).
+  { id: 'harness.write', labelKey: 'perm.harness_write', defaultClass: 'confirm', risk: 'med' },
+  {
+    id: 'harness.write_danger',
+    labelKey: 'perm.harness_write_danger',
+    defaultClass: 'confirm',
+    risk: 'high',
+    floor: 'confirm',
+  },
   { id: 'account.switch', labelKey: 'perm.account_switch', defaultClass: 'forbidden', risk: 'high' },
   { id: 'board.edit', labelKey: 'perm.board_edit', defaultClass: 'autonomous', risk: 'low' },
 ];

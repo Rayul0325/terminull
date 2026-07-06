@@ -51,6 +51,7 @@ export {
 export { claudeHarnessFiles } from './harness-files.js';
 export {
   parseStatusLine,
+  statusLineToSessionStatus,
   type StatusLineInput,
   type StatusLineModel,
   type StatusLineWorkspace,

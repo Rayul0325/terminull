@@ -149,6 +149,9 @@ export function createClaudeAdapter(opts: ClaudeAdapterOptions = {}): ToolAdapte
     models,
     accounts,
     harnessFiles: claudeHarnessFiles,
+    // M9 profiles: pointing CLAUDE_CONFIG_DIR at an isolated config home is
+    // the documented account-isolation seam — set per spawn, never bridged.
+    configHomeEnvVars: ['CLAUDE_CONFIG_DIR'],
   };
 }
 

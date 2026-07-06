@@ -176,6 +176,9 @@ export function createCodexAdapter(opts: CodexAdapterOptions = {}): ToolAdapter 
     models,
     accounts,
     harnessFiles: codexHarnessFiles,
+    // M9 profiles: CODEX_HOME relocates the whole ~/.codex config home — the
+    // documented isolation seam; set per spawn, never bridged.
+    configHomeEnvVars: ['CODEX_HOME'],
   };
 }
 

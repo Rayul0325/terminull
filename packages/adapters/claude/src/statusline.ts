@@ -13,6 +13,7 @@
  * and returns `null` rather than throwing, honouring the adapter honesty rule
  * (never fabricate a field it cannot read).
  */
+import type { SessionStatusDto } from '@terminull/shared';
 
 /** `model` block: the active model's stable id + human label. */
 export interface StatusLineModel {
@@ -111,6 +112,74 @@ export interface StatusLineInput {
 
 function isRecord(v: unknown): v is Record<string, unknown> {
   return v !== null && typeof v === 'object' && !Array.isArray(v);
+}
+
+function isFiniteNumber(v: unknown): v is number {
+  return typeof v === 'number' && Number.isFinite(v);
+}
+
+/**
+ * Fold a parsed statusline payload into the wire `SessionStatusDto` (M9 GUI
+ * statusbar). Mapping is contract-pinned (M9 §D5):
+ *
+ *  - `contextTokens.used` = current_usage input + cache_creation + cache_read
+ *    + output tokens; `max` = context_window_size; `usedPercent` is the
+ *    SOURCE-reported percentage, never recomputed;
+ *  - any absent/malformed block folds to `null` (honesty: never a fabricated
+ *    zero);
+ *  - `asOf` = fold time (`opts.now` for deterministic tests).
+ *
+ * Keyed by the TOOL-NATIVE session id — the same id space the collector
+ * reports, so the web can join statusbar → fleet without a uuid mapping.
+ */
+export function statusLineToSessionStatus(
+  input: StatusLineInput,
+  opts: { now?: number } = {},
+): SessionStatusDto {
+  const modelLabel = typeof input.model.display_name === 'string' ? input.model.display_name : '';
+  const model =
+    input.model.id.length > 0
+      ? { id: input.model.id, label: modelLabel.length > 0 ? modelLabel : input.model.id }
+      : null;
+
+  let contextTokens: SessionStatusDto['contextTokens'] = null;
+  const cw: unknown = input.context_window;
+  if (isRecord(cw) && isRecord(cw['current_usage'])) {
+    const usage = cw['current_usage'];
+    const parts = [
+      usage['input_tokens'],
+      usage['cache_creation_input_tokens'],
+      usage['cache_read_input_tokens'],
+      usage['output_tokens'],
+    ];
+    const max = cw['context_window_size'];
+    const usedPercent = cw['used_percentage'];
+    if (
+      parts.every(isFiniteNumber) &&
+      isFiniteNumber(max) &&
+      max > 0 &&
+      isFiniteNumber(usedPercent) &&
+      usedPercent >= 0
+    ) {
+      const used = (parts as number[]).reduce((a, b) => a + b, 0);
+      contextTokens = { used, max, usedPercent };
+    }
+  }
+
+  const cost: unknown = input.cost;
+  const costUsd =
+    isRecord(cost) && isFiniteNumber(cost['total_cost_usd']) && cost['total_cost_usd'] >= 0
+      ? cost['total_cost_usd']
+      : null;
+
+  return {
+    toolId: 'claude',
+    toolSessionId: input.session_id,
+    model,
+    contextTokens,
+    costUsd,
+    asOf: opts.now ?? Date.now(),
+  };
 }
 
 /**

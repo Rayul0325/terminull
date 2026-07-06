@@ -1,7 +1,12 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { parseStatusLine, type StatusLineInput } from '../src/statusline';
+import { SessionStatusDtoSchema } from '@terminull/shared';
+import {
+  parseStatusLine,
+  statusLineToSessionStatus,
+  type StatusLineInput,
+} from '../src/statusline';
 
 const readFixture = (name: string): string =>
   readFileSync(fileURLToPath(new URL(`./fixtures/harness/${name}`, import.meta.url)), 'utf8');
@@ -55,5 +60,48 @@ describe('parseStatusLine', () => {
     expect(parseStatusLine({ session_id: 'x' })).toBeNull(); // missing transcript_path + model.id
     expect(parseStatusLine({ session_id: 'x', transcript_path: '/t' })).toBeNull(); // missing model.id
     expect(parseStatusLine({ session_id: 'x', transcript_path: '/t', model: {} })).toBeNull();
+  });
+});
+
+describe('statusLineToSessionStatus (M9 GATE oracle f — golden fold)', () => {
+  it('folds the golden payload with the §D5 exact numbers and passes the wire schema', () => {
+    const parsed = parseStatusLine(FULL)!;
+    const dto = statusLineToSessionStatus(parsed, { now: 1_752_000_000_000 });
+    // Round-trips the shared schema — the exact DTO the shim will POST.
+    expect(SessionStatusDtoSchema.parse(dto)).toEqual(dto);
+    expect(dto).toEqual({
+      toolId: 'claude',
+      toolSessionId: '11111111-2222-3333-4444-555555555555',
+      model: { id: 'claude-fable-5', label: 'Fable 5' },
+      contextTokens: {
+        // input + cache_creation + cache_read + output — contract-pinned sum.
+        used: 4210 + 2048 + 149120 + 812,
+        max: 1000000,
+        // Source-reported percentage, NOT recomputed.
+        usedPercent: 17.1,
+      },
+      costUsd: 0.4212,
+      asOf: 1_752_000_000_000,
+    });
+  });
+
+  it('a fixture missing cost/context folds to honest nulls, never zeros', () => {
+    const stripped = JSON.parse(FULL) as Record<string, unknown>;
+    delete stripped['cost'];
+    delete stripped['context_window'];
+    const parsed = parseStatusLine(stripped)!;
+    expect(parsed).not.toBeNull();
+    const dto = statusLineToSessionStatus(parsed, { now: 1 });
+    expect(SessionStatusDtoSchema.parse(dto)).toEqual(dto);
+    expect(dto.contextTokens).toBeNull();
+    expect(dto.costUsd).toBeNull();
+    expect(dto.model).toEqual({ id: 'claude-fable-5', label: 'Fable 5' });
+  });
+
+  it('minimal payload: a REPORTED zero cost stays 0 (reported ≠ absent)', () => {
+    const dto = statusLineToSessionStatus(parseStatusLine(MINIMAL)!, { now: 2 });
+    expect(dto.costUsd).toBe(0);
+    expect(dto.contextTokens).toEqual({ used: 0, max: 200000, usedPercent: 0 });
+    expect(dto.toolSessionId).toBe('aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee');
   });
 });

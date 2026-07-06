@@ -6,5 +6,13 @@
   },
   "include": ["src/**/*"],
   "exclude": ["src/**/*.test.ts", "dist", "node_modules"],
-  "references": [{ "path": "../shared" }]
+  "references": [
+    { "path": "../shared" },
+    { "path": "../core" },
+    { "path": "../adapter-sdk" },
+    { "path": "../plugin-api" },
+    { "path": "../adapters/claude" },
+    { "path": "../adapters/codex" },
+    { "path": "../server" }
+  ]
 }

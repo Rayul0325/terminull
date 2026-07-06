@@ -1,25 +1,64 @@
 {
-  "name": "@terminull/cli",
-  "version": "0.0.0",
-  "private": true,
+  "name": "terminull",
+  "version": "0.1.0",
+  "description": "Terminull — a local, consent-shaped control panel for your CLI coding agents (Claude Code, Codex). `npx terminull setup` injects a fully reversible hook harness; `terminull eject` removes it byte-for-byte.",
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
   "bin": {
-    "terminull": "dist/bin.js"
+    "terminull": "dist-pack/bin.js"
   },
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
-    }
+  "files": [
+    "dist-pack",
+    "web-dist",
+    "scripts/ensure-node-pty.mjs",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=22"
   },
+  "license": "MIT",
+  "keywords": [
+    "terminull",
+    "cli",
+    "coding-agent",
+    "claude-code",
+    "codex",
+    "tui",
+    "panel",
+    "harness"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/terminull/terminull.git",
+    "directory": "packages/cli"
+  },
+  "homepage": "https://github.com/terminull/terminull/tree/main/packages/cli#readme",
+  "bugs": {
+    "url": "https://github.com/terminull/terminull/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "//": "PUBLIC product entry (M10 D1). `terminull` = packages/cli, bundled at pack time by tsup: every @terminull/* workspace import is INLINED into dist-pack/, so the ONLY runtime deps are node-pty (native), ws, zod. prepack writes exclusively under packages/cli gitignored dirs — the workspace stays git-clean after `npm pack` (gate f). Workspace deps below are devDependencies because they are bundled, not shipped as deps.",
   "scripts": {
     "build": "tsc -b",
     "test": "vitest run",
-    "typecheck": "tsc -b"
+    "typecheck": "tsc -b",
+    "prepack": "node scripts/prepack.mjs",
+    "postinstall": "node scripts/ensure-node-pty.mjs"
   },
   "dependencies": {
-    "@terminull/shared": "workspace:*"
+    "node-pty": "^1.0.0",
+    "ws": "^8.18.0",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@terminull/adapter-claude": "workspace:*",
+    "@terminull/adapter-codex": "workspace:*",
+    "@terminull/adapter-sdk": "workspace:*",
+    "@terminull/core": "workspace:*",
+    "@terminull/plugin-api": "workspace:*",
+    "@terminull/server": "workspace:*",
+    "@terminull/shared": "workspace:*",
+    "tsup": "^8.5.1"
   }
 }

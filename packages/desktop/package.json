@@ -3,6 +3,15 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "//": "Placeholder workspace slot. The Electron desktop shell lands in M10; there is no Electron dependency, build, or test yet — only the reserved package name and a src stub.",
-  "scripts": {}
+  "main": "./dist/main.js",
+  "//": "M10 Electron thin shell. HARD RULES (contract): ZERO native modules; thin client only (all state lives in the panel server); single instance via app.requestSingleInstanceLock + the server.json discovery file; NO remote content loading — the window loads the LOCAL web bundle only and talks to http://127.0.0.1:<port> from server.json. electron is a devDependency (contract-listed exception); packaging/signing is DEFERRED (v0.x ships as a documented unsigned local build — no electron-builder).",
+  "scripts": {
+    "build": "tsc -b",
+    "typecheck": "tsc -b",
+    "test": "vitest run",
+    "dev": "tsc -b && electron ."
+  },
+  "devDependencies": {
+    "electron": "^43.0.0"
+  }
 }

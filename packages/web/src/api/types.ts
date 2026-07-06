@@ -6,7 +6,13 @@
  * erased at build time, so no backend code ever enters the browser bundle;
  * they exist to keep response shapes single-sourced with the server.
  */
-import type { ChatItem } from '@terminull/adapter-sdk';
+import type {
+  AccountProfile,
+  AccountResult,
+  ChatItem,
+  ModelInfo,
+  WhoamiInfo,
+} from '@terminull/adapter-sdk';
 import type {
   AdapterFleetStatus,
   FleetSession,
@@ -14,9 +20,30 @@ import type {
   GateResult,
   PendingConfirmation,
 } from '@terminull/server';
-import type { Envelope } from '@terminull/shared';
+import type {
+  AgentChatAccepted,
+  AgentStatusDto,
+  Envelope,
+  PendingApprovalCard,
+  PermissionClass,
+  PermissionSettingsDto,
+  UsageGaugeDto,
+} from '@terminull/shared';
 
-export type { AdapterFleetStatus, ChatItem, Envelope, FleetSession, FleetSnapshot };
+export type {
+  AdapterFleetStatus,
+  AgentChatAccepted,
+  AgentStatusDto,
+  ChatItem,
+  Envelope,
+  FleetSession,
+  FleetSnapshot,
+  ModelInfo,
+  PendingApprovalCard,
+  PermissionClass,
+  PermissionSettingsDto,
+  UsageGaugeDto,
+};
 
 /** `GET /api/health` */
 export interface HealthResponse {
@@ -79,4 +106,27 @@ export interface ApproveResponse {
   action: string;
   resultStatus: GateResult['status'];
   result: unknown;
+}
+
+/** `GET /api/agent/approvals` — confirmation queue filtered to agent origin. */
+export interface AgentApprovalsResponse {
+  pending: PendingApprovalCard[];
+}
+
+/**
+ * `POST /api/agent/approvals/:id/resolve` — delegates to the same code path
+ * as `/api/confirmations/:id/approve|reject`, so the body mirrors those.
+ */
+export type AgentResolveResponse = ApproveResponse | { rejected: boolean };
+
+/** `GET /api/tools/:toolId/models` — the dynamic model registry passthrough. */
+export interface ToolModelsResponse {
+  models: ModelInfo[];
+}
+
+/** `GET /api/tools/:toolId/account` — whoami/profiles passthrough, honest
+ * `{available:false, reason}` when the adapter cannot read them. */
+export interface ToolAccountResponse {
+  whoami: AccountResult<WhoamiInfo>;
+  profiles: AccountResult<AccountProfile[]>;
 }

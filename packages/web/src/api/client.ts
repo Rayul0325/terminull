@@ -7,14 +7,23 @@
  * is what UI maps to i18n strings.
  */
 import type {
+  AgentApprovalsResponse,
+  AgentChatAccepted,
+  AgentResolveResponse,
+  AgentStatusDto,
   ApproveResponse,
   ConfirmationsResponse,
   DirectiveResponse,
   EventsResponse,
   FleetSnapshot,
   HealthResponse,
+  PermissionClass,
+  PermissionSettingsDto,
   SpawnResponse,
+  ToolAccountResponse,
+  ToolModelsResponse,
   TranscriptResponse,
+  UsageGaugeDto,
 } from './types';
 
 /** A non-2xx REST response, carrying the server's machine error body. */
@@ -98,4 +107,27 @@ export const api = {
     request<ApproveResponse>('POST', `/api/confirmations/${encodeURIComponent(id)}/approve`),
   rejectConfirmation: (id: string) =>
     request<{ rejected: boolean }>('POST', `/api/confirmations/${encodeURIComponent(id)}/reject`),
+
+  // --- Manage agent (/api/agent/*, M7 contract) ---
+  agentStatus: () => request<AgentStatusDto>('GET', '/api/agent/status'),
+  agentChat: (text: string) => request<AgentChatAccepted>('POST', '/api/agent/chat', { text }),
+  agentPermissionSettings: () =>
+    request<PermissionSettingsDto>('GET', '/api/agent/permission-settings'),
+  putAgentPermissionSettings: (changes: Record<string, PermissionClass>) =>
+    request<PermissionSettingsDto>('PUT', '/api/agent/permission-settings', { changes }),
+  agentApprovals: () => request<AgentApprovalsResponse>('GET', '/api/agent/approvals'),
+  resolveAgentApproval: (id: string, decision: 'approve' | 'reject') =>
+    request<AgentResolveResponse>(
+      'POST',
+      `/api/agent/approvals/${encodeURIComponent(id)}/resolve`,
+      { decision },
+    ),
+
+  // --- Tool adapter surfaces (/api/tools/*, M7 contract) ---
+  toolUsage: (toolId: string) =>
+    request<UsageGaugeDto>('GET', `/api/tools/${encodeURIComponent(toolId)}/usage`),
+  toolModels: (toolId: string) =>
+    request<ToolModelsResponse>('GET', `/api/tools/${encodeURIComponent(toolId)}/models`),
+  toolAccount: (toolId: string) =>
+    request<ToolAccountResponse>('GET', `/api/tools/${encodeURIComponent(toolId)}/account`),
 };

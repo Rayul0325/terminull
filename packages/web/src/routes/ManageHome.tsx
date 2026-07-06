@@ -9,6 +9,7 @@
 import type { ReactElement } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { ApprovalsInbox } from '../agent/ApprovalsInbox';
 import { groupByProject, projectIdOf, useFleetStore } from '../stores/fleet';
 import { useConnectionStore } from '../stores/connection';
 
@@ -104,6 +105,7 @@ export function ManageHome(): ReactElement {
     <div style={{ maxWidth: 1080, margin: '0 auto', padding: 16, display: 'grid', gap: 12 }}>
       <StatusStrip />
       <AttentionSection />
+      <ApprovalsInbox />
       <section className="tn-card" style={{ padding: 16 }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
           <h2 style={{ margin: '0 0 8px', fontSize: 16 }}>{t('home.fleet.title')}</h2>

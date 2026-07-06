@@ -115,6 +115,7 @@
       "diff": "변경 비교",
       "preview": "미리보기",
       "board": "작업 보드",
+      "agent": "관리 에이전트",
       "session-empty": "세션 없음",
       "terminal-empty": "터미널 없음"
     },
@@ -188,6 +189,131 @@
       "synced": "기기 간 동기화 중",
       "deviceLocal": "이 기기에만 저장됩니다 (서버 동기화 준비 중: {{code}})",
       "none": "저장된 템플릿이 없습니다."
+    },
+    "agent": {
+      "title": "에이전트 권한",
+      "notice": "이 설정은 사용자만 바꿀 수 있습니다. 관리 에이전트는 자신의 권한을 절대 스스로 변경할 수 없어요.",
+      "class": {
+        "autonomous": "자동",
+        "confirm": "물어보고",
+        "forbidden": "금지"
+      },
+      "floorNote": "안전을 위해 '{{floor}}' 아래로는 낮출 수 없습니다",
+      "twoStep": "2단계 확인 필수",
+      "risk": {
+        "low": "위험도 낮음",
+        "med": "위험도 중간",
+        "high": "위험도 높음"
+      },
+      "loadFailed": "권한 설정을 불러오지 못했습니다 ({{code}})",
+      "saveFailed": "저장하지 못했습니다 ({{code}})",
+      "saving": "저장 중…"
     }
+  },
+  "perm": {
+    "directive_send": "세션에 지시 보내기",
+    "session_spawn": "새 세션 만들기",
+    "ask_answer": "세션 질문에 대신 답하기",
+    "plan_approve": "플랜 승인하기",
+    "permission_grant": "권한 부여하기",
+    "permission_mode": "세션 권한 모드 바꾸기",
+    "session_interrupt": "세션 중단하기",
+    "session_delete": "세션 삭제하기",
+    "harness_edit": "하네스 설정 수정하기",
+    "account_switch": "계정 전환하기",
+    "board_edit": "작업 보드 카드 만들기"
+  },
+  "inbox": {
+    "title": "승인 대기함",
+    "subtitle": "관리 에이전트가 제안한 작업입니다. 승인하기 전에는 아무것도 실행되지 않아요.",
+    "empty": "대기 중인 승인 요청이 없습니다.",
+    "loadFailed": "승인 목록을 불러오지 못했습니다 ({{code}})",
+    "approve": "승인",
+    "deny": "거절",
+    "resolving": "처리 중…",
+    "requestedAt": "{{time}} 요청",
+    "session": "대상 세션: {{id}}",
+    "params": "실행 내용",
+    "reason": "제안 사유",
+    "outcome": {
+      "approved": "승인됨",
+      "rejected": "거절됨",
+      "gone": "이미 처리되었거나 만료된 요청입니다"
+    },
+    "resolveFailed": "처리하지 못했습니다 ({{code}})",
+    "trail": "감사 기록",
+    "trailEmpty": "수신된 감사 이벤트가 없습니다 (접속 이후 수신분만 표시)"
+  },
+  "agent": {
+    "phase": {
+      "proposed": "제안됨",
+      "pending": "승인 대기",
+      "approved": "승인됨",
+      "denied": "거부됨",
+      "executed": "실행됨",
+      "failed": "실패"
+    },
+    "kind": {
+      "send_directive": "지시 전송",
+      "spawn_session": "세션 생성",
+      "answer_ask": "질문 답변",
+      "approve_plan": "플랜 승인",
+      "set_permission_mode": "권한 모드 변경",
+      "interrupt_session": "세션 중단",
+      "create_board_card": "보드 카드 생성"
+    },
+    "availability": {
+      "ok": "정상",
+      "unverified": "미확인",
+      "unavailable": "사용 불가"
+    },
+    "state": {
+      "disabled": "비활성",
+      "idle": "대기",
+      "thinking": "생각 중…",
+      "awaiting_approval": "승인 대기 중",
+      "error": "오류"
+    },
+    "chat": {
+      "placeholder": "관리 에이전트에게 지시하세요…",
+      "sending": "전송 중 ⏳",
+      "accepted": "접수됨 — 턴 진행 중",
+      "failed": "전송 실패 ({{code}})",
+      "empty": "아직 대화가 없습니다. 에이전트는 제안만 하고, 실행은 권한 설정을 따릅니다.",
+      "truncated": "이전 대화는 생략되었습니다",
+      "streaming": "생성 중…"
+    },
+    "status": {
+      "loadFailed": "에이전트 상태를 불러오지 못했습니다 ({{code}})",
+      "pending": "승인 대기 {{count}}건",
+      "budgetSpent": "지출 ${{spent}}",
+      "budgetUnknown": "비용 미상"
+    },
+    "model": {
+      "label": "모델",
+      "none": "선택 안 함",
+      "unavailable": "모델 목록을 불러올 수 없습니다 ({{code}})",
+      "note": "모델 선택은 아직 대화 턴에 적용되지 않습니다 (계약 v1)",
+      "source": {
+        "discovered": "탐지됨",
+        "configured": "설정됨",
+        "fallback": "기본값"
+      }
+    },
+    "chip": {
+      "viewApproval": "승인함에서 보기"
+    }
+  },
+  "usage": {
+    "title": "도구 사용량",
+    "staleTurnGated": "턴 실행 시에만 갱신",
+    "asOf": "{{time}} 기준",
+    "unavailable": "사용량을 확인할 수 없습니다",
+    "unsupported": "이 도구는 사용량 조회를 지원하지 않습니다 ({{code}})",
+    "loadFailed": "사용량을 불러오지 못했습니다 ({{code}})",
+    "usedPercent": "{{percent}}% 사용",
+    "resets": "{{time}} 초기화",
+    "empty": "보고된 사용량 창이 없습니다",
+    "account": "계정: {{account}}"
   }
 }

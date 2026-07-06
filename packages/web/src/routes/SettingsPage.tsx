@@ -6,6 +6,8 @@
  */
 import { useEffect, useState, type ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
+import { AgentPermissionsSection } from '../agent/AgentPermissionsSection';
+import { ToolUsageSection } from '../agent/ToolUsageSection';
 import { KEY_ACTIONS } from '../keybindings/defaults';
 import { comboAllowedInTerminal, keybindings, normalizeCombo } from '../keybindings/manager';
 import { layoutSync, useLayoutStore } from '../stores/layout';
@@ -158,6 +160,9 @@ export function SettingsPage(): ReactElement {
           </tbody>
         </table>
       </section>
+
+      <AgentPermissionsSection />
+      <ToolUsageSection />
 
       <section className="tn-card" style={{ padding: 16 }}>
         <h2 style={{ margin: '0 0 8px', fontSize: 16 }}>{t('settings.layout.title')}</h2>

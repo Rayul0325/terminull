@@ -74,12 +74,17 @@ function buildIde(api: DockviewApi, ctx: BuildContext): void {
   api.getPanel('files')?.api.setSize({ width: 240 });
 }
 
-/** 관제형: 플릿 + 세션 + 터미널들. */
+/** 관제형: 플릿 + 세션 + 관리 에이전트 + 터미널들. */
 function buildOps(api: DockviewApi, ctx: BuildContext): void {
   api.addPanel({ id: 'fleet', component: 'fleet' });
   addSessionOrPlaceholder(api, ctx, 'session-main', {
     referencePanel: 'fleet',
     direction: 'right',
+  });
+  api.addPanel({
+    id: 'agent',
+    component: 'agent',
+    position: { referencePanel: 'session-main', direction: 'right' },
   });
   const live = ctx.sessions.filter((s) => s.live && s.origin === 'paneld').slice(0, 2);
   live.forEach((s, i) => {

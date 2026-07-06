@@ -5,6 +5,8 @@
  */
 import { EventStream } from '../api/stream';
 import { api } from '../api/client';
+import { useAgentChatStore } from './agentChat';
+import { useApprovalsStore } from './approvals';
 import { useConnectionStore } from './connection';
 import { useFleetStore } from './fleet';
 
@@ -21,10 +23,13 @@ export function startIngest(): EventStream {
       onEvents: (batch) => {
         useConnectionStore.getState().applyEvents(batch);
         useFleetStore.getState().applyEvents(batch);
+        useApprovalsStore.getState().applyEvents(batch);
+        useAgentChatStore.getState().applyEvents(batch);
       },
       onGap: () => {
         // Stream history was lost — snapshot stores refetch from REST.
         void useFleetStore.getState().refresh();
+        void useApprovalsStore.getState().refresh();
       },
     },
   });

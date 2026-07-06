@@ -115,6 +115,7 @@
       "diff": "Diff",
       "preview": "Preview",
       "board": "Board",
+      "agent": "Supervisor",
       "session-empty": "No session",
       "terminal-empty": "No terminal"
     },
@@ -188,6 +189,131 @@
       "synced": "Synced across devices",
       "deviceLocal": "Stored on this device only (server sync pending: {{code}})",
       "none": "No saved templates."
+    },
+    "agent": {
+      "title": "Agent permissions",
+      "notice": "Only you can change these. The supervisor agent can never widen its own permissions.",
+      "class": {
+        "autonomous": "Autonomous",
+        "confirm": "Ask first",
+        "forbidden": "Forbidden"
+      },
+      "floorNote": "Cannot be loosened below '{{floor}}' for safety",
+      "twoStep": "Two-step confirm required",
+      "risk": {
+        "low": "low risk",
+        "med": "medium risk",
+        "high": "high risk"
+      },
+      "loadFailed": "Failed to load permission settings ({{code}})",
+      "saveFailed": "Failed to save ({{code}})",
+      "saving": "Saving…"
     }
+  },
+  "perm": {
+    "directive_send": "Send directives to sessions",
+    "session_spawn": "Spawn new sessions",
+    "ask_answer": "Answer session asks",
+    "plan_approve": "Approve plans",
+    "permission_grant": "Grant permissions",
+    "permission_mode": "Change session permission mode",
+    "session_interrupt": "Interrupt sessions",
+    "session_delete": "Delete sessions",
+    "harness_edit": "Edit harness settings",
+    "account_switch": "Switch accounts",
+    "board_edit": "Create board cards"
+  },
+  "inbox": {
+    "title": "Approval inbox",
+    "subtitle": "Actions proposed by the supervisor agent. Nothing runs before you approve it.",
+    "empty": "No pending approvals.",
+    "loadFailed": "Failed to load approvals ({{code}})",
+    "approve": "Approve",
+    "deny": "Deny",
+    "resolving": "Resolving…",
+    "requestedAt": "requested {{time}}",
+    "session": "target session: {{id}}",
+    "params": "What will run",
+    "reason": "Reason",
+    "outcome": {
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "gone": "Already resolved or expired"
+    },
+    "resolveFailed": "Failed to resolve ({{code}})",
+    "trail": "Audit trail",
+    "trailEmpty": "No audit events received (since this page connected)"
+  },
+  "agent": {
+    "phase": {
+      "proposed": "Proposed",
+      "pending": "Pending approval",
+      "approved": "Approved",
+      "denied": "Denied",
+      "executed": "Executed",
+      "failed": "Failed"
+    },
+    "kind": {
+      "send_directive": "Send directive",
+      "spawn_session": "Spawn session",
+      "answer_ask": "Answer ask",
+      "approve_plan": "Approve plan",
+      "set_permission_mode": "Set permission mode",
+      "interrupt_session": "Interrupt session",
+      "create_board_card": "Create board card"
+    },
+    "availability": {
+      "ok": "OK",
+      "unverified": "Unverified",
+      "unavailable": "Unavailable"
+    },
+    "state": {
+      "disabled": "Disabled",
+      "idle": "Idle",
+      "thinking": "Thinking…",
+      "awaiting_approval": "Awaiting approval",
+      "error": "Error"
+    },
+    "chat": {
+      "placeholder": "Tell the supervisor agent what to do…",
+      "sending": "Sending ⏳",
+      "accepted": "Accepted — turn in progress",
+      "failed": "Send failed ({{code}})",
+      "empty": "No conversation yet. The agent only proposes; execution follows your permission settings.",
+      "truncated": "Older messages omitted",
+      "streaming": "Streaming…"
+    },
+    "status": {
+      "loadFailed": "Failed to load agent status ({{code}})",
+      "pending": "{{count}} pending approval(s)",
+      "budgetSpent": "spent ${{spent}}",
+      "budgetUnknown": "cost unknown"
+    },
+    "model": {
+      "label": "Model",
+      "none": "Not selected",
+      "unavailable": "Model list unavailable ({{code}})",
+      "note": "Model selection is not applied to chat turns yet (contract v1)",
+      "source": {
+        "discovered": "discovered",
+        "configured": "configured",
+        "fallback": "fallback"
+      }
+    },
+    "chip": {
+      "viewApproval": "View in inbox"
+    }
+  },
+  "usage": {
+    "title": "Tool usage",
+    "staleTurnGated": "Updated only when a turn runs",
+    "asOf": "as of {{time}}",
+    "unavailable": "Usage unavailable",
+    "unsupported": "This tool does not support usage lookup ({{code}})",
+    "loadFailed": "Failed to load usage ({{code}})",
+    "usedPercent": "{{percent}}% used",
+    "resets": "resets {{time}}",
+    "empty": "No usage windows reported",
+    "account": "Account: {{account}}"
   }
 }

@@ -299,6 +299,11 @@ export const INSTALL_CMDS = {
   mkdirs: `mkdir -p ~/${AGENT_DIR}/bin ~/${AGENT_HOST_DIR}`,
   writeNodePath: `cat > ~/${AGENT_DIR}/node-path`,
   extractBundle: `rm -rf ~/${AGENT_DIR}/pkg && mkdir -p ~/${AGENT_DIR}/pkg && tar -xzf - -C ~/${AGENT_DIR}/pkg`,
+  // node-pty's darwin prebuilds ship spawn-helper as 0644: require() works but
+  // every pty.spawn dies with `posix_spawnp failed` (same trap the workspace
+  // postinstall scripts/ensure-node-pty.mjs heals locally). Found live in the
+  // M8 e2e — the deployed bundle needs the same healing.
+  fixSpawnHelper: `find ~/${AGENT_DIR}/pkg/node_modules -type f -name spawn-helper -exec chmod 755 {} + 2>/dev/null; true`,
   hasNodePty: `test -d ~/${AGENT_DIR}/pkg/node_modules/node-pty`,
   writeLauncher: `cat > ~/${AGENT_LAUNCHER} && chmod 755 ~/${AGENT_LAUNCHER}`,
   probeAgent: `~/${AGENT_LAUNCHER} --probe`,
@@ -424,6 +429,7 @@ export async function enroll(opts: EnrollOptions, deps: EnrollDeps): Promise<Enr
     'node-path',
   );
   mustOk(await runner.run(opts.host, INSTALL_CMDS.extractBundle, bundle), 'extract');
+  mustOk(await runner.run(opts.host, INSTALL_CMDS.fixSpawnHelper), 'spawn-helper');
   log(t('enroll.uploaded', { dir: AGENT_DIR }));
 
   // 3b. node-pty native check (only when the bundle ships it)

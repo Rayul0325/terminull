@@ -40,9 +40,13 @@ export async function buildSessionHostBundle(): Promise<Buffer> {
   const deployDir = path.join(scratch, 'pkg');
   try {
     await new Promise<void>((resolve, reject) => {
+      // --legacy: pnpm v10 refuses `deploy` in non-injected workspaces
+      // (ERR_PNPM_DEPLOY_NONINJECTED_WORKSPACE); legacy mode packs workspace
+      // deps (@terminull/shared) into node_modules, which is exactly what the
+      // remote bundle needs. Found by the M8 live enroll run.
       const child = spawn(
         'pnpm',
-        ['--filter', '@terminull/session-host', 'deploy', '--prod', deployDir],
+        ['--filter', '@terminull/session-host', 'deploy', '--legacy', '--prod', deployDir],
         { stdio: ['ignore', 'ignore', 'pipe'] },
       );
       let stderr = '';

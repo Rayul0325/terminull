@@ -5,14 +5,18 @@
  * spawned it. SpawnSpec.meta carries `{terminullId, adapterId, label, cwd}` so
  * the registry can be REBUILT from the daemon's `helloOk` session list after a
  * panel-server restart — the daemon, not this map, is the source of truth.
+ *
+ * M8: sessions carry a `machine` id (default `'local'`). Daemon sids are only
+ * unique per machine, so sid lookups are keyed `${machine}:${sid}`; public ids
+ * (uuid) stay globally unique so URLs never need a machine dimension.
  */
-import type { SessionSummary } from '@terminull/shared';
+import { LOCAL_MACHINE_ID, type SessionSummary } from '@terminull/shared';
 
 /** One paneld-owned session as the server tracks it. */
 export interface ServerSession {
   /** Server-minted stable id (used in URLs, events, fleet). */
   id: string;
-  /** Daemon session id (valid for the daemon's current boot only). */
+  /** Daemon session id (valid for that machine's current daemon boot only). */
   sid: number;
   adapterId: string;
   cwd: string;
@@ -20,7 +24,12 @@ export interface ServerSession {
   running: boolean;
   pid?: number;
   createdAt: number;
+  /** Machine whose daemon owns the PTY (`'local'` = this host's paneld). */
+  machine: string;
 }
+
+/** {@link SessionRegistry.add} input — `machine` defaults to `'local'`. */
+export type ServerSessionInput = Omit<ServerSession, 'machine'> & { machine?: string };
 
 /** The meta block stamped into SpawnSpec.meta for later reconciliation. */
 export interface SessionMeta {
@@ -45,21 +54,27 @@ function metaOf(summary: SessionSummary): SessionMeta | null {
   };
 }
 
+/** sid lookups are per machine — daemon sids collide across machines. */
+function sidKey(machine: string, sid: number): string {
+  return `${machine}:${sid}`;
+}
+
 export class SessionRegistry {
   private readonly byId = new Map<string, ServerSession>();
-  private readonly bySid = new Map<number, ServerSession>();
+  private readonly bySid = new Map<string, ServerSession>();
 
-  add(session: ServerSession): void {
-    this.byId.set(session.id, session);
-    this.bySid.set(session.sid, session);
+  add(session: ServerSessionInput): void {
+    const full: ServerSession = { machine: LOCAL_MACHINE_ID, ...session };
+    this.byId.set(full.id, full);
+    this.bySid.set(sidKey(full.machine, full.sid), full);
   }
 
   get(id: string): ServerSession | undefined {
     return this.byId.get(id);
   }
 
-  getBySid(sid: number): ServerSession | undefined {
-    return this.bySid.get(sid);
+  getBySid(sid: number, machine: string = LOCAL_MACHINE_ID): ServerSession | undefined {
+    return this.bySid.get(sidKey(machine, sid));
   }
 
   all(): ServerSession[] {
@@ -74,42 +89,48 @@ export class SessionRegistry {
   }
 
   /** Mark a session exited. Returns it when the exit was a fresh transition. */
-  markExited(sid: number): ServerSession | null {
-    const s = this.bySid.get(sid);
+  markExited(sid: number, machine: string = LOCAL_MACHINE_ID): ServerSession | null {
+    const s = this.bySid.get(sidKey(machine, sid));
     if (!s || !s.running) return null;
     s.running = false;
     return s;
   }
 
   /**
-   * Reconcile against the daemon's advertised sessions after (re)connect.
+   * Reconcile ONE machine's sessions against its daemon's advertised list
+   * after (re)connect. Sessions on other machines are never touched.
    *
    *  - `resumed=true` (same daemon boot): sessions absent from the list died
    *    while we were away — mark them exited; sessions present get their
    *    running flag synced; unknown advertised sessions with terminull meta
    *    are re-adopted (panel-server restarted, daemon survived).
-   *  - `resumed=false` (new daemon boot): every previously known session is
-   *    dead (PTYs died with the old daemon) — mark all exited, then adopt
-   *    whatever the fresh daemon advertises (normally nothing).
+   *  - `resumed=false` (new daemon boot): every previously known session on
+   *    that machine is dead (PTYs died with the old daemon) — mark all exited,
+   *    then adopt whatever the fresh daemon advertises (normally nothing).
    *
    * Returns the sessions that TRANSITIONED to exited so the caller can mint
    * honest `session.end` events exactly once each.
    */
-  reconcile(advertised: SessionSummary[], resumed: boolean): ServerSession[] {
+  reconcile(
+    advertised: SessionSummary[],
+    resumed: boolean,
+    machine: string = LOCAL_MACHINE_ID,
+  ): ServerSession[] {
     const ended: ServerSession[] = [];
     if (!resumed) {
       for (const s of this.byId.values()) {
+        if (s.machine !== machine) continue;
         if (s.running) {
           s.running = false;
           ended.push(s);
         }
+        this.bySid.delete(sidKey(machine, s.sid));
       }
-      this.bySid.clear();
     }
     const seen = new Set<number>();
     for (const summary of advertised) {
       seen.add(summary.sid);
-      const known = resumed ? this.bySid.get(summary.sid) : undefined;
+      const known = resumed ? this.bySid.get(sidKey(machine, summary.sid)) : undefined;
       if (known) {
         if (known.running && !summary.running) {
           known.running = false;
@@ -131,14 +152,17 @@ export class SessionRegistry {
         running: summary.running,
         ...(summary.pid !== undefined ? { pid: summary.pid } : {}),
         createdAt: Date.now(),
+        machine,
       };
       session.sid = summary.sid;
       session.running = summary.running;
+      session.machine = machine;
       this.byId.set(session.id, session);
-      this.bySid.set(summary.sid, session);
+      this.bySid.set(sidKey(machine, summary.sid), session);
     }
     if (resumed) {
       for (const s of this.byId.values()) {
+        if (s.machine !== machine) continue;
         if (s.running && !seen.has(s.sid)) {
           s.running = false;
           ended.push(s);

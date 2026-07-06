@@ -16,18 +16,21 @@ import { spawn as spawnChild } from 'node:child_process';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import { createRequire } from 'node:module';
-import net from 'node:net';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
+  AgentHostControlSchema,
   FrameDecoder,
   FrameEncoder,
   HOST_PROTO_VERSION,
   HostControlSchema,
+  type AgentClientControl,
+  type AgentHostControl,
   type HostControl,
   type SessionSummary,
   type SpawnSpec,
 } from '@terminull/shared';
+import { UnixSocketTransport, type FrameStream } from './transport.js';
 
 /** Snapshot handed to `onUp` after every successful hello. */
 export interface HostUpInfo {
@@ -97,35 +100,69 @@ export function defaultPaneldBin(): string {
   return path.join(path.dirname(entry), 'bin.js');
 }
 
-type CtrlListener = (msg: HostControl) => void;
+type CtrlListener = (msg: AgentHostControl) => void;
 type OutListener = (sid: number, seq: bigint, data: Buffer) => void;
 
+/** Options accepted by {@link HostConnection.open}/{@link HostConnection.openOnStream}. */
+export interface HostConnectionOptions {
+  requestTimeoutMs?: number;
+  /**
+   * Parse inbound CTRL with the AGENT vocabulary (paneld's + `collected`).
+   * Machine control links set this; local paneld links keep the plain schema
+   * (which rejects `collected` — paneld never speaks it).
+   */
+  agent?: boolean;
+}
+
 /**
- * One framed, hello-authenticated connection to the daemon. Both the control
- * connection and per-PTY attachments are built on this.
+ * Encode an outbound CTRL. `collect` is not in paneld's ClientControl union,
+ * but the wire encoding (JSON in a CTRL frame) is identical — the assertion
+ * only widens the compile-time view for agent links.
  */
-class HostConnection {
+function encodeCtrl(msg: AgentClientControl): Buffer {
+  return FrameEncoder.ctrl(msg as Parameters<typeof FrameEncoder.ctrl>[0]);
+}
+
+/**
+ * One framed, hello-authenticated connection to a session-host daemon over any
+ * {@link FrameStream} (local unix socket or a remote stdio relay). The control
+ * connection, per-PTY attachments and machine links are all built on this.
+ */
+export class HostConnection {
   private readonly pending = new Map<
     string,
-    { resolve: (msg: HostControl) => void; reject: (err: Error) => void; timer: NodeJS.Timeout }
+    {
+      resolve: (msg: AgentHostControl) => void;
+      reject: (err: Error) => void;
+      timer: NodeJS.Timeout;
+    }
   >();
   private readonly ctrlListeners = new Set<CtrlListener>();
   private readonly outListeners = new Set<OutListener>();
   private readonly closeListeners = new Set<() => void>();
+  private readonly parseCtrl: (json: unknown) => AgentHostControl | null;
   private closed = false;
+  /** Assigned by {@link openOnStream} before the connection is handed out. */
+  helloOk!: Extract<HostControl, { t: 'helloOk' }>;
 
   private constructor(
-    private readonly socket: net.Socket,
+    private readonly stream: FrameStream,
     private readonly requestTimeoutMs: number,
-    readonly helloOk: Extract<HostControl, { t: 'helloOk' }>,
+    agent: boolean,
   ) {
+    this.parseCtrl = (json) => {
+      const parsed = agent
+        ? AgentHostControlSchema.safeParse(json)
+        : HostControlSchema.safeParse(json);
+      return parsed.success ? parsed.data : null;
+    };
     const decoder = new FrameDecoder();
-    socket.on('data', (chunk: Buffer) => {
+    stream.onData((chunk: Buffer) => {
       let frames;
       try {
         frames = decoder.push(chunk);
       } catch {
-        socket.destroy();
+        stream.close();
         return;
       }
       for (const frame of frames) {
@@ -136,7 +173,7 @@ class HostConnection {
         }
       }
     });
-    socket.on('close', () => {
+    stream.onClose(() => {
       this.closed = true;
       const err = new Error('host connection closed');
       for (const p of this.pending.values()) {
@@ -146,66 +183,59 @@ class HostConnection {
       this.pending.clear();
       for (const fn of this.closeListeners) fn();
     });
-    socket.on('error', () => socket.destroy());
   }
 
-  /** Connect + hello. Rejects on refused socket, bad token, or timeout. */
-  static open(
-    socketPath: string,
+  /**
+   * Hello-handshake over an already-connected stream (the M8 seam: machine
+   * links hand in a stdio-relay stream here). Rejects on a refused hello, a
+   * stream that closes mid-handshake, or the timeout.
+   */
+  static openOnStream(
+    stream: FrameStream,
     token: string,
-    opts: { requestTimeoutMs?: number } = {},
+    opts: HostConnectionOptions = {},
   ): Promise<HostConnection> {
     const timeoutMs = opts.requestTimeoutMs ?? 10_000;
+    const conn = new HostConnection(stream, timeoutMs, opts.agent ?? false);
     return new Promise((resolve, reject) => {
-      const socket = net.connect(socketPath);
-      const decoder = new FrameDecoder();
       const timer = setTimeout(() => {
-        socket.destroy();
+        conn.close();
         reject(new Error('timed out waiting for helloOk'));
       }, timeoutMs);
-      const bail = (err: Error): void => {
+      const onFirstCtrl: CtrlListener = (msg) => {
+        conn.ctrlListeners.delete(onFirstCtrl);
         clearTimeout(timer);
-        socket.destroy();
-        reject(err);
+        if (msg.t === 'helloOk') {
+          conn.helloOk = msg;
+          resolve(conn);
+          return;
+        }
+        const detail = msg.t === 'error' ? `${msg.code}: ${msg.msg}` : msg.t;
+        conn.close();
+        reject(new Error(`hello rejected (${detail})`));
       };
-      socket.once('error', bail);
-      socket.on('connect', () => {
-        socket.write(FrameEncoder.ctrl({ t: 'hello', proto: HOST_PROTO_VERSION, token }));
+      conn.ctrlListeners.add(onFirstCtrl);
+      conn.onClose(() => {
+        clearTimeout(timer);
+        reject(new Error('host connection closed during hello'));
       });
-      const onData = (chunk: Buffer): void => {
-        let frames;
-        try {
-          frames = decoder.push(chunk);
-        } catch (e) {
-          bail(e instanceof Error ? e : new Error(String(e)));
-          return;
-        }
-        for (const frame of frames) {
-          if (frame.kind !== 'ctrl') continue;
-          const parsed = HostControlSchema.safeParse(frame.json);
-          if (!parsed.success) continue;
-          const msg = parsed.data;
-          clearTimeout(timer);
-          socket.removeListener('data', onData);
-          socket.removeListener('error', bail);
-          if (msg.t === 'helloOk') {
-            resolve(new HostConnection(socket, timeoutMs, msg));
-          } else {
-            const detail = msg.t === 'error' ? `${msg.code}: ${msg.msg}` : msg.t;
-            socket.destroy();
-            reject(new Error(`hello rejected (${detail})`));
-          }
-          return;
-        }
-      };
-      socket.on('data', onData);
+      stream.write(encodeCtrl({ t: 'hello', proto: HOST_PROTO_VERSION, token }));
     });
   }
 
+  /** Connect + hello over a local unix socket (path length validated first). */
+  static async open(
+    socketPath: string,
+    token: string,
+    opts: HostConnectionOptions = {},
+  ): Promise<HostConnection> {
+    const stream = await new UnixSocketTransport(socketPath).connect();
+    return HostConnection.openOnStream(stream, token, opts);
+  }
+
   private onCtrl(jsonValue: unknown): void {
-    const parsed = HostControlSchema.safeParse(jsonValue);
-    if (!parsed.success) return; // unknown ctrl — forward-compat, ignore
-    const msg = parsed.data;
+    const msg = this.parseCtrl(jsonValue);
+    if (msg === null) return; // unknown ctrl — forward-compat, ignore
     const reqId = 'reqId' in msg ? msg.reqId : undefined;
     if (reqId !== undefined) {
       const waiter = this.pending.get(reqId);
@@ -220,29 +250,40 @@ class HostConnection {
     for (const fn of this.ctrlListeners) fn(msg);
   }
 
-  /** Send a reqId-bearing CTRL and await its reply (or error frame). */
-  request(msg: Parameters<typeof FrameEncoder.ctrl>[0] & { reqId: string }): Promise<HostControl> {
+  /**
+   * Send a reqId-bearing CTRL and await its reply (or error frame).
+   * `timeoutMs` overrides the connection default (e.g. the collect budget).
+   */
+  request(
+    msg: AgentClientControl & { reqId: string },
+    timeoutMs?: number,
+  ): Promise<AgentHostControl> {
     if (this.closed) return Promise.reject(new HostUnavailableError());
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => {
         this.pending.delete(msg.reqId);
         reject(new Error(`host request '${msg.t}' timed out`));
-      }, this.requestTimeoutMs);
+      }, timeoutMs ?? this.requestTimeoutMs);
       this.pending.set(msg.reqId, { resolve, reject, timer });
-      this.socket.write(FrameEncoder.ctrl(msg));
+      this.stream.write(encodeCtrl(msg));
     });
   }
 
   /** Fire-and-forget CTRL (detach/resize/kill). */
-  send(msg: Parameters<typeof FrameEncoder.ctrl>[0]): void {
+  send(msg: AgentClientControl): void {
     if (this.closed) throw new HostUnavailableError();
-    this.socket.write(FrameEncoder.ctrl(msg));
+    this.stream.write(encodeCtrl(msg));
   }
 
   /** Raw input bytes for a session (IN frame). */
   input(sid: number, data: Buffer): void {
     if (this.closed) throw new HostUnavailableError();
-    this.socket.write(FrameEncoder.input(sid, data));
+    this.stream.write(FrameEncoder.input(sid, data));
+  }
+
+  /** OS pid of the stream's backing child, when it is a process stream. */
+  get childPid(): number | null {
+    return this.stream.childPid ?? null;
   }
 
   onCtrlMessage(fn: CtrlListener): void {
@@ -263,7 +304,7 @@ class HostConnection {
   }
 
   close(): void {
-    this.socket.destroy();
+    this.stream.close();
   }
 }
 

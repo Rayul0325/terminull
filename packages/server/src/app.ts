@@ -41,10 +41,16 @@ import {
   type ToolAdapter,
 } from '@terminull/adapter-sdk';
 import {
+  LOCAL_MACHINE_ID,
   PANEL_PROTO_VERSION,
   PtyClientMessageSchema,
   type Actor,
   type AgentStatusDto,
+  type MachineConfig,
+  type MachineConnectionState,
+  type MachineStateCode,
+  type MachineStateDto,
+  type MachineStatePayload,
   type PanelEvent,
   type PanelHello,
   type ProposedActionKind,
@@ -71,8 +77,22 @@ import { registerToolsRoutes } from './tools-routes.js';
 import { Auth, TOKEN_COOKIE, originOk, type RequestActor } from './auth.js';
 import { ConfirmationQueue, type GateResult } from './confirmations.js';
 import { removeDiscovery, writeDiscovery } from './discovery.js';
-import { collectFleet, type FleetSnapshot } from './fleet.js';
+import {
+  collectFleet,
+  remoteCollectedToFleet,
+  remotePaneldFleetSessions,
+  unreachableStatus,
+  type FleetSnapshot,
+} from './fleet.js';
 import { BodyError, Router, fail, json, maskDeep, readJsonBody } from './http-util.js';
+import {
+  MachineManager,
+  MachineUnavailableError,
+  UnknownMachineError,
+  loadMachinesFile,
+  type MachineManagerOptions,
+} from './machines.js';
+import { registerMachinesRoutes } from './machines-routes.js';
 import { HostRequestError, HostUnavailableError, PaneldClient } from './paneld-client.js';
 import { SessionRegistry, type ServerSession } from './sessions.js';
 
@@ -134,6 +154,16 @@ export interface ServerOptions {
   agentCaps?: Partial<ManageAgentCaps>;
   /** Enable the manage agent (default true; disabled → chat 409). */
   agentEnabled?: boolean;
+  /**
+   * Remote machine registry (M8). Overrides `<stateDir>/machines.json`;
+   * tests inject stdio-transport machines here — NEVER real ssh hosts.
+   */
+  machines?: MachineConfig[];
+  /** Machine link timings (heartbeat/backoff/collect), test-injectable. */
+  machineTimings?: Pick<
+    MachineManagerOptions,
+    'heartbeatMs' | 'requestTimeoutMs' | 'backoffMinMs' | 'backoffMaxMs' | 'collectTimeoutMs'
+  >;
 }
 
 function readServerVersion(): string {
@@ -184,6 +214,8 @@ const SpawnBodySchema = z
     label: z.string().min(1).max(120).optional(),
     cols: z.number().int().positive().max(1000).optional(),
     rows: z.number().int().positive().max(1000).optional(),
+    /** Target machine id (M8). Absent = the local paneld. */
+    machine: z.string().min(1).optional(),
   })
   .strict();
 
@@ -197,6 +229,8 @@ export class TerminullServer {
   readonly registry = new SessionRegistry();
   readonly confirmations = new ConfirmationQueue();
   readonly paneld: PaneldClient;
+  /** The remote machine registry + links (public: the gate oracle drives it). */
+  readonly machines: MachineManager;
   readonly pluginHost: PluginHost;
   /** The manage-agent executor (public: the integration oracle drives it). */
   readonly agentActions: AgentExecutor;
@@ -214,6 +248,9 @@ export class TerminullServer {
   private readonly opts: ServerOptions;
   private fleetCache: { at: number; snap: FleetSnapshot } | null = null;
   private boundPort: number | null = null;
+  /** Local machine mirror: one uniform machine rail incl. this host's paneld. */
+  private localMachineState: MachineConnectionState = 'connecting';
+  private localLastSeenAt: number | null = null;
 
   constructor(opts: ServerOptions) {
     this.opts = opts;
@@ -258,9 +295,14 @@ export class TerminullServer {
             sessions: info.sessions.length,
           },
         });
+        // Local machine mirror (M8): 'local' rides the same machine.state rail
+        // as remote machines; host.up/host.down stay untouched for compat.
+        this.localLastSeenAt = Date.now();
+        this.setLocalMachineState('connected', 'dial_ok');
       },
       onDown: () => {
         this.store.append('host.down', { payload: {} });
+        this.setLocalMachineState('stale', 'link_closed');
       },
       onExit: (exit) => {
         const s = this.registry.markExited(exit.sid);
@@ -270,6 +312,47 @@ export class TerminullServer {
             tool: s.adapterId,
             payload: { reason: 'exited', sid: exit.sid, code: exit.code, signal: exit.signal },
           });
+        }
+      },
+    });
+
+    // --- machine registry (M8) -----------------------------------------------
+    // Boot honesty: a corrupt machines.json throws here — a half-read machine
+    // registry must never boot silently (contract §5).
+    this.machines = new MachineManager({
+      machines: opts.machines ?? loadMachinesFile(this.stateDir),
+      ...opts.machineTimings,
+      onState: (payload: MachineStatePayload) => {
+        this.store.append('machine.state', { actor: 'system', payload });
+        this.fleetCache = null;
+      },
+      onStderr: (id, chunk) => this.appendMachineLog(id, chunk),
+      onUp: (machineId, info) => {
+        const ended = this.registry.reconcile(info.sessions, info.resumed, machineId);
+        for (const s of ended) {
+          this.store.append('session.end', {
+            sessionId: s.id,
+            tool: s.adapterId,
+            payload: { reason: 'host_restarted', sid: s.sid, machine: machineId },
+          });
+        }
+        this.fleetCache = null;
+      },
+      onExit: (machineId, exit) => {
+        const s = this.registry.markExited(exit.sid, machineId);
+        if (s) {
+          this.store.append('session.end', {
+            sessionId: s.id,
+            tool: s.adapterId,
+            payload: {
+              reason: 'exited',
+              sid: exit.sid,
+              code: exit.code,
+              signal: exit.signal,
+              machine: machineId,
+            },
+          });
+          this.fleetCache = null;
         }
       },
     });
@@ -347,6 +430,7 @@ export class TerminullServer {
       throw new UnsafeBindError(host);
     }
     await this.paneld.start();
+    this.machines.start();
     await new Promise<void>((resolve, reject) => {
       this.httpServer.once('error', reject);
       this.httpServer.listen(this.opts.port ?? DEFAULT_PORT, host, () => resolve());
@@ -364,6 +448,7 @@ export class TerminullServer {
   /** Clean shutdown: discovery removed, WS dropped, daemon left running. */
   async close(): Promise<void> {
     removeDiscovery(this.stateDir);
+    this.machines.stop();
     this.paneld.stop();
     for (const client of this.wss.clients) client.terminate();
     await new Promise<void>((resolve) => {
@@ -470,8 +555,72 @@ export class TerminullServer {
       home: this.opts.collectHome ?? os.homedir(),
       now: Date.now(),
     });
+    // M8: machines[] is ALWAYS present (local-only installs included). Only
+    // CONNECTED machines contribute sessions — a stale machine's entry (with
+    // lastSeenAt) is the honest signal; its sessions are never ghosted.
+    snap.machines = [this.localMachineDto(), ...this.machines.states()];
+    await Promise.all(
+      this.machines.states().map(async (m) => {
+        if (m.state !== 'connected') return;
+        let unreachable = false;
+        try {
+          const sessions = await this.machines.list(m.id);
+          snap.sessions.push(...remotePaneldFleetSessions(m.id, sessions, this.registry));
+        } catch {
+          unreachable = true;
+        }
+        try {
+          const collected = await this.machines.collect(m.id);
+          const mapped = remoteCollectedToFleet(m.id, collected);
+          snap.adapters.push(...mapped.statuses);
+          snap.sessions.push(...mapped.sessions);
+        } catch {
+          unreachable = true;
+        }
+        if (unreachable) snap.adapters.push(unreachableStatus(m.id));
+      }),
+    );
+    snap.sessions.sort((a, b) => (b.updatedAt ?? 0) - (a.updatedAt ?? 0));
     this.fleetCache = { at: Date.now(), snap };
     return snap;
+  }
+
+  /** The implicit local machine's rail entry (mirrors the paneld link state). */
+  private localMachineDto(): MachineStateDto {
+    return {
+      id: LOCAL_MACHINE_ID,
+      label: LOCAL_MACHINE_ID,
+      state: this.localMachineState,
+      lastSeenAt: this.localLastSeenAt,
+      ...(this.paneld.bootId !== null ? { bootId: this.paneld.bootId } : {}),
+    };
+  }
+
+  /** Emit `machine.state` for the local mirror on real transitions only. */
+  private setLocalMachineState(state: MachineConnectionState, code: MachineStateCode): void {
+    if (this.localMachineState === state) return;
+    const previous = this.localMachineState;
+    this.localMachineState = state;
+    const payload: MachineStatePayload = {
+      machineId: LOCAL_MACHINE_ID,
+      previous,
+      state,
+      lastSeenAt: this.localLastSeenAt,
+      code,
+    };
+    this.store.append('machine.state', { actor: 'system', payload });
+    this.fleetCache = null;
+  }
+
+  /** Relay stderr sink: `<stateDir>/machines/<id>.log`, secrets masked. */
+  private appendMachineLog(id: string, chunk: string): void {
+    try {
+      const dir = path.join(this.stateDir, 'machines');
+      fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
+      fs.appendFileSync(path.join(dir, `${id}.log`), maskSecrets(chunk), { mode: 0o600 });
+    } catch {
+      // Diagnostics only — a log-write failure must never take the link down.
+    }
   }
 
   // -------------------------------------------------------------------------
@@ -564,8 +713,25 @@ export class TerminullServer {
         fail(res, 400, spec.error, spec.extra ?? {});
         return;
       }
+      const machineId = body.data.machine ?? LOCAL_MACHINE_ID;
+      if (machineId !== LOCAL_MACHINE_ID) {
+        const machine = this.machines.get(machineId);
+        if (!machine) {
+          fail(res, 400, 'unknown_machine', { machine: machineId });
+          return;
+        }
+        if (machine.state !== 'connected') {
+          fail(res, 503, 'machine_unavailable', { machine: machineId, state: machine.state });
+          return;
+        }
+      }
       await this.gate(req, res, 'session.spawn', {
-        params: { adapterId: body.data.adapterId, cwd: body.data.cwd, cmd: spec.cmd },
+        params: {
+          adapterId: body.data.adapterId,
+          cwd: body.data.cwd,
+          cmd: spec.cmd,
+          machine: machineId,
+        },
         execute: (actor) => this.spawnSession(body.data, spec, actor),
       });
     });
@@ -638,6 +804,17 @@ export class TerminullServer {
       res.end(html);
     });
 
+    // Machine registry surface (M8) — own module, app.ts must not grow.
+    registerMachinesRoutes(r, {
+      auth: this.auth,
+      stateDir: this.stateDir,
+      manager: this.machines,
+      localDto: () => this.localMachineDto(),
+      onReloaded: () => {
+        this.fleetCache = null;
+      },
+    });
+
     // Per-tool adapter surfaces (usage/account/harness) + the manage-agent API.
     registerToolsRoutes(r, {
       adapters: this.adaptersById,
@@ -704,7 +881,11 @@ export class TerminullServer {
     const directiveId = crypto.randomUUID();
     const masked = maskSecrets(text);
     const session = this.registry.get(sessionId);
-    if (session && session.running && this.paneld.connected) {
+    const linkUp =
+      session?.machine === LOCAL_MACHINE_ID
+        ? this.paneld.connected
+        : this.machines.get(session?.machine ?? '')?.state === 'connected';
+    if (session && session.running && linkUp) {
       const adapter = this.adaptersById.get(session.adapterId);
       if (adapter) {
         const discovered: DiscoveredSession = {
@@ -715,8 +896,14 @@ export class TerminullServer {
         };
         const driver = adapter.driverFor(discovered, {
           inject: async (bytes) => {
-            await this.paneld.ensureAttached(session.sid);
-            this.paneld.input(session.sid, Buffer.from(bytes));
+            // Same driver path for every machine — only the link differs.
+            if (session.machine === LOCAL_MACHINE_ID) {
+              await this.paneld.ensureAttached(session.sid);
+              this.paneld.input(session.sid, Buffer.from(bytes));
+            } else {
+              await this.machines.ensureAttached(session.machine, session.sid);
+              this.machines.input(session.machine, session.sid, Buffer.from(bytes));
+            }
           },
         });
         if (driver) {
@@ -816,6 +1003,7 @@ export class TerminullServer {
     actor: Actor,
   ): Promise<GateResult> {
     const id = crypto.randomUUID();
+    const machineId = body.machine ?? LOCAL_MACHINE_ID;
     const label = body.label ?? `${body.adapterId}-${id.slice(0, 8)}`;
     const spec: SpawnSpec = {
       cmd: command.cmd,
@@ -829,10 +1017,24 @@ export class TerminullServer {
     };
     let spawned: { sid: number; pid: number };
     try {
-      spawned = await this.paneld.spawn(spec);
+      spawned =
+        machineId === LOCAL_MACHINE_ID
+          ? await this.paneld.spawn(spec)
+          : await this.machines.spawn(machineId, spec);
     } catch (e) {
       if (e instanceof HostUnavailableError) {
         return { status: 503, body: { code: 'host_unavailable' } };
+      }
+      if (e instanceof UnknownMachineError) {
+        return { status: 400, body: { code: 'unknown_machine', machine: machineId } };
+      }
+      if (e instanceof MachineUnavailableError) {
+        // The machine can go stale between the route check and execution
+        // (e.g. an approved confirmation running later) — honest either way.
+        return {
+          status: 503,
+          body: { code: 'machine_unavailable', machine: machineId, state: e.state },
+        };
       }
       if (e instanceof HostRequestError) {
         return { status: 502, body: { code: 'spawn_failed', hostCode: e.hostCode } };
@@ -848,6 +1050,7 @@ export class TerminullServer {
       running: true,
       pid: spawned.pid,
       createdAt: Date.now(),
+      machine: machineId,
     });
     this.fleetCache = null; // the new session must be visible immediately
     this.store.append('session.start', {
@@ -860,11 +1063,12 @@ export class TerminullServer {
         cwd: body.cwd,
         label,
         adapterId: body.adapterId,
+        machine: machineId,
       },
     });
     return {
       status: 201,
-      body: { sessionId: id, sid: spawned.sid, pid: spawned.pid, label },
+      body: { sessionId: id, sid: spawned.sid, pid: spawned.pid, label, machine: machineId },
     };
   }
 
@@ -872,17 +1076,34 @@ export class TerminullServer {
     if (!session.running) {
       return { status: 200, body: { deleted: true, exited: true, alreadyExited: true } };
     }
-    if (!this.paneld.connected) return { status: 503, body: { code: 'host_unavailable' } };
-    this.paneld.kill(session.sid, 'SIGTERM');
-    let exited = await this.waitForExit(session, 2000);
-    if (!exited) {
-      this.paneld.kill(session.sid, 'SIGKILL');
-      exited = await this.waitForExit(session, 2000);
+    const local = session.machine === LOCAL_MACHINE_ID;
+    if (local && !this.paneld.connected) {
+      return { status: 503, body: { code: 'host_unavailable' } };
     }
-    this.fleetCache = null;
-    // session.end is minted by the daemon-exit handler (exactly once); the
-    // response reports what ACTUALLY happened, kill claims included.
-    return { status: 200, body: { deleted: true, exited } };
+    const kill = (signal: string): void => {
+      if (local) this.paneld.kill(session.sid, signal);
+      else this.machines.kill(session.machine, session.sid, signal);
+    };
+    try {
+      kill('SIGTERM');
+      let exited = await this.waitForExit(session, 2000);
+      if (!exited) {
+        kill('SIGKILL');
+        exited = await this.waitForExit(session, 2000);
+      }
+      this.fleetCache = null;
+      // session.end is minted by the daemon-exit handler (exactly once); the
+      // response reports what ACTUALLY happened, kill claims included.
+      return { status: 200, body: { deleted: true, exited } };
+    } catch (e) {
+      if (e instanceof MachineUnavailableError) {
+        return {
+          status: 503,
+          body: { code: 'machine_unavailable', machine: session.machine, state: e.state },
+        };
+      }
+      throw e;
+    }
   }
 
   private waitForExit(session: ServerSession, timeoutMs: number): Promise<boolean> {
@@ -917,6 +1138,12 @@ export class TerminullServer {
     const session = snap.sessions.find((s) => s.origin === 'adapter' && s.id === sessionId);
     if (!session) {
       fail(res, 404, 'not_found');
+      return;
+    }
+    // Remote adapter sessions have no transcript window in v1 — honest refusal
+    // instead of reading a local path that describes a different machine.
+    if (session.machine !== undefined && session.machine !== LOCAL_MACHINE_ID) {
+      json(res, 200, { supported: false, reason: 'remote_transcript' });
       return;
     }
     const adapter = this.adaptersById.get(session.tool);
@@ -1052,9 +1279,20 @@ export class TerminullServer {
     const readOnly = mode === 'ro';
     let attachment;
     try {
-      attachment = await this.paneld.openAttachment(session.sid, { sinceSeq: 0, readOnly });
+      // A remote session attaches over ITS machine's transport (fresh relay
+      // child per viewer); a stale machine is an honest 1011 refusal.
+      attachment =
+        session.machine === LOCAL_MACHINE_ID
+          ? await this.paneld.openAttachment(session.sid, { sinceSeq: 0, readOnly })
+          : await this.machines.openAttachment(session.machine, session.sid, {
+              sinceSeq: 0,
+              readOnly,
+            });
     } catch {
-      ws.close(1011, 'host_unavailable');
+      ws.close(
+        1011,
+        session.machine === LOCAL_MACHINE_ID ? 'host_unavailable' : 'machine_unavailable',
+      );
       return;
     }
     const attached: PtyAttached = {

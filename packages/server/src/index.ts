@@ -31,18 +31,40 @@ export {
 } from './discovery.js';
 export {
   collectFleet,
+  remoteCollectedToFleet,
+  remotePaneldFleetSessions,
+  unreachableStatus,
   type AdapterFleetStatus,
   type FleetSession,
   type FleetSnapshot,
 } from './fleet.js';
 export {
+  MachineManager,
+  MachineUnavailableError,
+  UnknownMachineError,
+  loadMachinesFile,
+  saveMachinesFile,
+  type MachineManagerOptions,
+} from './machines.js';
+export { registerMachinesRoutes, type MachinesRouteDeps } from './machines-routes.js';
+export {
+  HostConnection,
   HostRequestError,
   HostUnavailableError,
   PaneldClient,
   defaultPaneldBin,
+  type HostConnectionOptions,
   type HostExitInfo,
   type HostUpInfo,
   type PaneldClientOptions,
   type PtyAttachment,
 } from './paneld-client.js';
+export {
+  StdioProcessTransport,
+  TransportDialError,
+  UnixSocketTransport,
+  transportForSpec,
+  type FrameStream,
+  type FrameTransport,
+} from './transport.js';
 export { SessionRegistry, type ServerSession, type SessionMeta } from './sessions.js';

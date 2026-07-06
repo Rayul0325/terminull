@@ -28,7 +28,8 @@ const pkg = JSON.parse(fs.readFileSync(path.join(cliDir, 'package.json'), 'utf8'
 describe('publish metadata (terminull)', () => {
   it('is the public product entry with bundle bin + engines', () => {
     expect(pkg.name).toBe('terminull');
-    expect(pkg.version).toBe('0.1.0');
+    // Shape, not a pinned number — releases bump this without editing tests.
+    expect(pkg.version).toMatch(/^\d+\.\d+\.\d+(-[\w.]+)?$/);
     expect(pkg.bin.terminull).toBe('dist-pack/bin.js');
     expect(pkg.publishConfig?.access).toBe('public');
     expect(pkg.engines?.node).toBe('>=22');

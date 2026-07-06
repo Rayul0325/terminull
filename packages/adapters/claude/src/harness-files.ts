@@ -4,9 +4,11 @@
  * a dangerous one. Paths resolve from the {@link HarnessContext} (home / cwd).
  *
  * Risk bands: CLAUDE.md files are `low` (prose that shapes behaviour but grants
- * nothing); `settings.json` files are `high` (they wire hooks/permissions and
- * can execute arbitrary commands); the skills/agents DIRECTORIES are `med`
- * (adding a skill/agent extends behaviour but is not itself a permission grant).
+ * nothing); `settings.json`/`settings.local.json` and `.mcp.json` are `high`
+ * (they wire hooks/permissions or launch MCP processes and can execute arbitrary
+ * commands); the skills/agents/commands DIRECTORIES and `keybindings.json` are
+ * `med` (they extend behaviour or rebind keys but are not themselves a
+ * permission grant).
  */
 import os from 'node:os';
 import path from 'node:path';
@@ -97,6 +99,58 @@ export const claudeHarnessFiles: HarnessFileSpec[] = [
     scope: 'user',
     riskLevel: 'med',
     pathResolver: (ctx) => path.join(home(ctx), '.claude', 'agents'),
+    mayNotExist: true,
+  },
+  {
+    id: 'claude.commands',
+    label: { en: 'Commands directory', ko: '커맨드 디렉터리' },
+    description: {
+      en: 'User slash-commands folder (~/.claude/commands). Each file adds a /command; a command can run shell — extends behaviour.',
+      ko: '사용자 슬래시 커맨드 폴더 (~/.claude/commands). 각 파일이 /커맨드를 추가하며 셸을 실행할 수 있습니다.',
+    },
+    format: 'other',
+    scope: 'user',
+    riskLevel: 'med',
+    pathResolver: (ctx) => path.join(home(ctx), '.claude', 'commands'),
+    mayNotExist: true,
+  },
+  {
+    id: 'claude.settings.local',
+    label: { en: 'Project local settings.local.json', ko: '프로젝트 로컬 settings.local.json' },
+    description: {
+      en: 'Untracked project overrides (./.claude/settings.local.json): hooks, permissions, env. Executes commands — highest-risk edit.',
+      ko: '추적되지 않는 프로젝트 재정의 (./.claude/settings.local.json): 훅·권한·환경변수. 명령을 실행하므로 가장 위험한 편집입니다.',
+    },
+    format: 'json',
+    scope: 'project',
+    riskLevel: 'high',
+    pathResolver: (ctx) => path.join(cwd(ctx), '.claude', 'settings.local.json'),
+    mayNotExist: true,
+  },
+  {
+    id: 'claude.mcp.project',
+    label: { en: 'Project MCP config (.mcp.json)', ko: '프로젝트 MCP 설정 (.mcp.json)' },
+    description: {
+      en: 'Project MCP servers (./.mcp.json). Each configured server launches a process — edit with care.',
+      ko: '프로젝트 MCP 서버 (./.mcp.json). 설정된 각 서버가 프로세스를 실행하므로 주의해서 편집하세요.',
+    },
+    format: 'json',
+    scope: 'project',
+    riskLevel: 'high',
+    pathResolver: (ctx) => path.join(cwd(ctx), '.mcp.json'),
+    mayNotExist: true,
+  },
+  {
+    id: 'claude.keybindings',
+    label: { en: 'Keybindings', ko: '키 바인딩' },
+    description: {
+      en: 'User keyboard shortcuts (~/.claude/keybindings.json). Rebinds keys; no command execution.',
+      ko: '사용자 키보드 단축키 (~/.claude/keybindings.json). 키를 재지정하며 명령을 실행하지 않습니다.',
+    },
+    format: 'json',
+    scope: 'user',
+    riskLevel: 'med',
+    pathResolver: (ctx) => path.join(home(ctx), '.claude', 'keybindings.json'),
     mayNotExist: true,
   },
 ];

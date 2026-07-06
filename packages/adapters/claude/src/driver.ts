@@ -35,11 +35,23 @@ const encoder = new TextEncoder();
 const PRIME_KEYS = new Set<NamedKey>(['ShiftTab']);
 
 /**
- * The permission modes reachable by the Shift+Tab cycle, in order. Claude's TUI
- * cycles normal → auto-accept edits → plan → normal; `bypassPermissions` and
- * `dontAsk` are set at launch (`--permission-mode`), NOT via this cycle.
+ * The permission modes reachable by the Shift+Tab cycle, in order.
+ *
+ * Empirically verified live against 2.1.201 (see `test/shifttab-probe.test.ts`):
+ * the TUI cycles `default → acceptEdits → plan → bypassPermissions → auto →`
+ * (wrap). Footer badges observed: "auto mode on", "accept edits on", "plan mode
+ * on", "bypass permissions on", and an empty footer for `default`. This is FIVE
+ * modes — `bypassPermissions` and the new `auto` mode are now IN the cycle (an
+ * older survey assumed bypass was launch-only). `manual` and `dontAsk` are
+ * `--permission-mode` launch choices only and are NOT reachable via Shift+Tab.
  */
-export const SHIFT_TAB_CYCLE: readonly string[] = ['default', 'acceptEdits', 'plan'];
+export const SHIFT_TAB_CYCLE: readonly string[] = [
+  'default',
+  'acceptEdits',
+  'plan',
+  'bypassPermissions',
+  'auto',
+];
 
 /** A screen snapshot source used for post-verification. */
 export type SnapshotFn = () => string | Promise<string>;
@@ -227,7 +239,7 @@ export class ClaudeDriver implements Driver {
     if (targetIdx < 0) {
       throw new AdapterUnsupportedError(
         `setPermissionMode('${mode}') — only ${this.cycle.join('/')} are reachable via Shift+Tab; ` +
-          `bypassPermissions/dontAsk are set at launch`,
+          `manual/dontAsk are set at launch (--permission-mode)`,
       );
     }
     const currentIdx = this.detectPermissionMode(screen);
@@ -235,10 +247,17 @@ export class ClaudeDriver implements Driver {
     for (let i = 0; i < steps; i++) await this.sendKey('ShiftTab');
   }
 
-  /** Best-effort current permission mode as an index into the cycle. */
+  /**
+   * Best-effort current permission mode as an index into the cycle. Matches the
+   * footer badges 2.1.201 prints (probe-verified): "bypass permissions on",
+   * "plan mode on", "accept edits on", "auto mode on"; anything else = default.
+   * `bypass` is checked before `auto`/`edits` since its badge is unambiguous.
+   */
   private detectPermissionMode(screen: string): number {
+    if (/bypass permissions/i.test(screen)) return this.cycle.indexOf('bypassPermissions');
     if (/plan mode/i.test(screen)) return this.cycle.indexOf('plan');
-    if (/accept edits|auto-accept/i.test(screen)) return this.cycle.indexOf('acceptEdits');
+    if (/accept edits/i.test(screen)) return this.cycle.indexOf('acceptEdits');
+    if (/auto mode/i.test(screen)) return this.cycle.indexOf('auto');
     return this.cycle.indexOf('default'); // -1 if 'default' not in a custom cycle
   }
 

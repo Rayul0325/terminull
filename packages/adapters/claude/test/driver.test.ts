@@ -146,17 +146,25 @@ describe('ClaudeDriver — mode + control', () => {
     expect(captured.map(U)).toEqual([RIGHT, SHIFTTAB, RIGHT, SHIFTTAB]);
   });
 
-  it('walks Up when the current mode is past the target in the cycle', async () => {
+  it('forward-wraps to a target that is behind the current mode in the cycle', async () => {
     const { driver, captured } = newDriver();
-    // From plan (idx 2) → default (idx 0): (0-2+3)%3 = 1 ShiftTab.
+    // 5-mode cycle: default,acceptEdits,plan,bypassPermissions,auto (probe-verified).
+    // From plan (idx 2) → default (idx 0): (0-2+5)%5 = 3 primed ShiftTab presses.
     await driver.setPermissionMode('default', 'plan mode on');
-    expect(captured.map(U)).toEqual([RIGHT, SHIFTTAB]);
+    expect(captured.map(U)).toEqual([RIGHT, SHIFTTAB, RIGHT, SHIFTTAB, RIGHT, SHIFTTAB]);
     expect(UP).toEqual(UP); // (Up is exercised by walk() in answerMenu tests)
   });
 
-  it('refuses modes not reachable via Shift+Tab', async () => {
+  it('reaches bypassPermissions via the cycle (now Shift+Tab-reachable on 2.1.201)', async () => {
+    const { driver, captured } = newDriver();
+    // From default (idx 0) → bypassPermissions (idx 3): 3 primed ShiftTab presses.
+    await driver.setPermissionMode('bypassPermissions', IDLE);
+    expect(captured.map(U)).toEqual([RIGHT, SHIFTTAB, RIGHT, SHIFTTAB, RIGHT, SHIFTTAB]);
+  });
+
+  it('refuses modes not reachable via Shift+Tab (manual/dontAsk are launch-only)', async () => {
     const { driver } = newDriver();
-    await expect(driver.setPermissionMode('bypassPermissions', IDLE)).rejects.toMatchObject({
+    await expect(driver.setPermissionMode('manual', IDLE)).rejects.toMatchObject({
       code: 'ADAPTER_UNSUPPORTED',
     });
   });

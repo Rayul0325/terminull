@@ -53,6 +53,15 @@ const EXPECTED: ChatItem[] = [
     raw: { semantic: 'tool_use', name: 'ExitPlanMode', input: { plan: 'do the thing' } },
   },
   {
+    // The sidechain record is no longer dropped: it emits ONE bounded marker
+    // (identity only — the subagent's content is never surfaced).
+    id: 'c6.0',
+    role: 'system',
+    kind: 'sidechain',
+    text: 'subagent thread',
+    raw: { semantic: 'sidechain', recordType: 'assistant' },
+  },
+  {
     id: 'c8.0',
     role: 'user',
     kind: 'event',
@@ -68,13 +77,17 @@ describe('ClaudeTranscriptParser — golden fixture', () => {
     expect(w.items).toEqual(EXPECTED);
   });
 
-  it('skips sidechain + meta records and strips the system-reminder tag', async () => {
+  it('emits a bounded sidechain marker (not content), still skips meta, strips the reminder', async () => {
     const w = await new ClaudeTranscriptParser().readWindowDetailed(ref);
     const texts = w.items.map((i) => i.text);
-    expect(texts).not.toContain('subagent chatter'); // sidechain skipped
-    expect(texts).not.toContain('meta noise'); // meta skipped
+    expect(texts).not.toContain('subagent chatter'); // subagent CONTENT never surfaced
+    expect(texts).not.toContain('meta noise'); // meta still skipped
     expect(texts).toContain('real question here'); // reminder stripped, text kept
     expect(texts.some((t) => t?.includes('<system-reminder>'))).toBe(false);
+    // …but the subagent thread IS marked so M6 can group it.
+    const marker = w.items.find((i) => i.kind === 'sidechain');
+    expect(marker?.role).toBe('system');
+    expect((marker?.raw as { semantic?: string })?.semantic).toBe('sidechain');
   });
 
   it('renders a slash command as a compact command event, not raw XML', async () => {
@@ -86,7 +99,7 @@ describe('ClaudeTranscriptParser — golden fixture', () => {
 
   it('drops the torn final line and stops the cursor before it (no unparsed item)', async () => {
     const w = await new ClaudeTranscriptParser().readWindowDetailed(ref);
-    expect(w.items).toHaveLength(8);
+    expect(w.items).toHaveLength(9);
     expect(w.items.some((i) => (i.raw as { semantic?: string })?.semantic === 'unparsed')).toBe(
       false,
     );

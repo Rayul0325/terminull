@@ -137,14 +137,18 @@ describe('E2E — real claude session via SessionHost (env-gated)', () => {
       // has ended is that output stops flowing.
       let lastLen = -1;
       let quietSince = Date.now();
-      await until(() => {
-        if (screen.length !== lastLen) {
-          lastLen = screen.length;
-          quietSince = Date.now();
-          return undefined;
-        }
-        return Date.now() - quietSince > 2500 ? true : undefined;
-      }, 45000, 'generation quiescence (return to idle)');
+      await until(
+        () => {
+          if (screen.length !== lastLen) {
+            lastLen = screen.length;
+            quietSince = Date.now();
+            return undefined;
+          }
+          return Date.now() - quietSince > 2500 ? true : undefined;
+        },
+        45000,
+        'generation quiescence (return to idle)',
+      );
 
       expect(screen.length).toBeGreaterThan(before);
     },

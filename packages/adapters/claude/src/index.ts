@@ -49,4 +49,17 @@ export {
   type ClaudeHarnessInjectorOptions,
 } from './injector.js';
 export { claudeHarnessFiles } from './harness-files.js';
+export {
+  parseStatusLine,
+  type StatusLineInput,
+  type StatusLineModel,
+  type StatusLineWorkspace,
+  type StatusLineRepo,
+  type StatusLineCost,
+  type StatusLineContextWindow,
+  type StatusLineCurrentUsage,
+  type StatusLineRateLimits,
+  type StatusLinePr,
+  type StatusLineWorktree,
+} from './statusline.js';
 export { manifest } from './manifest.js';

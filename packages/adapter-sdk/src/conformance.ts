@@ -69,7 +69,18 @@ const ChatItemSchema = z
   .object({
     id: z.string(),
     role: z.enum(['user', 'agent', 'tool', 'system']),
-    kind: z.enum(['message', 'tool_call', 'tool_result', 'event']),
+    // Mirrors the additive ChatItem.kind union in adapter.ts (2026-07-06 claude
+    // parity extension added reasoning/sidechain/system); kept in lock-step so a
+    // valid emitted kind is never rejected by the parser-roundtrip check.
+    kind: z.enum([
+      'message',
+      'tool_call',
+      'tool_result',
+      'event',
+      'reasoning',
+      'sidechain',
+      'system',
+    ]),
     text: z.string().optional(),
     ts: z.number().optional(),
     raw: z.unknown().optional(),

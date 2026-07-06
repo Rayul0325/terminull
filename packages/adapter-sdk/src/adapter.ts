@@ -103,11 +103,21 @@ export interface TranscriptCursor {
   offset: number;
 }
 
-/** A normalised transcript entry the UI renders. */
+/**
+ * A normalised transcript entry the UI renders.
+ *
+ * `kind` is additive across adapters: the base set is `message` / `tool_call` /
+ * `tool_result` / `event`. The claude adapter (2026-07-06 parity extension) adds
+ * `reasoning` (thinking blocks), `sidechain` (a bounded subagent-thread marker),
+ * and `system` (system/summary/compaction records, subtype carried in `raw`).
+ * Members are ONLY ever added, never removed or repurposed, so an adapter that
+ * emits a narrower set stays valid; renderers treat any unknown kind as a
+ * generic event.
+ */
 export interface ChatItem {
   id: string;
   role: 'user' | 'agent' | 'tool' | 'system';
-  kind: 'message' | 'tool_call' | 'tool_result' | 'event';
+  kind: 'message' | 'tool_call' | 'tool_result' | 'event' | 'reasoning' | 'sidechain' | 'system';
   text?: string;
   ts?: number;
   /** Original tool-native record, kept for renderers that need more. */

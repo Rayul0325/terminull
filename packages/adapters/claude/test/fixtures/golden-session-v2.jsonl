@@ -1,0 +1,10 @@
+{"type":"assistant","message":{"content":[{"type":"thinking","thinking":"Let me reason about the layout first."}]}}
+{"type":"assistant","message":{"content":[{"type":"tool_use","id":"toolu_01ABC","name":"Read","input":{"file_path":"/home/u/proj/src/app.ts"}}]}}
+{"type":"user","message":{"content":[{"type":"tool_result","tool_use_id":"toolu_01ABC","content":[{"type":"text","text":"export const app = 1;"}],"is_error":false}]},"toolUseResult":{"stdout":"export const app = 1;"}}
+{"type":"user","message":{"content":[{"type":"tool_result","tool_use_id":"toolu_02DEF","content":"ENOENT: no such file","is_error":true}]}}
+{"type":"assistant","isSidechain":true,"slug":"explore-src","agentType":"Explore","message":{"content":[{"type":"text","text":"internal subagent chatter"}]}}
+{"type":"system","subtype":"compact_boundary","content":"compacted"}
+{"type":"summary","summary":"Prior context summarized."}
+{"type":"compaction","content":"auto-compaction"}
+{"type":"mode","mode":"acceptEdits"}
+{"type":"quantum-flux-2099","payload":"who knows"}

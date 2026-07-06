@@ -11,8 +11,9 @@
  *  - Permission modes are NOT hardcoded blindly. {@link parsePermissionModes}
  *    reads them out of `claude --help` at probe time; the hardcoded list is only
  *    a fallback, tagged `'builtin-maybe-stale'` so a consumer knows it may lag
- *    the installed CLI (the live CLI already diverges — it ships `auto`/`manual`
- *    which this fallback list predates).
+ *    the installed CLI. The fallback now mirrors 2.1.201's full six-mode set
+ *    (`acceptEdits`/`auto`/`bypassPermissions`/`manual`/`dontAsk`/`plan`), but
+ *    the parsed-from-help list always wins when available.
  */
 import { minimalCapabilities, type ToolCapabilities } from '@terminull/adapter-sdk';
 
@@ -20,13 +21,21 @@ import { minimalCapabilities, type ToolCapabilities } from '@terminull/adapter-s
  * Fallback permission modes, used ONLY when `claude --help` cannot be parsed.
  * Tagged {@link PermissionModeSource} `'builtin-maybe-stale'` at the call site.
  * Deliberately NOT the source of truth — the installed CLI is.
+ *
+ * These are the SIX `--permission-mode` choices verified against 2.1.201
+ * (`claude --help`: `(choices: "acceptEdits", "auto", "bypassPermissions",
+ * "manual", "dontAsk", "plan")`), in the CLI's own order. `default` is
+ * intentionally absent: it is the implicit no-flag mode, not a `--permission-mode`
+ * choice. The two newer entries `auto`/`manual` (which an older fallback list
+ * predated) are now included, so a fallback still enumerates the full set.
  */
 export const BUILTIN_PERMISSION_MODES: readonly string[] = [
-  'default',
-  'plan',
   'acceptEdits',
+  'auto',
   'bypassPermissions',
+  'manual',
   'dontAsk',
+  'plan',
 ];
 
 /** Where a permission-mode list came from — provenance for honesty. */

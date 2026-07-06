@@ -4,17 +4,27 @@
  * Two sources, both honest about provenance:
  *  1. `'discovered'` — model ids actually seen in recent transcripts
  *     (`"model":"…"` fields), so the list reflects what this install has used.
- *  2. `'fallback'` — the generic tier aliases `opus` / `sonnet` / `haiku`, which
- *     `--model` always accepts. Deliberately NOT pinned to a dated model id: the
- *     `'fallback'` tag is the ONLY assumption made about "what's current".
+ *  2. `'fallback'` — the generic tier aliases `fable` / `opus` / `sonnet` /
+ *     `haiku`, which `--model` always accepts. Deliberately NOT pinned to a
+ *     dated model id: the `'fallback'` tag is the ONLY assumption made about
+ *     "what's current".
  */
 import fsp from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import type { HarnessContext, ModelInfo, ModelRegistry } from '@terminull/adapter-sdk';
 
-/** Generic tier aliases `--model` accepts; no dated-model assumption. */
+/**
+ * Generic tier aliases `--model` accepts; no dated-model assumption.
+ *
+ * `fable`/`opus`/`sonnet` are the aliases the live CLI advertises verbatim
+ * (`claude --help` on 2.1.201: "an alias for the latest model (e.g. 'fable',
+ * 'opus', or 'sonnet')"). `haiku` is kept: the help's list is a non-exhaustive
+ * "e.g.", and `haiku` remains a valid tier alias `--model` accepts. Ordered
+ * most→least capable to match the help's ordering.
+ */
 const FALLBACK_ALIASES: ReadonlyArray<{ id: string; label: string }> = [
+  { id: 'fable', label: 'Fable' },
   { id: 'opus', label: 'Opus' },
   { id: 'sonnet', label: 'Sonnet' },
   { id: 'haiku', label: 'Haiku' },

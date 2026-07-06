@@ -8,11 +8,24 @@
  * multibyte UTF-8 char is never split at a window edge.
  *
  * Records are normalised to SDK {@link ChatItem}s. The transcript's own
- * semantic kind (user / assistant / command / tool_use / unparsed) is mapped
- * onto the SDK's `(role, kind)` pair and preserved verbatim under `raw.semantic`
- * so a renderer keeps the tool payload `{name, input}`. Sidechain (subagent)
- * and meta records, and thinking blocks, are dropped — the GUI shows the
- * conversation, not every internal event.
+ * semantic kind is mapped onto the SDK's `(role, kind)` pair and preserved
+ * verbatim under `raw.semantic` so a renderer keeps the tool payload. The
+ * mapping (2026-07-06 parity extension) covers the observed record kinds:
+ *  - user text / slash-command chip → `user` / `command`;
+ *  - assistant text / `tool_use` (with its pairing `id`) → `assistant` /
+ *    `tool_use`;
+ *  - assistant `thinking` blocks → `reasoning` (text preserved, GUI collapses);
+ *  - user-carried `tool_result` blocks → `tool_result`, carrying
+ *    `{toolUseId, isError, payload}` so M6 can PAIR them with their `tool_use`;
+ *  - sidechain (subagent) records → a single bounded `sidechain` MARKER per
+ *    record (identity only, no recursive expansion) so M6 can group threads;
+ *  - `system` / `summary` / `compaction` / `progress` records → `system` with a
+ *    `subtype`;
+ *  - `isMeta` records and the P1-deferred session-meta stream (mode /
+ *    permission-mode / ai-title / …) are still dropped (folded into session
+ *    state later, not chat items);
+ *  - anything else (a torn line, or a novel record type) → the honest
+ *    `unparsed` fallback item, never a silent drop.
  */
 import fsp from 'node:fs/promises';
 import type {
@@ -53,10 +66,21 @@ export interface ClaudeTranscriptWindow extends TranscriptWindow {
 }
 
 /** The semantic kind carried in `ChatItem.raw` for renderers that want detail. */
-export type ClaudeItemSemantic = 'user' | 'assistant' | 'command' | 'tool_use' | 'unparsed';
+export type ClaudeItemSemantic =
+  | 'user'
+  | 'assistant'
+  | 'command'
+  | 'tool_use'
+  | 'reasoning'
+  | 'tool_result'
+  | 'sidechain'
+  | 'system'
+  | 'unparsed';
 
 interface ToolUseBlock {
   type: 'tool_use';
+  /** The `toolu_*` id a later `tool_result` references (pairing key). */
+  id?: string;
   name?: string;
   input?: Record<string, unknown>;
 }
@@ -64,14 +88,82 @@ interface TextBlock {
   type: 'text';
   text?: string;
 }
-type ContentBlock = ToolUseBlock | TextBlock | { type: string };
+interface ThinkingBlock {
+  type: 'thinking';
+  /** Extended-thinking blocks carry the text under `thinking`; some under `text`. */
+  thinking?: string;
+  text?: string;
+}
+interface ToolResultBlock {
+  type: 'tool_result';
+  tool_use_id?: string;
+  is_error?: boolean;
+  /** Result payload: a plain string or an array of content blocks. */
+  content?: unknown;
+}
+type ContentBlock =
+  | ToolUseBlock
+  | TextBlock
+  | ThinkingBlock
+  | ToolResultBlock
+  | { type: string };
 
 interface ClaudeRecord {
   type?: string;
+  /** `system` record discriminator (e.g. `compact_boundary`, `api_error`). */
+  subtype?: string;
   isSidechain?: boolean;
   isMeta?: boolean;
   timestamp?: string;
+  /** Subagent identity fields that may ride on a sidechain record. */
+  slug?: string;
+  agentId?: string;
+  agentType?: string;
+  /** Structured tool-result envelope that accompanies a `tool_result` block. */
+  toolUseResult?: unknown;
   message?: { content?: string | ContentBlock[] };
+}
+
+/**
+ * Record types folded into session state later (gap-matrix P1) — dropped today,
+ * exactly as before this extension, so the window is not flooded by the
+ * high-volume session-meta stream. Distinct from `isMeta` (injected context).
+ */
+const DEFERRED_TYPES: ReadonlySet<string> = new Set([
+  'mode',
+  'permission-mode',
+  'ai-title',
+  'custom-title',
+  'agent-name',
+  'last-prompt',
+  'attachment',
+  'queue-operation',
+  'file-history-snapshot',
+  'bridge-session',
+]);
+
+/** Record types normalised to a single `system` item carrying a `subtype`. */
+const SYSTEM_TYPES: ReadonlySet<string> = new Set([
+  'system',
+  'summary',
+  'compaction',
+  'progress',
+]);
+
+/** Flatten a tool_result `content` (string | block array) to a text preview. */
+function toolResultText(content: unknown): string {
+  if (typeof content === 'string') return content;
+  if (Array.isArray(content)) {
+    return content
+      .map((c) =>
+        c && typeof c === 'object' && (c as { type?: string }).type === 'text'
+          ? String((c as { text?: unknown }).text ?? '')
+          : '',
+      )
+      .join('')
+      .trim();
+  }
+  return '';
 }
 
 /** Compact, human-readable summary of a tool call's input (ported). */
@@ -134,24 +226,62 @@ function tsOf(rec: ClaudeRecord): number | undefined {
  * the per-record block index make a deterministic, stable id.
  */
 function recordToItems(rec: ClaudeRecord, lineNo: number): ChatItem[] {
-  if (!rec || rec.isSidechain || rec.isMeta) return [];
+  if (!rec) return [];
   const ts = tsOf(rec);
-  const out: ChatItem[] = [];
+  const withTs = ts !== undefined ? { ts } : {};
   const id = (block: number): string => `c${lineNo}.${block}`;
+
+  // Injected context (isMeta) stays dropped. A sidechain (subagent) record
+  // becomes ONE bounded marker carrying identity only — never its content —
+  // so M6 can group subagent threads without expanding them into the window.
+  if (rec.isMeta) return [];
+  if (rec.isSidechain) {
+    const identity: Record<string, unknown> = { recordType: rec.type ?? 'unknown' };
+    if (rec.slug) identity['slug'] = rec.slug;
+    if (rec.agentId) identity['agentId'] = rec.agentId;
+    if (rec.agentType) identity['agentType'] = rec.agentType;
+    const label = rec.agentType || rec.slug || rec.agentId;
+    return [
+      {
+        id: id(0),
+        role: 'system',
+        kind: 'sidechain',
+        text: label ? `subagent: ${label}` : 'subagent thread',
+        ...withTs,
+        raw: { semantic: 'sidechain' as ClaudeItemSemantic, ...identity },
+      },
+    ];
+  }
 
   if (rec.type === 'user') {
     const c = rec.message?.content;
-    const texts: string[] =
-      typeof c === 'string'
-        ? [c]
-        : Array.isArray(c)
-          ? c
-              .filter((x): x is TextBlock => x?.type === 'text')
-              .map((x) => x.text)
-              .filter((t): t is string => typeof t === 'string')
-          : [];
+    const blocks: ContentBlock[] =
+      typeof c === 'string' ? [{ type: 'text', text: c }] : Array.isArray(c) ? c : [];
+    const out: ChatItem[] = [];
     let block = 0;
-    for (const raw of texts) {
+    for (const b of blocks) {
+      // A tool_result rides on a user record; keep it paired to its tool_use.
+      if (b?.type === 'tool_result') {
+        const tr = b as ToolResultBlock;
+        out.push({
+          id: id(block++),
+          role: 'tool',
+          kind: 'tool_result',
+          text: toolResultText(tr.content).slice(0, TEXT_CAP),
+          ...withTs,
+          raw: {
+            semantic: 'tool_result' as ClaudeItemSemantic,
+            ...(tr.tool_use_id ? { toolUseId: tr.tool_use_id } : {}),
+            isError: tr.is_error === true,
+            payload: tr.content,
+            ...(rec.toolUseResult !== undefined ? { toolUseResult: rec.toolUseResult } : {}),
+          },
+        });
+        continue;
+      }
+      if (b?.type !== 'text') continue;
+      const raw = (b as TextBlock).text;
+      if (typeof raw !== 'string') continue;
       // Slash-command invocations render as a compact chip, not a wall of XML.
       const cmd = /<command-name>([^<]+)<\/command-name>/.exec(raw);
       if (cmd) {
@@ -163,7 +293,7 @@ function recordToItems(rec: ClaudeRecord, lineNo: number): ChatItem[] {
           role: 'user',
           kind: 'event',
           text: argText ? `${name} ${argText}` : name,
-          ...(ts !== undefined ? { ts } : {}),
+          ...withTs,
           raw: { semantic: 'command' as ClaudeItemSemantic, command: name, args: argText },
         });
         continue;
@@ -175,7 +305,7 @@ function recordToItems(rec: ClaudeRecord, lineNo: number): ChatItem[] {
           role: 'user',
           kind: 'message',
           text: text.slice(0, TEXT_CAP),
-          ...(ts !== undefined ? { ts } : {}),
+          ...withTs,
         });
       }
     }
@@ -185,6 +315,7 @@ function recordToItems(rec: ClaudeRecord, lineNo: number): ChatItem[] {
   if (rec.type === 'assistant') {
     const c = rec.message?.content;
     if (!Array.isArray(c)) return [];
+    const out: ChatItem[] = [];
     let block = 0;
     for (const x of c) {
       if (x?.type === 'text') {
@@ -195,7 +326,21 @@ function recordToItems(rec: ClaudeRecord, lineNo: number): ChatItem[] {
             role: 'agent',
             kind: 'message',
             text: t.slice(0, TEXT_CAP),
-            ...(ts !== undefined ? { ts } : {}),
+            ...withTs,
+          });
+        }
+      } else if (x?.type === 'thinking') {
+        // Reasoning is preserved (M6 collapses it by default), no longer dropped.
+        const th = x as ThinkingBlock;
+        const t = th.thinking ?? th.text;
+        if (typeof t === 'string' && t.trim()) {
+          out.push({
+            id: id(block++),
+            role: 'agent',
+            kind: 'reasoning',
+            text: t.slice(0, TEXT_CAP),
+            ...withTs,
+            raw: { semantic: 'reasoning' as ClaudeItemSemantic },
           });
         }
       } else if (x?.type === 'tool_use') {
@@ -207,17 +352,50 @@ function recordToItems(rec: ClaudeRecord, lineNo: number): ChatItem[] {
           role: 'agent',
           kind: 'tool_call',
           text: toolDetail(name, input),
-          ...(ts !== undefined ? { ts } : {}),
-          raw: { semantic: 'tool_use' as ClaudeItemSemantic, name, input },
+          ...withTs,
+          raw: {
+            semantic: 'tool_use' as ClaudeItemSemantic,
+            name,
+            input,
+            // The pairing key a later tool_result references, when present.
+            ...(tu.id ? { toolUseId: tu.id } : {}),
+          },
         });
       }
-      // thinking / other block types: reasoning intentionally skipped (honesty:
-      // the GUI shows the conversation, reasoning is not surfaced here).
+      // image / document blocks: P1 — not surfaced yet.
     }
     return out;
   }
 
-  return []; // system / attachment / queue-operation / summary …
+  // system / summary / compaction / progress → one honest system item + subtype.
+  if (rec.type && SYSTEM_TYPES.has(rec.type)) {
+    const subtype = rec.subtype ?? rec.type;
+    return [
+      {
+        id: id(0),
+        role: 'system',
+        kind: 'system',
+        text: `system: ${subtype}`,
+        ...withTs,
+        raw: { semantic: 'system' as ClaudeItemSemantic, subtype, recordType: rec.type },
+      },
+    ];
+  }
+
+  // P1-deferred session-meta stream: folded into session state later, dropped now.
+  if (rec.type && DEFERRED_TYPES.has(rec.type)) return [];
+
+  // A novel/unexpected record type → honest fallback, never a silent drop.
+  return [
+    {
+      id: id(0),
+      role: 'system',
+      kind: 'event',
+      text: `‹${rec.type ?? 'unknown record'}›`,
+      ...withTs,
+      raw: { semantic: 'unparsed' as ClaudeItemSemantic, recordType: rec.type ?? null },
+    },
+  ];
 }
 
 /**

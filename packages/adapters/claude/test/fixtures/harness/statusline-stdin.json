@@ -1,0 +1,45 @@
+{
+  "cwd": "/home/u/proj",
+  "session_id": "11111111-2222-3333-4444-555555555555",
+  "session_name": "parity-work",
+  "prompt_id": "prompt_0001",
+  "transcript_path": "/home/u/.claude/projects/-home-u-proj/11111111-2222-3333-4444-555555555555.jsonl",
+  "model": { "id": "claude-fable-5", "display_name": "Fable 5" },
+  "workspace": {
+    "current_dir": "/home/u/proj",
+    "project_dir": "/home/u/proj",
+    "added_dirs": ["/home/u/proj/packages"],
+    "git_worktree": "/home/u/proj",
+    "repo": { "host": "github.com", "owner": "example", "name": "proj" }
+  },
+  "version": "2.1.201",
+  "output_style": { "name": "default" },
+  "cost": {
+    "total_cost_usd": 0.4212,
+    "total_duration_ms": 812345,
+    "total_api_duration_ms": 456789,
+    "total_lines_added": 128,
+    "total_lines_removed": 34
+  },
+  "context_window": {
+    "total_input_tokens": 152340,
+    "total_output_tokens": 18422,
+    "context_window_size": 1000000,
+    "used_percentage": 17.1,
+    "remaining_percentage": 82.9,
+    "current_usage": {
+      "input_tokens": 4210,
+      "output_tokens": 812,
+      "cache_creation_input_tokens": 2048,
+      "cache_read_input_tokens": 149120
+    }
+  },
+  "exceeds_200k_tokens": false,
+  "effort": { "level": "high" },
+  "thinking": { "enabled": true },
+  "rate_limits": { "five_hour": { "used": 12, "limit": 100 }, "seven_day": { "used": 40, "limit": 900 } },
+  "vim": { "mode": "insert" },
+  "agent": { "name": "mw-claude-ext" },
+  "pr": { "number": 42, "url": "https://github.com/example/proj/pull/42", "review_state": "APPROVED" },
+  "worktree": { "name": "parity", "path": "/home/u/proj-wt", "branch": "parity-work" }
+}

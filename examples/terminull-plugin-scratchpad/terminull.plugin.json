@@ -1,0 +1,16 @@
+{
+  "name": "terminull-plugin-scratchpad",
+  "version": "0.1.0",
+  "pluginApi": "^1",
+  "displayName": { "en": "Scratchpad", "ko": "스크래치패드" },
+  "contributes": {
+    "panels": [
+      {
+        "id": "scratchpad",
+        "module": "./panel.mjs",
+        "title": { "en": "Scratchpad", "ko": "스크래치패드" },
+        "location": "sidebar"
+      }
+    ]
+  }
+}

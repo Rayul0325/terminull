@@ -1,0 +1,521 @@
+{
+  "app": {
+    "title": "Terminull — すべての CLI コーディングエージェントを一つのパネルで",
+    "name": "Terminull"
+  },
+  "nav": {
+    "workspace": "ワークスペース",
+    "settings": "設定"
+  },
+  "common": {
+    "loading": "読み込み中…",
+    "close": "閉じる",
+    "delete": "削除",
+    "dismiss": "非表示",
+    "cancel": "キャンセル",
+    "confirm": "確定"
+  },
+  "conn": {
+    "ws": {
+      "connecting": "接続中",
+      "online": "ライブ",
+      "resyncing": "再同期中",
+      "offline": "切断"
+    },
+    "host": {
+      "unknown": "セッションホストを確認中",
+      "up": "セッションホスト接続済み",
+      "down": "セッションホスト停止"
+    },
+    "seq": "イベント #{{seq}}"
+  },
+  "home": {
+    "attention": {
+      "title": "対応が必要です",
+      "sinceConnect": "このページの接続以降に受信した項目を表示しています（履歴 API は準備中）",
+      "empty": "現在、対応が必要な項目はありません。",
+      "kind": {
+        "ask": "質問",
+        "permission": "権限",
+        "confirmation": "承認"
+      }
+    },
+    "fleet": {
+      "title": "セッション",
+      "generatedAt": "{{time}} 時点",
+      "openWorkspace": "ワークスペースを開く",
+      "unknownProject": "場所不明",
+      "sessionCount": "{{count}}",
+      "more": "他 +{{count}} 件"
+    }
+  },
+  "fleet": {
+    "loadFailed": "セッションの読み込みに失敗しました（{{code}}）",
+    "collectorFailed": "一部のコレクターが失敗しました: {{adapters}}",
+    "empty": "表示するセッションがありません。",
+    "live": "ライブ"
+  },
+  "machines": {
+    "title": "マシン",
+    "local": "このマシン",
+    "filterAll": "すべて",
+    "state": {
+      "connected": "接続済み",
+      "connecting": "接続中",
+      "stale": "応答なし",
+      "disabled": "無効"
+    },
+    "lastSeen": {
+      "seconds": "最終確認 {{count}} 秒前",
+      "minutes": "最終確認 {{count}} 分前",
+      "hours": "最終確認 {{count}} 時間前",
+      "days": "最終確認 {{count}} 日前",
+      "never": "未接続"
+    },
+    "attempts": "{{count}} 回試行",
+    "staleSnapshot": "古いスナップショット",
+    "error": {
+      "unknown_machine": "不明なマシン",
+      "machine_unavailable": "マシンが応答しません — そこでは実行できません"
+    },
+    "settings": {
+      "title": "マシン",
+      "empty": "登録済みのリモートマシンはありません。",
+      "loadFailed": "マシンの読み込みに失敗しました（{{code}}）",
+      "enrollTitle": "リモートマシンを登録（CLI）",
+      "enrollHint": "GUI からの登録には対応していません — このコマンドをターミナルで実行してください。SSH 認証はお使いの ssh 設定を使用します。",
+      "copy": "コピー",
+      "copied": "コピーしました ✓",
+      "copyFailed": "コピーに失敗しました — テキストを手動で選択してください"
+    }
+  },
+  "chat": {
+    "role": {
+      "user": "ユーザー",
+      "agent": "エージェント",
+      "tool": "ツール",
+      "system": "システム"
+    },
+    "kind": {
+      "message": "メッセージ",
+      "tool_call": "ツール呼び出し",
+      "tool_result": "ツール結果",
+      "event": "イベント",
+      "reasoning": "推論",
+      "sidechain": "サブエージェント",
+      "system": "システム"
+    },
+    "generic": {
+      "noText": "表示する内容がありません。",
+      "truncated": "内容は省略されています。"
+    },
+    "rendererFailed": "レンダラーが失敗しました（{{id}}） — フォールバックを使用します",
+    "tool": {
+      "bash": "Bash",
+      "write": "書き込み",
+      "openTerminal": "ターミナルを開く",
+      "resultMissing": "結果を受信していません — パーサー拡張を待機中",
+      "resultError": "エラー",
+      "showOutput": "出力を表示",
+      "hideOutput": "出力を隠す",
+      "writeSize": "{{count}} 文字",
+      "detail": "詳細",
+      "contentUnavailable": "内容なし"
+    }
+  },
+  "composer": {
+    "placeholder": "指示を入力…",
+    "send": "送信",
+    "state": {
+      "sending": "送信中 ⏳",
+      "delivered": "送信済み ✓",
+      "queued": "次のターンに送信待ち",
+      "pendingConfirmation": "ユーザーの承認待ち",
+      "failed": "送信に失敗しました（{{code}}）"
+    }
+  },
+  "session": {
+    "noId": "セッション情報がありません。",
+    "noTranscript": "このセッションにはトランスクリプトがありません（{{reason}}）",
+    "loadError": "トランスクリプトの読み込みに失敗しました（{{code}}）",
+    "truncatedHead": "古い履歴は省略されています",
+    "empty": "まだ会話がありません。"
+  },
+  "panel": {
+    "kind": {
+      "session": "セッション",
+      "terminal": "ターミナル",
+      "fleet": "セッション",
+      "files": "ファイル",
+      "editor": "エディター",
+      "diff": "差分",
+      "preview": "プレビュー",
+      "board": "ボード",
+      "agent": "スーパーバイザー",
+      "session-empty": "セッションなし",
+      "terminal-empty": "ターミナルなし"
+    },
+    "placeholder": {
+      "title": "近日公開",
+      "notice": "このパネルはまだ実装されていません — レイアウト上の場所を確保しているだけです。"
+    }
+  },
+  "layout": {
+    "template": "テンプレート",
+    "apply": "適用…",
+    "saveNamePlaceholder": "新しいテンプレート名",
+    "saveAs": "現在のレイアウトを保存",
+    "defaultFor": "デフォルトテンプレート",
+    "noDefault": "なし",
+    "popout": "切り離す",
+    "notice": {
+      "template_failed": "テンプレートの読み込みに失敗しました — デフォルトのレイアウトに戻しました",
+      "last_layout_failed": "前回のレイアウトを復元できませんでした — デフォルトから開始します"
+    },
+    "builtin": {
+      "chat": "チャット優先",
+      "ide": "IDE",
+      "ops": "運用",
+      "preview": "プレビュー"
+    }
+  },
+  "terminal": {
+    "readOnly": "読み取り専用",
+    "domRenderer": "WebGL が利用できません — DOM レンダラー",
+    "notice": {
+      "user_required": "入力にはユーザー認証（/auth?token=…）が必要です — 読み取り専用に切り替えました",
+      "read_only": "このアタッチメントは読み取り専用です",
+      "closed_1011": "ホストとの接続が切れました — マシンの再接続後に再アタッチしてください",
+      "closed_1006": "接続が切れました — 「再接続」で再アタッチしてください"
+    },
+    "reconnect": "再接続",
+    "attachRw": "ターミナル（入力）"
+  },
+  "detail": {
+    "markdownPending": "Markdown プレビューは準備中 — 生テキストを表示しています",
+    "kindUnavailable": "「{{kind}}」の詳細表示はまだ利用できません。"
+  },
+  "keys": {
+    "nextTab": "次のタブ",
+    "prevTab": "前のタブ",
+    "nextGroup": "次のパネルグループ",
+    "goHome": "ホームへ",
+    "goSettings": "設定を開く"
+  },
+  "settings": {
+    "general": {
+      "title": "一般",
+      "locale": "言語",
+      "localeKo": "한국어",
+      "localeEn": "English",
+      "theme": "テーマ",
+      "themeAuto": "システムに合わせる",
+      "themeLight": "ライト",
+      "themeDark": "ダーク"
+    },
+    "keys": {
+      "title": "キーボードショートカット",
+      "unbound": "未割り当て",
+      "notInTerminal": "ターミナルでは無効",
+      "pressNow": "キーを押してください…（Esc でキャンセル）",
+      "rebind": "再割り当て",
+      "resetOne": "デフォルト",
+      "resetAll": "すべてリセット",
+      "scopeRule": "ターミナルにフォーカスがある間は ⌘/Ctrl+Alt の組み合わせのみが動作し、他のすべてのキーはターミナルに送られます。",
+      "conflicts": "{{count}} 件のショートカットが競合しています",
+      "roamingSynced": "サーバーと同期済み — 他のデバイスでも同じショートカットが適用されます",
+      "roamingLocal": "このデバイスにのみ保存されています（サーバー同期に失敗: {{code}}）",
+      "roamingSyncing": "同期中…"
+    },
+    "layout": {
+      "title": "レイアウトテンプレート",
+      "synced": "デバイス間で同期済み",
+      "deviceLocal": "このデバイスにのみ保存されています（サーバー同期は保留中: {{code}}）",
+      "none": "保存されたテンプレートはありません。"
+    },
+    "agent": {
+      "title": "エージェント権限",
+      "notice": "変更できるのはあなただけです。スーパーバイザーエージェントが自身の権限を拡大することはできません。",
+      "class": {
+        "autonomous": "自律",
+        "confirm": "都度確認",
+        "forbidden": "禁止"
+      },
+      "floorNote": "安全のため「{{floor}}」より緩くはできません",
+      "twoStep": "2 段階の確認が必要",
+      "risk": {
+        "low": "低リスク",
+        "med": "中リスク",
+        "high": "高リスク"
+      },
+      "loadFailed": "権限設定の読み込みに失敗しました（{{code}}）",
+      "saveFailed": "保存に失敗しました（{{code}}）",
+      "saving": "保存中…"
+    }
+  },
+  "perm": {
+    "directive_send": "セッションに指示を送信",
+    "session_spawn": "新しいセッションを起動",
+    "ask_answer": "セッションの質問に回答",
+    "plan_approve": "プランを承認",
+    "permission_grant": "権限を付与",
+    "permission_mode": "セッションの権限モードを変更",
+    "session_interrupt": "セッションを中断",
+    "session_delete": "セッションを削除",
+    "harness_edit": "ハーネス設定を編集",
+    "harness_write": "ハーネスファイルを保存",
+    "harness_write_danger": "危険なハーネスファイルを保存（settings.json など）",
+    "account_switch": "アカウントを切り替え",
+    "board_edit": "ボードカードを作成"
+  },
+  "inbox": {
+    "title": "承認インボックス",
+    "subtitle": "スーパーバイザーエージェントが提案したアクション。承認するまで何も実行されません。",
+    "empty": "保留中の承認はありません。",
+    "loadFailed": "承認の読み込みに失敗しました（{{code}}）",
+    "approve": "承認",
+    "deny": "却下",
+    "resolving": "処理中…",
+    "requestedAt": "{{time}} にリクエスト",
+    "session": "対象セッション: {{id}}",
+    "params": "実行される内容",
+    "reason": "理由",
+    "outcome": {
+      "approved": "承認済み",
+      "rejected": "却下済み",
+      "gone": "すでに処理済みまたは期限切れ"
+    },
+    "resolveFailed": "処理に失敗しました（{{code}}）",
+    "trail": "監査ログ",
+    "trailEmpty": "監査イベントを受信していません（このページの接続以降）"
+  },
+  "agent": {
+    "phase": {
+      "proposed": "提案済み",
+      "pending": "承認待ち",
+      "approved": "承認済み",
+      "denied": "却下済み",
+      "executed": "実行済み",
+      "failed": "失敗"
+    },
+    "kind": {
+      "send_directive": "指示を送信",
+      "spawn_session": "セッションを起動",
+      "answer_ask": "質問に回答",
+      "approve_plan": "プランを承認",
+      "set_permission_mode": "権限モードを設定",
+      "interrupt_session": "セッションを中断",
+      "create_board_card": "ボードカードを作成"
+    },
+    "availability": {
+      "ok": "OK",
+      "unverified": "未検証",
+      "unavailable": "利用不可"
+    },
+    "state": {
+      "disabled": "無効",
+      "idle": "アイドル",
+      "thinking": "思考中…",
+      "awaiting_approval": "承認待ち",
+      "error": "エラー"
+    },
+    "chat": {
+      "placeholder": "スーパーバイザーエージェントへの指示を入力…",
+      "sending": "送信中 ⏳",
+      "accepted": "受理されました — ターン実行中",
+      "failed": "送信に失敗しました（{{code}}）",
+      "empty": "まだ会話がありません。エージェントは提案のみを行い、実行はあなたの権限設定に従います。",
+      "truncated": "古いメッセージは省略されています",
+      "streaming": "ストリーミング中…"
+    },
+    "status": {
+      "loadFailed": "エージェントの状態の読み込みに失敗しました（{{code}}）",
+      "pending": "承認待ち {{count}} 件",
+      "budgetSpent": "使用額 ${{spent}}",
+      "budgetUnknown": "コスト不明"
+    },
+    "model": {
+      "label": "モデル",
+      "none": "未選択",
+      "unavailable": "モデル一覧を取得できません（{{code}}）",
+      "note": "モデル選択はまだチャットのターンに適用されません（contract v1）",
+      "source": {
+        "discovered": "検出済み",
+        "configured": "設定済み",
+        "fallback": "フォールバック"
+      }
+    },
+    "chip": {
+      "viewApproval": "インボックスで表示"
+    }
+  },
+  "usage": {
+    "title": "ツール使用状況",
+    "staleTurnGated": "ターン実行時のみ更新されます",
+    "asOf": "{{time}} 時点",
+    "unavailable": "使用状況を取得できません",
+    "unsupported": "このツールは使用状況の取得に対応していません（{{code}}）",
+    "loadFailed": "使用状況の読み込みに失敗しました（{{code}}）",
+    "usedPercent": "{{percent}}% 使用",
+    "resets": "{{time}} にリセット",
+    "empty": "使用状況のウィンドウがありません",
+    "account": "アカウント: {{account}}"
+  },
+  "account": {
+    "title": "アカウントセンター",
+    "subtitle": "ツールごとの ID とプロファイル。認証情報がコピーや移動されることはありません — プロファイルは分離された設定ホームへのポインターにすぎません。",
+    "whoami": {
+      "unavailable": "利用不可",
+      "plan": "プラン: {{plan}}"
+    },
+    "profiles": {
+      "title": "プロファイル",
+      "default": "デフォルト（実際のホーム）",
+      "active": "有効",
+      "empty": "登録済みのプロファイルはありません。",
+      "loadFailed": "プロファイルの読み込みに失敗しました（{{code}}）",
+      "use": "このプロファイルに切り替え",
+      "deleteNote": "レジストリのエントリのみが削除されます — 設定ホームの内容はそのまま残ります。"
+    },
+    "create": {
+      "title": "プロファイルを追加",
+      "id": "プロファイル ID（小文字・数字・-・_）",
+      "label": "表示名",
+      "configHome": "設定ホームの絶対パス",
+      "submit": "追加",
+      "failed": "プロファイルの追加に失敗しました（{{code}}）"
+    },
+    "switch": {
+      "title": "アカウント切り替えの確認",
+      "newSpawnsOnly": "この切り替えは新しいセッションにのみ適用されます。",
+      "liveWarning": "実行中の {{count}} 件のセッションは現在のアカウントを維持します — 再起動されることはありません。",
+      "confirm": "切り替え",
+      "done": "切り替えました — 実行中の {{count}} 件のセッションは以前のアカウントを維持します。",
+      "failed": "切り替えに失敗しました（{{code}}）"
+    },
+    "error": {
+      "unknown_profile": "不明なプロファイル",
+      "profile_id_reserved": "「default」は予約された ID です",
+      "profile_id_duplicate": "この ID のプロファイルはこのツールに既に存在します",
+      "profile_unsupported": "このツールはプロファイル分離に対応していません",
+      "profile_machine_unsupported": "プロファイルはリモートマシンでは利用できません（v1）",
+      "profiles_file_invalid": "サーバー側のプロファイルファイルが破損しています"
+    }
+  },
+  "harness": {
+    "title": "ハーネスファイル",
+    "subtitle": "検証・バックアップ付きのパイプラインでツールの設定ファイルを編集します。保存のたびにまず差分プレビューを表示し、直近 20 件のバックアップを保持します。",
+    "loadFailed": "ファイル一覧の読み込みに失敗しました（{{code}}）",
+    "missing": "ファイルがありません — 保存すると作成されます",
+    "directory": "ディレクトリ — 直接編集できません",
+    "customGroup": "カスタム",
+    "customReadOnly": "読み取り専用として検出",
+    "customScannedAt": "{{time}} にスキャン",
+    "customTruncated": "項目が多すぎます — 一部のみ表示しています",
+    "customEmpty": "カスタム項目は検出されませんでした。",
+    "customLoadFailed": "カスタム項目の読み込みに失敗しました（{{code}}）",
+    "kind": {
+      "hook": "フック",
+      "statusline": "ステータスライン",
+      "skill": "スキル",
+      "agent": "エージェント",
+      "command": "コマンド",
+      "mcp": "MCP サーバー",
+      "other": "その他"
+    },
+    "editor": {
+      "raw": "生データ",
+      "guided": "ガイド付きフォーム",
+      "readFailed": "ファイルの読み込みに失敗しました（{{code}}）",
+      "dangerNote": "高リスク — 誤った保存はツール全体を停止させる可能性があります。保存前に下の差分プレビューを確認してください。"
+    },
+    "diff": {
+      "title": "差分プレビュー",
+      "none": "変更はありません。"
+    },
+    "save": "保存",
+    "saveDanger": "変更を確認しました — 保存",
+    "saving": "保存中…",
+    "saved": "保存しました",
+    "saveFailed": "保存に失敗しました（{{code}}）",
+    "validation": {
+      "full": "完全に解析済み",
+      "lint": "構造チェックのみ（完全な解析ではありません）",
+      "none": "この形式には機械的な検証がありません"
+    },
+    "conflict": {
+      "title": "ファイルが別の場所で変更されました",
+      "body": "前回読み込んでからファイルが変更されたため、何も保存されませんでした。再読み込みして変更をやり直してください。",
+      "reload": "再読み込み"
+    },
+    "parseError": "保存を拒否しました — {{format}} の解析エラー",
+    "parseErrorLine": "{{line}} 行目",
+    "error": {
+      "unknown_file": "不明なファイル",
+      "directory_not_editable": "ディレクトリは直接編集できません",
+      "sha_mismatch": "ファイルが別の場所で変更されました",
+      "parse_invalid": "形式の検証に失敗しました",
+      "path_jailbreak": "パスが許可された範囲を超えています",
+      "file_too_large": "ファイルが大きすぎます（上限 1MB）",
+      "backup_not_found": "バックアップが見つかりません"
+    },
+    "backups": {
+      "title": "バックアップ",
+      "empty": "バックアップはありません。",
+      "loadFailed": "バックアップの読み込みに失敗しました（{{code}}）",
+      "restore": "復元",
+      "confirm": "このバックアップを復元しますか？現在の内容は先にバックアップされるため、復元は取り消せます。",
+      "restored": "復元しました",
+      "bytes": "{{count}} バイト"
+    }
+  },
+  "statusbar": {
+    "model": "モデル",
+    "context": "コンテキスト",
+    "cost": "コスト",
+    "noData": "ステータスデータなし",
+    "asOf": "{{time}} 時点"
+  },
+  "stepper": {
+    "open": "新規セッション",
+    "title": "セッションを作成",
+    "step": {
+      "tool": "ツール",
+      "machine": "マシン",
+      "cwd": "作業ディレクトリ",
+      "model": "モデル",
+      "permission": "権限モード",
+      "confirm": "確認"
+    },
+    "next": "次へ",
+    "back": "戻る",
+    "spawn": "セッションを開始",
+    "spawning": "開始中…",
+    "cwdPlaceholder": "/absolute/path",
+    "toolsLoadFailed": "ツールの読み込みに失敗しました（{{code}}）",
+    "machineNote": "接続済みのマシンのみ選択できます。",
+    "modelDefault": "デフォルトを使用",
+    "modelUnsupported": "このツールはモデル検出に対応していません — デフォルトモデルで開始します",
+    "modelsLoadFailed": "モデルの読み込みに失敗しました（{{code}}）",
+    "permissionDefault": "デフォルト",
+    "permissionNone": "このツールは権限モードを定義していません — デフォルトで開始します",
+    "profileBadge": "アカウントプロファイル: {{profile}}",
+    "spawnFailed": "セッションの開始に失敗しました（{{code}}）",
+    "created": "セッションを開始しました"
+  },
+  "mobile": {
+    "tab": {
+      "status": "ステータス",
+      "sessions": "セッション",
+      "inbox": "インボックス",
+      "ops": "運用",
+      "account": "アカウント"
+    },
+    "noTiling": "モバイルでは、タイル表示のワークスペースの代わりに全画面表示になります。",
+    "sessionsEmpty": "表示するセッションがありません。"
+  },
+  "attention": {
+    "answerPlaceholder": "回答を入力…",
+    "answerSend": "回答を送信"
+  }
+}

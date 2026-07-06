@@ -1,0 +1,16 @@
+{
+  "name": "terminull-plugin-broken",
+  "version": "0.1.0",
+  "pluginApi": "^2",
+  "displayName": { "en": "Broken Example", "ko": "고장난 예시" },
+  "contributes": {
+    "themes": [
+      {
+        "id": "broken",
+        "module": "./theme.json",
+        "label": { "en": "Broken", "ko": "고장" },
+        "kind": "dark"
+      }
+    ]
+  }
+}

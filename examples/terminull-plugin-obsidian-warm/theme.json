@@ -1,0 +1,20 @@
+{
+  "$comment": "Obsidian Warm — a dark theme that overrides the web app's --tn-* CSS custom properties (see packages/web/src/theme/tokens.css). Only the tokens listed here change; anything omitted inherits the base 'Clear' dark theme. Values are warm neutrals (amber accent over near-black browns).",
+  "kind": "dark",
+  "tokens": {
+    "--tn-bg": "#1a1613",
+    "--tn-bg-elevated": "#221d18",
+    "--tn-bg-sunken": "#120f0c",
+    "--tn-fg": "#ede6dc",
+    "--tn-fg-muted": "#b3a695",
+    "--tn-fg-faint": "#8a7d6b",
+    "--tn-border": "#352e26",
+    "--tn-accent": "#f0a94b",
+    "--tn-accent-fg": "#1a1613",
+    "--tn-ok": "#7fae6a",
+    "--tn-warn": "#e0902f",
+    "--tn-danger": "#e56a52",
+    "--tn-chip-bg": "#2a231c",
+    "--tn-shadow": "0 1px 3px rgba(0, 0, 0, 0.5)"
+  }
+}

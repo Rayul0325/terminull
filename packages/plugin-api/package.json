@@ -1,0 +1,60 @@
+{
+  "name": "@terminull/plugin-api",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Terminull plugin contract: manifest types + zod schemas for the 8 contribution points, the pluginApi semver gate, a programmatic plugin-directory validator, and a scaffolding generator.",
+  "license": "MIT",
+  "keywords": [
+    "terminull",
+    "plugin",
+    "plugin-api",
+    "manifest",
+    "validate",
+    "scaffold",
+    "cli-agent"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/terminull/terminull.git",
+    "directory": "packages/plugin-api"
+  },
+  "homepage": "https://github.com/terminull/terminull/tree/main/packages/plugin-api#readme",
+  "bugs": {
+    "url": "https://github.com/terminull/terminull/issues"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./validate": {
+      "types": "./dist/validate.d.ts",
+      "import": "./dist/validate.js"
+    },
+    "./scaffold": {
+      "types": "./dist/scaffold.d.ts",
+      "import": "./dist/scaffold.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "//": "PUBLIC package (M10). The plugin manifest source of truth moved here from @terminull/shared so plugin authors can depend on it without the private monorepo. `.` is pure (zod only — safe in the web bundle via shared's re-export); `./validate` uses node:fs and must never be imported from shared/web.",
+  "scripts": {
+    "build": "tsc -b",
+    "test": "vitest run",
+    "typecheck": "tsc -b"
+  },
+  "dependencies": {
+    "zod": "^3.24.0"
+  }
+}

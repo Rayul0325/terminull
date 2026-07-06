@@ -1,0 +1,82 @@
+# Terminull — plugin contract (llms.txt)
+
+> Terminull is one panel for every CLI coding agent. It is extended by PLUGINS,
+> never by patching core. This page is the whole plugin contract in one screen;
+> the exhaustive reference (full JSON-schema, error codes, per-point examples) is
+> `docs/plugin-authoring/SKILL.md` (Claude) and `docs/plugin-authoring/AGENTS.md`
+> (codex/gemini).
+
+## The one rule
+
+NEVER modify Terminull core. Extend ONLY through the eight declarative
+contribution points. After every edit run `terminull plugins validate <dir>` and
+loop until it is green — it is the machine oracle. A plugin cannot reach outside
+its own directory (module jail) and is disabled with a reason if it is
+incompatible or malformed.
+
+## What a plugin is
+
+An npm package `terminull-plugin-*` with a declarative manifest
+(`terminull.plugin.json`, or a `terminull` field in `package.json`, or
+`package.json` itself) plus lazily-loaded module files. First-party features use
+the same mechanism (dogfooding).
+
+## Manifest shape
+
+```json
+{
+  "name": "terminull-plugin-<slug>",
+  "version": "0.1.0",
+  "pluginApi": "^1",
+  "displayName": { "en": "…", "ko": "…" },
+  "contributes": { "<point>": [ { "id": "…", "module": "./…", "…": "…" } ] }
+}
+```
+
+- Every label is `LocalizedText` — `en` and `ko` are BOTH required.
+- Objects are strict: unknown keys are rejected.
+
+## The eight contribution points
+
+| Point | Label field | Required extra | Optional |
+| --- | --- | --- | --- |
+| adapters | displayName | — | — (module default-exports a zero-arg ToolAdapter factory) |
+| renderers | displayName | — | mimeTypes[] |
+| panels | title | — | location: sidebar\|main\|statusbar |
+| themes | label | kind: light\|dark | — |
+| locales | label | locale (BCP-47) | — |
+| keymaps | label | — | — |
+| harnessForms | title | — | targets[] |
+| commands | title | — | — |
+
+First-class scaffold templates: theme, panel, locale. The other five share a
+generic template. `terminull plugins scaffold <point> <name>` writes a package
+that already validates.
+
+## Semver gate
+
+Host API major = 1. `pluginApi` must admit it: `^1`, `1`, `1.0.0`, or comparators
+like `>=1 <2`. `^2` / `banana` / `""` fail closed. Use `^1`.
+
+## Validate → the loop
+
+1. `terminull plugins scaffold <point> <name>`
+2. edit manifest + module
+3. `terminull plugins validate <dir>`  (`--json` for machines)
+4. not green? fix by each issue's `code` + `at`, GOTO 3
+
+Programmatic: `import { validatePluginDir } from '@terminull/plugin-api/validate'`
+and `import { scaffoldPlugin } from '@terminull/plugin-api/scaffold'` (Node-only).
+Pure schemas + the `rangeSatisfies` gate: `@terminull/plugin-api`.
+
+## Working examples
+
+- examples/terminull-plugin-obsidian-warm — theme (token overrides)
+- examples/terminull-plugin-scratchpad — panel (test loads via the real PluginHost)
+- examples/terminull-plugin-locale-ja — a full Japanese locale pack (core ships ko+en)
+- examples/terminull-plugin-broken — intentionally invalid (shows an actionable FAIL)
+
+## Reference
+
+- docs/plugin-authoring/SKILL.md — full schema, error codes, per-point examples (Claude)
+- docs/plugin-authoring/AGENTS.md — same, for codex/gemini

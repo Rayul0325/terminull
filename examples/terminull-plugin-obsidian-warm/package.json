@@ -1,0 +1,12 @@
+{
+  "name": "terminull-plugin-obsidian-warm",
+  "version": "0.1.0",
+  "description": "Terminull theme plugin — Obsidian Warm, a warm-neutral dark theme (control-tower heritage) that overrides the web app's --tn-* tokens.",
+  "type": "module",
+  "license": "MIT",
+  "keywords": ["terminull", "terminull-plugin", "theme"],
+  "files": ["theme.json", "terminull.plugin.json", "README.md", "LICENSE"],
+  "scripts": {
+    "test": "node --test test.mjs"
+  }
+}

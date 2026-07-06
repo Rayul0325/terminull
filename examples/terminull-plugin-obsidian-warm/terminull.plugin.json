@@ -1,0 +1,16 @@
+{
+  "name": "terminull-plugin-obsidian-warm",
+  "version": "0.1.0",
+  "pluginApi": "^1",
+  "displayName": { "en": "Obsidian Warm", "ko": "흑요석 웜" },
+  "contributes": {
+    "themes": [
+      {
+        "id": "obsidian-warm",
+        "module": "./theme.json",
+        "label": { "en": "Obsidian Warm", "ko": "흑요석 웜" },
+        "kind": "dark"
+      }
+    ]
+  }
+}

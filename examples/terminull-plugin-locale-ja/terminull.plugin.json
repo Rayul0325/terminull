@@ -1,0 +1,16 @@
+{
+  "name": "terminull-plugin-locale-ja",
+  "version": "0.1.0",
+  "pluginApi": "^1",
+  "displayName": { "en": "Japanese locale", "ko": "일본어 로케일" },
+  "contributes": {
+    "locales": [
+      {
+        "id": "locale-ja",
+        "module": "./ja.json",
+        "locale": "ja",
+        "label": { "en": "Japanese", "ko": "일본어", "ja": "日本語" }
+      }
+    ]
+  }
+}

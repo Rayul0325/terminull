@@ -19,5 +19,12 @@ ignoredBuiltDependencies:
 #    executable, so posix_spawnp fails at runtime; a real native build produces
 #    an executable spawn-helper under build/Release. Requires a C/C++ toolchain
 #    (macOS CommandLineTools / Xcode).
+#  - electron: its postinstall downloads the platform binary — without it the
+#    @terminull/desktop devDependency is an empty shell (M10 contract-listed).
+#    NOT a native module in our code: the desktop shell itself stays pure JS.
 onlyBuiltDependencies:
   - node-pty
+  - electron
+
+allowBuilds:
+  esbuild: set this to true or false

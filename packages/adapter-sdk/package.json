@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@terminull/core": "workspace:*",
+    "@terminull/plugin-api": "workspace:*",
     "@terminull/shared": "workspace:*",
     "zod": "^3.24.0"
   }

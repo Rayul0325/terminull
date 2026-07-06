@@ -23,6 +23,7 @@ import net from 'node:net';
 import path from 'node:path';
 import { spawn as ptySpawn, type IPty } from 'node-pty';
 import {
+  assertSocketPathOk,
   ClientControlSchema,
   FrameDecoder,
   FrameEncoder,
@@ -101,6 +102,8 @@ function readOrCreate(file: string, create: () => string, mode: number): string 
 export class SessionHost {
   readonly stateDir: string;
   readonly socketPath: string;
+  /** `<stateDir>/host.pid` — written on successful start, removed on stop. */
+  readonly pidPath: string;
   readonly ringBytes: number;
 
   /** Stable per-machine id, persisted in `<stateDir>/host-id`. */
@@ -117,14 +120,24 @@ export class SessionHost {
   constructor(opts: SessionHostOptions) {
     this.stateDir = opts.stateDir;
     this.socketPath = path.join(opts.stateDir, 'host.sock');
+    this.pidPath = path.join(opts.stateDir, 'host.pid');
     this.ringBytes = opts.ringBytes ?? DEFAULT_RING_BYTES;
   }
 
   /** Create state files, bind the unix socket and start accepting clients. */
   async start(): Promise<void> {
+    // Guard FIRST, before any filesystem side effect: macOS caps AF_UNIX
+    // sun_path at 104 bytes and rejects longer paths at bind(2) with a
+    // baffling EINVAL (known live failure). Fail with the coded error and
+    // leave no half-created state behind.
+    assertSocketPathOk(this.socketPath);
     fs.mkdirSync(this.stateDir, { recursive: true, mode: 0o700 });
     fs.chmodSync(this.stateDir, 0o700); // mkdirSync mode is ignored for pre-existing dirs
-    this.hostId = readOrCreate(path.join(this.stateDir, 'host-id'), () => crypto.randomUUID(), 0o644);
+    this.hostId = readOrCreate(
+      path.join(this.stateDir, 'host-id'),
+      () => crypto.randomUUID(),
+      0o644,
+    );
     this.token = readOrCreate(
       path.join(this.stateDir, 'host-token'),
       () => crypto.randomBytes(32).toString('hex'),
@@ -142,6 +155,9 @@ export class SessionHost {
       this.server!.listen(this.socketPath, () => resolve());
     });
     fs.chmodSync(this.socketPath, 0o600);
+    // Written only AFTER a successful bind so a failed boot never advertises a
+    // pid. Consumed by enroll --remove and a future `paneld stop`.
+    fs.writeFileSync(this.pidPath, `${process.pid}\n`, { mode: 0o600 });
   }
 
   /** Graceful shutdown: kill PTY children, drop clients, close the socket. */
@@ -166,6 +182,11 @@ export class SessionHost {
       fs.unlinkSync(this.socketPath);
     } catch {
       /* never bound or already removed */
+    }
+    try {
+      fs.unlinkSync(this.pidPath);
+    } catch {
+      /* never written or already removed */
     }
   }
 

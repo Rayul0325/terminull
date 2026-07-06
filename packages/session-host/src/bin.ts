@@ -1,25 +1,39 @@
 #!/usr/bin/env node
 /**
- * `paneld` CLI — start or query the session-host daemon.
+ * `paneld` CLI — start, query, or relay to the session-host daemon.
  *
  *   paneld start  --state-dir <dir> [--foreground]
  *   paneld status --state-dir <dir>
+ *   paneld agent  --state-dir <dir> [--no-spawn] [--home <dir>]
+ *   paneld agent  --probe
  *
  * `start` runs in the foreground for now (detach/launchd install lands in
  * M10); `--foreground` is accepted so scripts written today keep working then.
  * `status` connects to the daemon's socket, performs the hello handshake with
  * the state dir's token and prints the `helloOk` reply as JSON.
+ * `agent` is the M8 remote relay: it bridges its OWN stdin/stdout to the
+ * daemon socket (spawning the daemon when dead, unless `--no-spawn`). In agent
+ * mode stdout carries ONLY the preamble line + binary frames — every log line
+ * goes to stderr. `--home` points the session collector at an alternate home
+ * (tests use a tmpdir fake); `--probe` prints the preamble and exits 0 without
+ * touching the daemon (enroll verification).
  */
 import fs from 'node:fs';
 import net from 'node:net';
+import os from 'node:os';
 import path from 'node:path';
 import process from 'node:process';
 import { parseArgs } from 'node:util';
-import { FrameDecoder, FrameEncoder, HOST_PROTO_VERSION } from '@terminull/shared';
+import { AGENT_PREAMBLE, FrameDecoder, FrameEncoder, HOST_PROTO_VERSION } from '@terminull/shared';
+import { runAgentRelay } from './agent-relay.js';
+import { createAgentCollector } from './collect.js';
 import { SessionHost } from './host.js';
 
 function usage(): never {
-  console.error('usage: paneld <start|status> --state-dir <dir> [--foreground]');
+  console.error(
+    'usage: paneld <start|status> --state-dir <dir> [--foreground]\n' +
+      '       paneld agent --state-dir <dir> [--no-spawn] [--home <dir>] | paneld agent --probe',
+  );
   process.exit(2);
 }
 
@@ -75,16 +89,36 @@ async function cmdStatus(stateDir: string): Promise<void> {
   console.log(JSON.stringify(helloOk, null, 2));
 }
 
+async function cmdAgent(stateDir: string, noSpawn: boolean, home: string): Promise<never> {
+  // NOTE: agent-mode stdout must stay byte-clean for the frame codec — the
+  // relay owns it entirely; this wrapper never writes to stdout itself.
+  const code = await runAgentRelay({
+    stateDir,
+    noSpawn,
+    collector: createAgentCollector({ home }),
+  });
+  process.exit(code);
+}
+
 async function main(): Promise<void> {
   const { values, positionals } = parseArgs({
     args: process.argv.slice(2),
     options: {
       'state-dir': { type: 'string' },
       foreground: { type: 'boolean', default: false },
+      'no-spawn': { type: 'boolean', default: false },
+      probe: { type: 'boolean', default: false },
+      home: { type: 'string' },
     },
     allowPositionals: true,
   });
   const command = positionals[0];
+  if (command === 'agent' && values.probe) {
+    // Enroll verification: prove the launcher + node pin work end to end
+    // without touching the daemon. Preamble on stdout, exit 0.
+    process.stdout.write(AGENT_PREAMBLE + '\n');
+    return;
+  }
   const stateDir = values['state-dir'];
   if (!command || !stateDir) usage();
 
@@ -94,6 +128,9 @@ async function main(): Promise<void> {
       return;
     case 'status':
       await cmdStatus(stateDir);
+      return;
+    case 'agent':
+      await cmdAgent(stateDir, values['no-spawn'], values.home ?? os.homedir());
       return;
     default:
       usage();

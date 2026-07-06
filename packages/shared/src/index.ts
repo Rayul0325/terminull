@@ -1,6 +1,7 @@
 export * from './agent-protocol.js';
 export * from './events.js';
 export * from './host-protocol.js';
+export * from './machine-protocol.js';
 export * from './panel-protocol.js';
 export * from './plugin-api.js';
 

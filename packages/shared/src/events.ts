@@ -77,6 +77,7 @@ export const GUARDED_EVENT_TYPES = [
   'account.profile_switched',
   'host.up',
   'host.down',
+  'machine.state',
   'update.available',
   'board.card_created',
   'board.card_moved',

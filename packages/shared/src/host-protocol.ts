@@ -289,6 +289,73 @@ function decodeBody(kind: number, body: Buffer): DecodedFrame {
 }
 
 /**
+ * Stream-safe frame SPLITTER: like {@link FrameDecoder} but yields complete
+ * raw frames (header + body, byte-identical) WITHOUT parsing bodies. This is
+ * the relay primitive — the stdio agent must interleave its own frames into a
+ * relayed stream only at frame boundaries, and JSON-parsing every high-volume
+ * OUT frame just to copy it would be waste.
+ */
+export class FrameSplitter {
+  private buf: Buffer = Buffer.alloc(0);
+  private readonly maxBody: number;
+
+  constructor(opts?: { maxBodyLen?: number }) {
+    this.maxBody = opts?.maxBodyLen ?? DEFAULT_MAX_FRAME_BODY;
+  }
+
+  push(chunk: Buffer): Buffer[] {
+    this.buf = this.buf.length === 0 ? chunk : Buffer.concat([this.buf, chunk]);
+    const frames: Buffer[] = [];
+    let off = 0;
+    while (this.buf.length - off >= FRAME_HEADER_BYTES) {
+      const bodyLen = this.buf.readUInt32LE(off);
+      if (bodyLen > this.maxBody) {
+        throw new FrameError(`frame body length ${bodyLen} exceeds max ${this.maxBody}`);
+      }
+      const total = FRAME_HEADER_BYTES + bodyLen;
+      if (this.buf.length - off < total) break; // wait for the rest of this frame
+      // Copy: the returned frame must outlive this push()'s concat buffer.
+      frames.push(Buffer.from(this.buf.subarray(off, off + total)));
+      off += total;
+    }
+    this.buf = off === 0 ? this.buf : Buffer.from(this.buf.subarray(off));
+    return frames;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Unix-socket path guard
+// ---------------------------------------------------------------------------
+
+/**
+ * Usable AF_UNIX path budget in bytes. macOS `sun_path` is 104 bytes INCLUDING
+ * the trailing NUL (Linux: 108) — 103 is the portable usable maximum. Binding
+ * a longer path fails at the OS level with a baffling error, so socket
+ * creators validate FIRST and fail with a clear one (known live failure).
+ */
+export const MAX_UNIX_SOCKET_PATH = 103;
+
+/** Thrown before binding/dialing a unix socket whose path exceeds the OS cap. */
+export class SocketPathTooLongError extends Error {
+  readonly code = 'socket_path_too_long';
+  constructor(readonly socketPath: string) {
+    super(
+      `unix socket path is ${Buffer.byteLength(socketPath, 'utf8')} bytes but AF_UNIX ` +
+        `caps sun_path at ${MAX_UNIX_SOCKET_PATH} usable bytes (macOS: 104 incl. NUL). ` +
+        `Use a shorter state dir (e.g. directly under os.tmpdir()): ${socketPath}`,
+    );
+    this.name = 'SocketPathTooLongError';
+  }
+}
+
+/** Validate a unix-socket path length; throws {@link SocketPathTooLongError}. */
+export function assertSocketPathOk(socketPath: string): void {
+  if (Buffer.byteLength(socketPath, 'utf8') > MAX_UNIX_SOCKET_PATH) {
+    throw new SocketPathTooLongError(socketPath);
+  }
+}
+
+/**
  * Stream-safe frame decoder. Feed it arbitrary chunks (partial frames or
  * several frames coalesced into one chunk are both fine) and it returns every
  * complete frame it can extract, buffering any trailing partial for next time.

@@ -1,9 +1,11 @@
 export * from './agent-protocol.js';
 export * from './events.js';
+export * from './harness-protocol.js';
 export * from './host-protocol.js';
 export * from './machine-protocol.js';
 export * from './panel-protocol.js';
 export * from './plugin-api.js';
+export * from './profile-protocol.js';
 
 /** Metadata shared by every Terminull package. */
 export interface TerminullMeta {

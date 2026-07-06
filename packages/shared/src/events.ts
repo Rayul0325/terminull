@@ -49,6 +49,9 @@ export const POSTABLE_EVENT_TYPES = [
   'session.ask',
   'session.turn',
   'session.end',
+  // M9: statusline-shim telemetry (payload: SessionStatusDto). Display-only —
+  // forgeable by design like every postable type; nothing gates on it.
+  'session.status',
 ] as const;
 export type PostableEventType = (typeof POSTABLE_EVENT_TYPES)[number];
 
@@ -74,7 +77,14 @@ export const GUARDED_EVENT_TYPES = [
   'confirmation.approved',
   'confirmation.rejected',
   'harness.edited',
+  // M9 harness editor: payloads carry fileId/toolId/sha/backupId/bytes ONLY —
+  // file content and diffs are NEVER persisted in the event log.
+  'harness.file_written',
+  'harness.file_restored',
   'account.profile_switched',
+  // M9: server-persisted UI keybinding overrides changed (payload: action ids
+  // touched, not combos — combos are prefs, not audit material).
+  'prefs.keybindings_changed',
   'host.up',
   'host.down',
   'machine.state',

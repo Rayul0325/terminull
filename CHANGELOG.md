@@ -4,6 +4,19 @@ All notable changes to Terminull. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.3] — 2026-07-07
+
+### Added
+
+- Directive delivery to discovered **Codex** sessions. Codex has no pid registry
+  (so the tmux-pane path can't reach it), but its app-server keys on the same id
+  Terminull already displays — a discovered session's id is the rollout uuid is
+  the app-server `threadId`. So a directive is delivered by spawning a codex
+  app-server and calling `thread/resume` + `turn/start` on that id (no pane/pid
+  join). Unresolvable/empty threads still queue honestly. The core routing tries
+  a tool's own delivery first (`method:'adapter:codex'`), then the generic
+  tmux-pid path (Claude/generic), then queues.
+
 ## [0.1.2] — 2026-07-07
 
 ### Added

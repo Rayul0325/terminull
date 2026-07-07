@@ -114,7 +114,8 @@ class AppServerSession {
 
   private fail(): void {
     if (this.closed) return;
-    for (const resolve of this.pending.values()) resolve({ error: { message: 'app-server closed' } });
+    for (const resolve of this.pending.values())
+      resolve({ error: { message: 'app-server closed' } });
     this.pending.clear();
   }
 

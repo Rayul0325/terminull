@@ -82,6 +82,13 @@ export interface DiscoveredSession {
   title?: string;
   /** Epoch ms of last activity, when known. */
   updatedAt?: number;
+  /**
+   * Live OS pid of the session process, when known. Lets the server resolve the
+   * tmux pane a discovered (non-paneld-owned) session runs in, so a GUI
+   * directive can be delivered via `tmux send-keys`. Absent = not resolvable
+   * (never guessed).
+   */
+  pid?: number;
   /** How to read this session's transcript, when available. */
   transcriptRef?: TranscriptRef;
 }

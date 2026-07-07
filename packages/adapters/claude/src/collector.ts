@@ -179,6 +179,9 @@ export function createClaudeCollector(opts: ClaudeCollectorOptions = {}): Sessio
           id: sessionId,
           tool: 'claude',
           live: true,
+          // pid is already validated finite + alive above; carry it so the
+          // server can resolve this session's tmux pane for directive delivery.
+          pid,
           ...(cwd ? { cwd } : {}),
           ...(typeof j['name'] === 'string' && j['name'] ? { title: j['name'] } : {}),
           ...(updatedAt !== undefined ? { updatedAt } : {}),

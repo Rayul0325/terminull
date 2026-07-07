@@ -72,6 +72,7 @@ import * as claudePlugin from '@terminull/adapter-claude';
 import * as codexPlugin from '@terminull/adapter-codex';
 import * as genericPlugin from '@terminull/adapter-generic';
 import * as agyPlugin from '@terminull/adapter-agy';
+import { tmux } from '@terminull/session-host';
 import { PERMISSION_TO_KIND, resultCodeOf } from './agent.js';
 import { AgentExecutor, type AgentSpawnRequest } from './agent-executor.js';
 import { registerAgentRoutes } from './agent-routes.js';
@@ -1048,14 +1049,59 @@ export class TerminullServer {
         }
       }
     }
-    // Not a paneld-owned live session: queue it. Delivery-at-next-turn comes
-    // with the hook harness (a later milestone); the event IS the contract.
+    // Not paneld-owned. If it's a LOCAL discovered session running inside a tmux
+    // pane, deliver via non-adopting `tmux send-keys` — this reaches the live
+    // TUI (like typing) WITHOUT attaching a client (no resize/redraw conflict on
+    // the user's terminal). Resolvable only for local sessions with a live pid.
+    const bin = tmux.resolveTmuxBin();
+    if (bin) {
+      const target = await this.localTmuxTargetFor(sessionId, bin);
+      if (target) {
+        try {
+          await tmux.sendText(bin, target, text);
+          this.store.append('directive.delivered', {
+            sessionId,
+            actor,
+            payload: { directiveId, text: masked, method: 'tmux-sendkeys' },
+          });
+          return { status: 200, body: { delivered: true, directiveId } };
+        } catch {
+          // send-keys failed (pane raced away) — fall through to the honest queue.
+        }
+      }
+    }
+    // Not paneld-owned and not a resolvable tmux pane: queue it. Delivery-at-next
+    // -turn for hook-only sessions is a later milestone; the event IS the contract.
     this.store.append('directive.queued', {
       sessionId,
       actor,
       payload: { directiveId, text: masked },
     });
     return { status: 202, body: { queued: true, directiveId } };
+  }
+
+  /**
+   * The tmux pane target (`pane_id`) for a LOCAL discovered (non-paneld-owned)
+   * session with a live pid, or null. Remote sessions and sessions without a
+   * resolvable local tmux pane return null so the caller stays honest (queues,
+   * never fabricates a delivery).
+   */
+  private async localTmuxTargetFor(sessionId: string, bin: string): Promise<string | null> {
+    let snap: FleetSnapshot;
+    try {
+      snap = await this.fleetSnapshot();
+    } catch {
+      return null;
+    }
+    const s = snap.sessions.find(
+      (x) =>
+        x.id === sessionId &&
+        x.origin === 'adapter' &&
+        (x.machine ?? LOCAL_MACHINE_ID) === LOCAL_MACHINE_ID &&
+        typeof x.pid === 'number',
+    );
+    if (s?.pid === undefined) return null;
+    return tmux.resolvePaneByPid(bin, s.pid);
   }
 
   private buildSpawnCommand(

@@ -85,6 +85,7 @@ import {
   remoteCollectedToFleet,
   remotePaneldFleetSessions,
   unreachableStatus,
+  type FleetSession,
   type FleetSnapshot,
 } from './fleet.js';
 import { BodyError, Router, fail, json, maskDeep, readJsonBody } from './http-util.js';
@@ -1049,29 +1050,52 @@ export class TerminullServer {
         }
       }
     }
-    // Not paneld-owned. If it's a LOCAL discovered session running inside a tmux
-    // pane, deliver via non-adopting `tmux send-keys` — this reaches the live
-    // TUI (like typing) WITHOUT attaching a client (no resize/redraw conflict on
-    // the user's terminal). Resolvable only for local sessions with a live pid.
-    const bin = tmux.resolveTmuxBin();
-    if (bin) {
-      const target = await this.localTmuxTargetFor(sessionId, bin);
-      if (target) {
+    // Not paneld-owned. For a LOCAL discovered session, deliver via the tool's
+    // OWN mechanism first, then the generic tmux path, before honestly queuing.
+    const discovered = await this.localDiscoveredSession(sessionId);
+    if (discovered) {
+      // 1) Tool-specific delivery (Codex: app-server `turn/start` keyed on the
+      //    session id — no pid/pane needed). Claude/generic leave this undefined.
+      const adapter = this.adaptersById.get(discovered.tool);
+      if (adapter?.deliverDirectiveToDiscovered) {
+        let outcome: 'delivered' | 'unsupported' = 'unsupported';
         try {
-          await tmux.sendText(bin, target, text);
+          outcome = await adapter.deliverDirectiveToDiscovered(discovered, text);
+        } catch {
+          outcome = 'unsupported';
+        }
+        if (outcome === 'delivered') {
           this.store.append('directive.delivered', {
             sessionId,
             actor,
-            payload: { directiveId, text: masked, method: 'tmux-sendkeys' },
+            payload: { directiveId, text: masked, method: `adapter:${discovered.tool}` },
           });
           return { status: 200, body: { delivered: true, directiveId } };
-        } catch {
-          // send-keys failed (pane raced away) — fall through to the honest queue.
+        }
+      }
+      // 2) Generic tmux send-keys for a session with a resolvable local pid — it
+      //    reaches the live TUI (like typing) WITHOUT attaching a client (no
+      //    resize/redraw conflict). Claude/generic run as a TUI in a tmux pane.
+      const bin = tmux.resolveTmuxBin();
+      if (bin && typeof discovered.pid === 'number') {
+        const target = await tmux.resolvePaneByPid(bin, discovered.pid);
+        if (target) {
+          try {
+            await tmux.sendText(bin, target, text);
+            this.store.append('directive.delivered', {
+              sessionId,
+              actor,
+              payload: { directiveId, text: masked, method: 'tmux-sendkeys' },
+            });
+            return { status: 200, body: { delivered: true, directiveId } };
+          } catch {
+            // send-keys failed (pane raced away) — fall through to the honest queue.
+          }
         }
       }
     }
-    // Not paneld-owned and not a resolvable tmux pane: queue it. Delivery-at-next
-    // -turn for hook-only sessions is a later milestone; the event IS the contract.
+    // Not deliverable to a live channel: queue it. Delivery-at-next-turn for
+    // hook-only sessions is a later milestone; the event IS the contract.
     this.store.append('directive.queued', {
       sessionId,
       actor,
@@ -1081,27 +1105,25 @@ export class TerminullServer {
   }
 
   /**
-   * The tmux pane target (`pane_id`) for a LOCAL discovered (non-paneld-owned)
-   * session with a live pid, or null. Remote sessions and sessions without a
-   * resolvable local tmux pane return null so the caller stays honest (queues,
-   * never fabricates a delivery).
+   * The LOCAL discovered (non-paneld-owned) FleetSession for an id, or null.
+   * Remote and paneld-owned sessions return null so the caller stays honest
+   * (queues, never fabricates a delivery).
    */
-  private async localTmuxTargetFor(sessionId: string, bin: string): Promise<string | null> {
+  private async localDiscoveredSession(sessionId: string): Promise<FleetSession | null> {
     let snap: FleetSnapshot;
     try {
       snap = await this.fleetSnapshot();
     } catch {
       return null;
     }
-    const s = snap.sessions.find(
-      (x) =>
-        x.id === sessionId &&
-        x.origin === 'adapter' &&
-        (x.machine ?? LOCAL_MACHINE_ID) === LOCAL_MACHINE_ID &&
-        typeof x.pid === 'number',
+    return (
+      snap.sessions.find(
+        (x) =>
+          x.id === sessionId &&
+          x.origin === 'adapter' &&
+          (x.machine ?? LOCAL_MACHINE_ID) === LOCAL_MACHINE_ID,
+      ) ?? null
     );
-    if (s?.pid === undefined) return null;
-    return tmux.resolvePaneByPid(bin, s.pid);
   }
 
   private buildSpawnCommand(

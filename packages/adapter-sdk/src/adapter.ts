@@ -395,19 +395,6 @@ export interface ToolAdapter {
    * non-default profiles for it with a typed 422 — honesty, no silent default).
    */
   configHomeEnvVars?: readonly string[];
-  /**
-   * Deliver a GUI directive to a DISCOVERED (non-paneld-owned) session using
-   * this tool's OWN mechanism, when the generic pid→tmux path cannot reach it.
-   * Codex implements this (app-server `turn/start` keyed on the session id =
-   * rollout uuid = threadId — no pane/pid join needed); tools with a live pid
-   * registry (Claude) leave it undefined and are served by the core tmux path.
-   * Resolves to `'delivered'` only on real acceptance; `'unsupported'` → the
-   * caller queues honestly and NEVER fabricates a delivery. Local sessions only.
-   */
-  deliverDirectiveToDiscovered?(
-    session: DiscoveredSession,
-    text: string,
-  ): Promise<'delivered' | 'unsupported'>;
 }
 
 /**

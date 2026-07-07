@@ -22,7 +22,6 @@ import type {
   ToolAdapter,
 } from '@terminull/adapter-sdk';
 import { codexCapabilities, parsePermissionModes } from './capabilities.js';
-import { injectDirective } from './app-server-client.js';
 import { createCodexCollector } from './collector.js';
 import { CodexTranscriptParser } from './parser.js';
 import { CodexPtyDriver } from './driver.js';
@@ -180,12 +179,6 @@ export function createCodexAdapter(opts: CodexAdapterOptions = {}): ToolAdapter 
     // M9 profiles: CODEX_HOME relocates the whole ~/.codex config home — the
     // documented isolation seam; set per spawn, never bridged.
     configHomeEnvVars: ['CODEX_HOME'],
-
-    // Codex has no pid registry, so a discovered session can't be resolved to a
-    // tmux pane. But the app-server keys on the same id we display: the session
-    // id IS the rollout uuid IS the app-server threadId. So deliver by that id
-    // via `turn/start` — no pane/pid join. Failure isolates to 'unsupported'.
-    deliverDirectiveToDiscovered: (session, text) => injectDirective(session.id, text),
   };
 }
 

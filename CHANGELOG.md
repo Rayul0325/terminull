@@ -4,6 +4,18 @@ All notable changes to Terminull. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.2] — 2026-07-07
+
+### Added
+
+- Directive delivery to DISCOVERED local tmux sessions. A GUI directive to a
+  session Terminull merely discovered (not one it spawned — most of the fleet)
+  used to queue and never arrive; now, when the session runs in a local tmux
+  pane, it is delivered via non-adopting `tmux send-keys` (reaches the live TUI
+  like typing, without attaching a client). Unresolvable or remote sessions
+  still queue honestly — no fabricated delivery. `directive.delivered` carries
+  `method:'tmux-sendkeys'` to distinguish it from paneld-owned driver delivery.
+
 ## [0.1.1] — 2026-07-06
 
 Patch release for `terminull` (CLI) only — `terminull-plugin-api` stays 0.1.0.

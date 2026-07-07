@@ -179,7 +179,7 @@ export async function injectDirective(
       },
     });
   const spawnFn = opts.spawn ?? defaultSpawn;
-  const budget = opts.timeoutMs ?? 15000;
+  const budget = opts.timeoutMs ?? 30000;
   const perCall = Math.max(2000, Math.floor(budget / 3));
 
   let session: AppServerSession;
@@ -198,6 +198,9 @@ export async function injectDirective(
 
     // Load the thread from disk by its id. A running thread is REJOINED by the
     // app-server; an idle/notLoaded one loads cleanly. Unknown id → error.
+    // NB: resuming a REAL session (with the user's config/daemon contention) can
+    // take a few seconds — measured ~3.7s in the panel vs ~0.3s standalone — so
+    // the per-call budget is generous (10s) to avoid a spurious queue fallback.
     const resume = await session.request('thread/resume', { threadId }, perCall);
     if (resume.error || !resume.result) return 'unsupported';
 

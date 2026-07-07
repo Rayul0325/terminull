@@ -167,7 +167,18 @@ export async function injectDirective(
 ): Promise<InjectResult> {
   const bin = opts.codexBin ?? resolveCodexBin();
   if (!bin) return 'unsupported';
-  const spawnFn = opts.spawn ?? (nodeSpawn as NonNullable<AppServerClientOptions['spawn']>);
+  // The panel often runs under a minimal launchd PATH (`/usr/bin:/bin:…`) with
+  // no node on it; codex's `#!/usr/bin/env node` shebang (and the native binary
+  // it re-execs) would then fail to start. Put OUR node's dir on the child's
+  // PATH so the spawn works regardless of how the panel was launched.
+  const defaultSpawn: NonNullable<AppServerClientOptions['spawn']> = (b, a) =>
+    nodeSpawn(b, a, {
+      env: {
+        ...process.env,
+        PATH: `${path.dirname(process.execPath)}${path.delimiter}${process.env['PATH'] ?? ''}`,
+      },
+    });
+  const spawnFn = opts.spawn ?? defaultSpawn;
   const budget = opts.timeoutMs ?? 15000;
   const perCall = Math.max(2000, Math.floor(budget / 3));
 
